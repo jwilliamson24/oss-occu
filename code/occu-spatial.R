@@ -14,10 +14,9 @@ library(dplyr)
 library(tidyr)
 library(tidyverse)
 
-#### Load data -----------------------------------------------------------------
+#### Downed Wood Data -----------------------------------------------------------------
 
-# Downed wood data
-dwd_2023 <- read.csv("OSS_data_2023_dwd.csv", 
+dwd_2023 <- read.csv("oss_2023_dwd.csv", 
                      colClasses = c(landowner="factor", trt="factor", 
                                     subplot="factor", dwd_type="factor", size_cl="factor",
                                     decay_cl="factor", char_cl="factor", length_cl="factor"))
@@ -53,8 +52,48 @@ dwd_2024$date_mdy <- as.Date(dwd_2024$date, format = "%m/%d/%Y")
 dwd <- rbind(dwd_2023, dwd_2024)
 
 
-# Salamander Data
-sals_2023 <- read.csv("OSS_data_2023_sals.csv")
+#### Salamander Data -----------------------------------------------------------------
+# 2 missing age classes - obs and sal id person dont match?
+# notes: this data frame includes all captures. unoccupied sites not included.
+# SLV has NA's for animals that we didn't measure (non-OSS animals and OSS recaps)
+
+#load and format 2023 data
+sals_2023 <- read.csv("oss_2023_sals.csv", 
+                      colClasses = c(obs="factor", pass="factor", 
+                                     spp="factor", cover_obj="factor", 
+                                     substrate="factor", age_class="factor"))
+
+#separate subplot code column
+sals_2023 <- sals_2023 %>%
+  separate(subplot_code, into = c("stands", "trt", "subplot"), sep = "_")
+
+sals_2023 <- sals_2023 %>%
+  mutate(landowner = str_extract(stands, "^([A-Za-z]+)"),
+         stand = str_extract(stands, "(?<=\\D)(\\d+)")) %>%
+  select(-stands) 
+
+#delete unnecessary col, add year, format date, delete leading zero
+sals_2023 <- sals_2023[, -7] #delete "under" column
+sals_2023$year <- 2023
+sals_2023$date_mdy <- as.Date(sals_2023$date, format = "%m/%d/%Y")
+sals_2023$subplot <- as.numeric(gsub("^0+", "", sals_2023$subplot))
+
+
+#load and format 2024 data
+sals_2024 <- read.csv("oss_2024_sals.csv", 
+                 colClasses = c(landowner="factor", stand="character", trt="factor",
+                                obs="factor", pass="factor", spp="factor", 
+                                cover_obj="factor", substrate="factor", age_class="factor"))
+
+sals_2024$date_mdy <- as.Date(sals_2024$date, format = "%m/%d/%Y")
+
+#data frame with both years of sal data
+sals <- bind_rows(sals_2024,sals_2023)
+
+
+#### Site Data -----------------------------------------------------------------
+#want to do the same with rest of data
+
 
 
 
