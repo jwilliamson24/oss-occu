@@ -8,7 +8,7 @@
 ##
 
 rm(list=ls())
-setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-spatial-occu/data")
+setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
 
 library(dplyr)
 library(tidyr)
@@ -16,40 +16,61 @@ library(tidyverse)
 
 #### Downed Wood Data -----------------------------------------------------------------
 
-dwd_2023 <- read.csv("oss_2023_dwd.csv", 
-                     colClasses = c(landowner="factor", trt="factor", 
-                                    subplot="factor", dwd_type="factor", size_cl="factor",
-                                    decay_cl="factor", char_cl="factor", length_cl="factor"))
+
+#2023 data
+dwd_2023 <- read.csv("oss_2023_dwd.csv")
 dwd_2023 <- dwd_2023[, -10] #delete random extra column
 
+#identify rows with NA in decay class column
+na_rows <- which(is.na(dwd_2023$decay_cl))
+dwd_2023 <- dwd_2023[-na_rows, ] #Remove these rows from the data frame
 
 #separate subplot code column into three columns by underscore
 dwd_2023 <- dwd_2023 %>%
       separate(subplot_code, into = c("stands", "trt", "subplot"), sep = "_")
 
-#separate stand column into two columns by letters and numbers
+#separate "stands" column into two columns by letters and numbers
 dwd_2023 <- dwd_2023 %>%
   mutate(landowner = str_extract(stands, "^([A-Za-z]+)"),
-         stand = str_extract(stands, "(?<=\\D)(\\d+)")) %>%
-  select(-stands) #remove original column 
-dwd_2023 <- dwd_2023[, -5] #delete id column
-dwd_2023$date_mdy <- as.Date(dwd_2023$date, format = "%m/%d/%Y")
+         stand = str_extract(stands, "(?<=\\D)(\\d+)")) %>% #call new column "stand"
+  select(-stands) #remove original "stands" column 
+dwd_2023 <- dwd_2023[, -5] #delete "id" column
+dwd_2023$date_mdy <- as.Date(dwd_2023$date, format = "%m/%d/%Y") #format date, add column
 dwd_2023$subplot <- as.numeric(gsub("^0+", "", dwd_2023$subplot)) #remove leading 0 so both years match
 
+#make columns factors to check for data entry errors
+dwd_2023$trt <- as.factor(dwd_2023$trt)
+dwd_2023$subplot <- as.factor(dwd_2023$subplot)
+dwd_2023$dwd_type <- as.factor(dwd_2023$dwd_type)
+dwd_2023$size_cl <- as.factor(dwd_2023$size_cl)
+dwd_2023$decay_cl <- as.factor(dwd_2023$decay_cl)
+dwd_2023$char_cl <- as.factor(dwd_2023$char_cl)
+dwd_2023$landowner <- as.factor(dwd_2023$landowner)
 
 
-# Downed wood data - done
-# notes: type/class columns are 0 if no wood was found in the plot
-# length column is blank for all stumps, values only entered for logs
+
+#2024 data
 dwd_2024 <- read.csv("oss_2024_dwd.csv", 
                 colClasses = c(landowner="factor", stand="character", trt="factor", 
                                subplot="factor", dwd_type="factor", size_cl="factor",
-                               decay_cl="factor", char_cl="factor", length_cl="factor"))
+                               decay_cl="factor", char_cl="factor"))
 dwd_2024$date_mdy <- as.Date(dwd_2024$date, format = "%m/%d/%Y")
+
 
 
 #combine both years of downed wood
 dwd <- rbind(dwd_2023, dwd_2024)
+
+#changing blank NA cells to zeros in the length class column
+dwd$length_cl[dwd$length_cl == "" | is.na(dwd$length_cl)] <- 0
+dwd$length_cl <- as.factor(dwd$length_cl) #making it a factor
+
+summary(dwd)
+
+# downed wood data - done
+# length class col = 0 if row is a stump
+
+
 
 
 #### Salamander Data -----------------------------------------------------------------
