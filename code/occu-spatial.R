@@ -1,6 +1,10 @@
-#### oss_allyears_exploration.R ####
+#### 01_data_formatting.R ####
 ##
-## Initial efforts to organize, explore, and summarize 2023 and 2024 data together
+## Creates working csv's for all four data sheets/types:
+## downed wood data = dwd.complete.csv
+## site data =
+## subplot data =
+## salamander data =
 ##
 ## Jasmine Williamson
 ## Date Created: 06-20-2024
@@ -59,14 +63,23 @@ dwd_2024$date_mdy <- as.Date(dwd_2024$date, format = "%m/%d/%Y")
 
 
 #combine both years of downed wood
-dwd <- rbind(dwd_2023, dwd_2024)
+dwd.complete <- rbind(dwd_2023, dwd_2024)
 
 #changing blank NA cells to zeros in the length class column
-dwd$length_cl[dwd$length_cl == "" | is.na(dwd$length_cl)] <- 0
-dwd$length_cl <- as.factor(dwd$length_cl) #making it a factor
+dwd.complete$length_cl[dwd$length_cl == "" | is.na(dwd$length_cl)] <- 0
+dwd.complete$length_cl <- as.factor(dwd$length_cl) #making it a factor
 
-summary(dwd)
+summary(dwd.complete)
 
+#unique number of stands by year
+unique_stands_by_year <- dwd.complete %>%
+       group_by(year) %>%
+       summarize(unique_stands = n_distinct(stand))
+
+
+# save as csv
+write.csv(dwd.complete, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/dwd.complete.csv", 
+          row.names = FALSE)
 # downed wood data - done
 # length class col = 0 if row is a stump
 
