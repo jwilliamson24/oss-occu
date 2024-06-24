@@ -3,7 +3,7 @@
 ## Creates working csv's for all four data sheets/types:
 ## downed wood data = dwd.complete.csv
 ## site data = site.complete.csv
-## subplot data =
+## subplot data = subplot.complete.csv
 ## salamander data =
 ##
 ## Jasmine Williamson
@@ -19,12 +19,12 @@ library(dplyr)
 library(tidyr)
 library(tidyverse)
 
-## Notes on data
+## Notes on site data 6/24/24
+#realized that stand numbers are not equal by treatment
 #changed 10185 from HB to BS in all three original 2023 csv sheets
-#need to verify 16804 as BU or BS using maps (and maybe field verification??)
-#its listed as BU in 2023 data sheet, but listed as BS on my original detailed stand info google sheet
+#16804 is listed as BU in 2023 data sheet (but listed as BS on my original detailed stand info google sheet)
 #i have two extra HU sites. i used the wrong sheet to tally numbers for 2024 season plans, so i went over
-
+#final counts: BS:24, BU:26, HB:25, HU:27, UU:25
 
 #### Downed Wood Data -----------------------------------------------------------------
 # downed wood data - done
@@ -94,10 +94,12 @@ write.csv(dwd.complete, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-
 
 
 #### Salamander Data -----------------------------------------------------------------
-# 2 missing age classes - obs and sal id person dont match?
-# notes: this data frame includes all captures. unoccupied sites not included.
-# SLV has NA's for animals that we didn't measure (non-OSS animals and OSS recaps)
-# ID has NA's for 2023 animals, blank for 2024 animals that are not OSS clips
+
+# Notes on sal data 6/15/24
+# 2 missing age class cells - obs and sal id person dont match?
+# this data frame includes all captures. unoccupied sites not included.
+# svl = NA for animals that we didn't measure (non-OSS animals and OSS recaps)
+# id = NA for all 2023 animals, blank for 2024 animals that are not OSS clips
 
 #load and format 2023 data
 sals_2023 <- read.csv("oss_2023_sals.csv", 
@@ -221,5 +223,8 @@ summary(site23)
 summary(site24)
 
 
+# save as csv
+write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/subplot.complete.csv", 
+          row.names = FALSE)
 
 
