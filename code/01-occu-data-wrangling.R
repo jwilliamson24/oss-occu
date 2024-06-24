@@ -2,7 +2,7 @@
 ##
 ## Creates working csv's for all four data sheets/types:
 ## downed wood data = dwd.complete.csv
-## site data =
+## site data = site.complete.csv
 ## subplot data =
 ## salamander data =
 ##
@@ -18,6 +18,12 @@ library(plyr)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
+
+## Notes on data
+#changed 10185 from HB to BS in all three original 2023 csv sheets
+#need to verify 16804 as BU or BS using maps (and maybe field verification??)
+#its listed as BU in 2023 data sheet, but listed as BS on my original detailed stand info google sheet
+#i have two extra HU sites. i used the wrong sheet to tally numbers for 2024 season plans, so i went over
 
 
 #### Downed Wood Data -----------------------------------------------------------------
@@ -139,9 +145,11 @@ sals$age_class <- as.factor(sals$age_class)
 
 site_2023 <- read.csv("oss_2023_sitesubplot.csv")
 site_2023$year <- 2023 #add year column to 2023 data
+site_2023$date_mdy <- as.Date(site_2023$date, format = "%m/%d/%Y") #format date
 summary(site_2023)
 
 site_2024 <- read.csv("oss_2024_site.csv")
+site_2024$date_mdy <- as.Date(site_2024$date, format = "%m/%d/%y") #format date
 summary(site_2024)
 
 #subset 2023/2024 data so that merged will only include cols they both have in common
@@ -156,5 +164,62 @@ site_2023_2024 <- bind_rows(site_2023[site_2023_subset],site_2024[site_2024_subs
 new_site_2023_subset <- subset(site_2023_2024, subset = year==2023)
 
 #i want to average elev, temp, hum for all rows that have the same stand number
+#this code creates new data frame with that info
+site_2023_avg <- aggregate(cbind(temp,hum,elev)~stand,new_site_2023_subset,mean)
+
+#prepare to merge site_2023_avg cols with other site cols
+new_site_2023_subset[, c(5:7)] <- list(NULL) #remove old temp,hum,elev cols
+new_site_2023_subset <- unique(new_site_2023_subset) #keep only one of each stand, remove duplicates
+site_2023_joined <- inner_join(site_2023_avg,new_site_2023_subset,by="stand") #merge
+summary(site_2023_joined)
+
+#combine by subsetted 2023 data with the 2024 site data and format
+site.complete <- bind_rows(site_2023_joined,subset(site_2023_2024,subset=year==2024))
+site.complete$landowner <- as.factor(site.complete$landowner)
+site.complete$trt <- as.factor(site.complete$trt)
+
+summary(site.complete)
+
+# save as csv
+write.csv(site.complete, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site.complete.csv", 
+          row.names = FALSE)
+
+
+
+#### Subplot Data -----------------------------------------------------------------
+
+site_2023 <- read.csv("oss_2023_sitesubplot.csv")
+site_2023$year <- 2023 #add year column to 2023 data
+site_2023$date_mdy <- as.Date(site_2023$date, format = "%m/%d/%Y") #format date
+
+subplot_24 <- read.csv("oss_2024_subplot.csv", 
+                colClasses = c(landowner="factor", stand="character", trt="factor"))
+subplot_24$date_mdy <- as.Date(subplot_24$date, format="%m/%d/%Y") #format date
+subplot_24$stand <- as.integer(subplot_24$stand) #change stand so matches 2023 for merging
+
+#subset 2023/2024 data so that merged will only include cols they both have in common
+subplot_23_subset <- names(site_2023) %in% names(subplot_24)
+subplot_24_subset <- names(subplot_24) %in% names(site_2023)
+#combine
+subplot_23_24 <- bind_rows(site_2023[subplot_23_subset],subplot_24[subplot_24_subset])
+
+#format
+subplot_23_24$landowner <- as.factor(subplot_23_24$landowner)
+subplot_23_24$trt <- as.factor(subplot_23_24$trt)
+subplot_23_24$subplot <- as.factor(subplot_23_24$subplot)
+subplot_23_24$weather <- as.factor(subplot_23_24$weather)
+summary(subplot_23_24)
+
+
+#subsetting so i can look at the years separately
+site <- read.csv("site.complete.csv", 
+                 colClasses = c(landowner="factor", stand="character", trt="factor"))
+summary(site)
+site23 <- subset(site, year==2023)
+site24 <- subset(site, year==2024)
+summary(site23)
+summary(site24)
+
+
 
 
