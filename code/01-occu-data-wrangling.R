@@ -1,4 +1,4 @@
-#### 01_data_formatting.R ####
+#### 01-occu-data-wrangling.R ####
 ##
 ## Creates working csv's for all four data sheets/types:
 ## downed wood data = dwd.complete.csv
@@ -14,12 +14,15 @@
 rm(list=ls())
 setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
 
+library(plyr)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
 
-#### Downed Wood Data -----------------------------------------------------------------
 
+#### Downed Wood Data -----------------------------------------------------------------
+# downed wood data - done
+# length class col = 0 if row is a stump
 
 #2023 data
 dwd_2023 <- read.csv("oss_2023_dwd.csv")
@@ -66,8 +69,8 @@ dwd_2024$date_mdy <- as.Date(dwd_2024$date, format = "%m/%d/%Y")
 dwd.complete <- rbind(dwd_2023, dwd_2024)
 
 #changing blank NA cells to zeros in the length class column
-dwd.complete$length_cl[dwd$length_cl == "" | is.na(dwd$length_cl)] <- 0
-dwd.complete$length_cl <- as.factor(dwd$length_cl) #making it a factor
+dwd.complete$length_cl[dwd.complete$length_cl == "" | is.na(dwd.complete$length_cl)] <- 0
+dwd.complete$length_cl <- as.factor(dwd.complete$length_cl) #making it a factor
 
 summary(dwd.complete)
 
@@ -80,8 +83,6 @@ unique_stands_by_year <- dwd.complete %>%
 # save as csv
 write.csv(dwd.complete, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/dwd.complete.csv", 
           row.names = FALSE)
-# downed wood data - done
-# length class col = 0 if row is a stump
 
 
 
@@ -90,6 +91,7 @@ write.csv(dwd.complete, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-
 # 2 missing age classes - obs and sal id person dont match?
 # notes: this data frame includes all captures. unoccupied sites not included.
 # SLV has NA's for animals that we didn't measure (non-OSS animals and OSS recaps)
+# ID has NA's for 2023 animals, blank for 2024 animals that are not OSS clips
 
 #load and format 2023 data
 sals_2023 <- read.csv("oss_2023_sals.csv", 
@@ -117,19 +119,42 @@ sals_2023$subplot <- as.numeric(gsub("^0+", "", sals_2023$subplot))
 sals_2024 <- read.csv("oss_2024_sals.csv", 
                  colClasses = c(landowner="factor", stand="character", trt="factor",
                                 obs="factor", pass="factor", spp="factor", 
-                                cover_obj="factor", substrate="factor", age_class="factor"))
+                                cover_obj="factor", substrate="factor"))
 
 sals_2024$date_mdy <- as.Date(sals_2024$date, format = "%m/%d/%Y")
 
 #data frame with both years of sal data
 sals <- bind_rows(sals_2024,sals_2023)
 
+#change columns to factor to check
+sals$landowner <- as.factor(sals$landowner)
+sals$trt <- as.factor(sals$trt)
+sals$subplot <- as.factor(sals$subplot)
+
+sals$age_class <- as.character(sals$age_class)
+sals$age_class[sals$age_class == "" | is.na(sals$age_class)] <- "U"
+sals$age_class <- as.factor(sals$age_class)
 
 #### Site Data -----------------------------------------------------------------
-#want to do the same with rest of data
 
+site_2023 <- read.csv("oss_2023_sitesubplot.csv")
+site_2023$year <- 2023 #add year column to 2023 data
+summary(site_2023)
 
+site_2024 <- read.csv("oss_2024_site.csv")
+summary(site_2024)
 
+#subset 2023/2024 data so that merged will only include cols they both have in common
+site_2023_subset <- names(site_2023) %in% names(site_2024) #vector of 2023 col names that match 2024 col names
+site_2024_subset <- names(site_2024) %in% names(site_2023) #vector of 2024 col names that match 2023 col  names
 
+#rbind them to include only those cols in common
+site_2023_2024 <- bind_rows(site_2023[site_2023_subset],site_2024[site_2024_subset])
+
+#2023 has data for all subplots, so we need to work on that
+#subset new data frame to inlcude only cols we care about for 2023
+new_site_2023_subset <- subset(site_2023_2024, subset = year==2023)
+
+#i want to average elev, temp, hum for all rows that have the same stand number
 
 
