@@ -17,7 +17,11 @@ library(tidyr)
 site <- read.csv("site.complete.csv")
 dwd <- read.csv("dwd.complete.csv")
 subplot <- read.csv("subplot.complete.csv")
-sals <- read.csv("sals.complete.csv")
+sals <- read.csv("sals.complete.csv", 
+                 colClasses = c(landowner="factor", stand="character", trt="factor",
+                                obs="factor", subplot="factor", recap="factor",
+                                pass="factor", spp="factor", cover_obj="factor", 
+                                substrate="factor", age_class="factor"))
 
 
 #### Load data -----------------------------------------------------------------
@@ -117,13 +121,9 @@ spp.tot.counts <- as.data.frame(spp.tot.counts) #make data frame
 colnames(spp.tot.counts) <- c("species","count") #format col names
 spp.tot.counts
 
-
-
-# Counting the number of salamanders observed in each treatment
+#counting the number of salamanders observed in each treatment
 sal.trt.counts <- table(sals$trt)
-
-
-
+sal.trt.counts
 
 
 # Counting the number of salamanders observed in each unique combination of variables
