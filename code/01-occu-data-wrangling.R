@@ -143,7 +143,8 @@ sals$age_class <- as.character(sals$age_class)
 sals$age_class[sals$age_class == "" | is.na(sals$age_class)] <- "U"
 sals$age_class <- as.factor(sals$age_class)
 sals$recap <- as.factor(sals$recap)
-sals$recap[sals$recap == "" | is.na(sals$recap)] <- 0
+sals$recap[sals$recap == "" | is.na(sals$recap)] <- 0 #change blank recap to zero
+sals$stand <- as.integer(sals$stand) #to remove trailing zero from stand numbers
 summary(sals)
 
 # save as csv
@@ -186,6 +187,7 @@ summary(site_2023_joined)
 site.complete <- bind_rows(site_2023_joined,subset(site_2023_2024,subset=year==2024))
 site.complete$landowner <- as.factor(site.complete$landowner)
 site.complete$trt <- as.factor(site.complete$trt)
+site.complete$stand <- as.integer(site.complete$stand)
 
 summary(site.complete)
 
