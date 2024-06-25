@@ -126,6 +126,7 @@ sal.trt.counts <- table(sals$trt)
 sal.trt.counts
 
 
+    # this code doesnt work. trying to count sals by trt, or other grouping column
 # Counting the number of salamanders observed in each unique combination of variables
 counts_per_group <- sals %>%
   group_by(spp) %>%
@@ -137,6 +138,13 @@ print(counts_per_group)
 
 counts_per_group <- sals %>%
   count(trt, spp)
+
+
+
+
+
+
+
 
 
 #create sal detection data frames
