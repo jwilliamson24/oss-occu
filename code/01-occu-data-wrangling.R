@@ -4,7 +4,7 @@
 ## downed wood data = dwd.complete.csv
 ## site data = site.complete.csv
 ## subplot data = subplot.complete.csv
-## salamander data =
+## salamander data = sals.complete.csv
 ##
 ## Jasmine Williamson
 ## Date Created: 06-20-2024
@@ -96,7 +96,6 @@ write.csv(dwd.complete, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-
 #### Salamander Data -----------------------------------------------------------------
 
 # Notes on sal data 6/15/24
-# 2 missing age class cells - obs and sal id person dont match?
 # this data frame includes all captures. unoccupied sites not included.
 # svl = NA for animals that we didn't measure (non-OSS animals and OSS recaps)
 # id = NA for all 2023 animals, blank for 2024 animals that are not OSS clips
@@ -107,20 +106,21 @@ sals_2023 <- read.csv("oss_2023_sals.csv",
                                      spp="factor", cover_obj="factor", 
                                      substrate="factor", age_class="factor"))
 
-#separate subplot code column
+#separate subplot code column by underscore
 sals_2023 <- sals_2023 %>%
   separate(subplot_code, into = c("stands", "trt", "subplot"), sep = "_")
 
+#that left the landowner and stand number in one column. separate those out:
 sals_2023 <- sals_2023 %>%
   mutate(landowner = str_extract(stands, "^([A-Za-z]+)"),
          stand = str_extract(stands, "(?<=\\D)(\\d+)")) %>%
-  select(-stands) 
+  select(-stands) #replace "stands" col above with new "stand" col
 
 #delete unnecessary col, add year, format date, delete leading zero
 sals_2023 <- sals_2023[, -7] #delete "under" column
-sals_2023$year <- 2023
-sals_2023$date_mdy <- as.Date(sals_2023$date, format = "%m/%d/%Y")
-sals_2023$subplot <- as.numeric(gsub("^0+", "", sals_2023$subplot))
+sals_2023$year <- 2023 #add year column
+sals_2023$date_mdy <- as.Date(sals_2023$date, format = "%m/%d/%Y") #format date
+sals_2023$subplot <- as.numeric(gsub("^0+", "", sals_2023$subplot)) #remove leading zero
 
 
 #load and format 2024 data
@@ -142,6 +142,13 @@ sals$subplot <- as.factor(sals$subplot)
 sals$age_class <- as.character(sals$age_class)
 sals$age_class[sals$age_class == "" | is.na(sals$age_class)] <- "U"
 sals$age_class <- as.factor(sals$age_class)
+sals$recap <- as.factor(sals$recap)
+sals$recap[sals$recap == "" | is.na(sals$recap)] <- 0
+summary(sals)
+
+# save as csv
+write.csv(sals, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/sals.complete.csv", 
+          row.names = FALSE)
 
 #### Site Data -----------------------------------------------------------------
 
