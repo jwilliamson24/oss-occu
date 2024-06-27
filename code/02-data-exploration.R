@@ -110,7 +110,7 @@ trt.detect
 #### troubleshooting sals data frames ------------------------------------------------
 
 
-# i did not repeat any stands within 2023 season
+# i repeated one stand twice in 2023, with different trt for each - 408178
 # in 2024, i resurveyed some stands from 2023 just once - 
 # stand names stayed identical in data, just sep by year column
 # in 2024, i also repeated some sites twice within the season - 
@@ -157,7 +157,7 @@ trt.detect
   stand.detect
   length(stand.detect$detect) # = 42
   
-  #unique number of stands in detection data frame
+  #unique number of stands in detection data frame    -- this is bc of 408178
   site.detect1 <- unique(sals_2023[,c(2)])
   length(site.detect1) # = 42
   
@@ -209,10 +209,14 @@ trt.detect
   #decimals to show stand repeat visits
   
   #2023 stand names are not entirely unique, i get one more stand when i 
-  #group by treatment as well
+  #group by treatment as well - 408178 listed twice, HB abd BS
   
   #do i need to have a "stand" column that has repeated stand numbers, and
   #a "site" column that has a unique identifier?
+  
+  #do i need to have a unique identifier col that includes stand, trt, year?
+  #that wont solve the problem for sites that were surveyed twice in 2024
+  #with the same treatment both times, unless i keep the .1 and .2 naming
 
   
   
