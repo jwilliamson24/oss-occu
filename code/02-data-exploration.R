@@ -153,24 +153,24 @@ trt.detect
   length(unique(sals_2023$stand)) # = 42
   
   #aggregate detections by stand
-  stand.detect <- aggregate(sals_2023[c(14)], by=sals_2023[c(11)], sum)
+  stand.detect <- aggregate(sals_2023[c(14)], by=sals_2023[c(2)], sum)
   stand.detect
   length(stand.detect$detect) # = 42
   
   #unique number of stands in detection data frame
-  site.detect1 <- unique(sals_2023[,c(11)])
+  site.detect1 <- unique(sals_2023[,c(2)])
   length(site.detect1) # = 42
   
   #unique instances of stand and treatment
-  site.detect <- unique(sals_2023[,c(11,1)])
+  site.detect <- unique(sals_2023[,c(2,3)])
   length(site.detect$stand) # = 43 
   
   #unique instances of stand, treatment, and year
-  site.detect.2 <- unique(sals_2023[,c(11,1,12)])
+  site.detect.2 <- unique(sals_2023[,c(2,3,4)])
   length(site.detect.2$stand) # = 43
   
   #unique instances of stand, trt, year, subplot
-  site.detect.3 <- unique(sals_2023[,c(11,1,2,12)])
+  site.detect.3 <- unique(sals_2023[,c(2,3,4,7)])
   length(site.detect.3$stand) # = 106
   
   
@@ -200,7 +200,7 @@ trt.detect
   length(site.detect.2$stand) # = 49
   
   #unique instances of stand, trt, year, subplot
-  site.detect.3 <- unique(sals_2024[,c(2,3,7,4)])
+  site.detect.3 <- unique(sals_2024[,c(2,3,4,7)])
   length(site.detect.3$stand) # = 137
   
   
