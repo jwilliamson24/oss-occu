@@ -95,13 +95,11 @@ length(subplot.detect$stand) # =205 subplot level detections including all spp
 
 
 
-
 #better/quicker way to do the sal count data frames:
 
 #total subplot level detections by species
 detections <- aggregate(sals[c(17)], by=sals[c(11)], sum)
 detections
-
 
 #detections just per treatment group
 trt.detect <- aggregate(sals[c(17)], by=sals[c(3)], sum)
@@ -109,50 +107,117 @@ trt.detect
 
 
 
+#### troubleshooting sals data frames ------------------------------------------------
 
 
-      # why do all these sections of code give me different answers? 
-  #stand level detections
+# i did not repeat any stands within 2023 season
+# in 2024, i resurveyed some stands from 2023 just once - 
+# stand names stayed identical in data, just sep by year column
+# in 2024, i also repeated some sites twice within the season - 
+# stand names became stand#.1 and stand#.2 
+
+  
+  # all sals
+
+  length(sals$detect) # = 409
+
+  #aggregate detections by stand
   stand.detect <- aggregate(sals[c(17)], by=sals[c(2)], sum)
   stand.detect
   length(stand.detect$detect) # = 62
 
-  #detections per stand, not showing plot repeats
+  #unique number of stands in detection data frame
   site.detect1 <- unique(sals[,c(2)])
   length(site.detect1) # = 62
   
-  #using unique combinations of stand, trt
-  #detections per stand, not showing plot repeats
+  #unique instances of stand and treatment
   site.detect <- unique(sals[,c(2,3)])
   length(site.detect$stand) # = 64 
   
-  #using unique combinations of stand, trt, year
+  #unique instances of stand, treatment, and year
   site.detect.2 <- unique(sals[,c(2,3,4)])
   length(site.detect.2$stand) # = 92
   
-  #using unique combinations of stand, trt, year, subplot
+  #unique instances of stand, trt, year, subplot
+  #gives single subplot detection as 1, not including repeats in a single subplot
   site.detect.3 <- unique(sals[,c(2,3,4,7)])
   length(site.detect.3$stand) # = 243
   
   
-  # i did not repeat any sites within 2023 season
-  # in 2024, i repeated many sites from 2023 once - 
-    # stand names stayed identical
-  # in 2024, i repeated some sites twice within the season -
-    # stand names became stand#.1 and stand#.2
+  
+  
+  # 2023 sals
+  
+  sals_2023$detect = 1
+  length(sals_2023$detect) # = 180
+  length(unique(sals_2023$stand)) # = 42
+  
+  #aggregate detections by stand
+  stand.detect <- aggregate(sals_2023[c(14)], by=sals_2023[c(11)], sum)
+  stand.detect
+  length(stand.detect$detect) # = 42
+  
+  #unique number of stands in detection data frame
+  site.detect1 <- unique(sals_2023[,c(11)])
+  length(site.detect1) # = 42
+  
+  #unique instances of stand and treatment
+  site.detect <- unique(sals_2023[,c(11,1)])
+  length(site.detect$stand) # = 43 
+  
+  #unique instances of stand, treatment, and year
+  site.detect.2 <- unique(sals_2023[,c(11,1,12)])
+  length(site.detect.2$stand) # = 43
+  
+  #unique instances of stand, trt, year, subplot
+  site.detect.3 <- unique(sals_2023[,c(11,1,2,12)])
+  length(site.detect.3$stand) # = 106
   
   
   
   
+  # 2024 sals
+  
+  sals_2024$detect = 1
+  length(sals_2024$detect) # = 229
+  length(unique(sals_2024$stand)) # = 49
+  
+  #aggregate detections by stand
+  stand.detect <- aggregate(sals_2024[c(17)], by=sals_2024[c(2)], sum)
+  stand.detect
+  length(stand.detect$detect) # = 49
+  
+  #unique number of stands in detection data frame
+  site.detect1 <- unique(sals_2024[,c(2)])
+  length(site.detect1) # = 49
+  
+  #unique instances of stand and treatment
+  site.detect <- unique(sals_2024[,c(2,3)])
+  length(site.detect$stand) # = 49
+  
+  #unique instances of stand, treatment, and year
+  site.detect.2 <- unique(sals_2024[,c(2,3,4)])
+  length(site.detect.2$stand) # = 49
+  
+  #unique instances of stand, trt, year, subplot
+  site.detect.3 <- unique(sals_2024[,c(2,3,7,4)])
+  length(site.detect.3$stand) # = 137
   
   
   
+  #interpretation: 2024 stand names are entirely unique, because i used
+  #decimals to show stand repeat visits
   
+  #2023 stand names are not entirely unique, i get one more stand when i 
+  #group by treatment as well
   
-  
+  #do i need to have a "stand" column that has repeated stand numbers, and
+  #a "site" column that has a unique identifier?
 
-#stand level detections by treatment
-sal.richness <- aggregate(spp.detect[c(6)], by=spp.detect[c(2:3)], sum)
+  
+  
+  
+  
 
 #### correl efforts from peterson code example-----------------------------------------------
 
