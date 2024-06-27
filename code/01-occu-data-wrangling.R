@@ -144,7 +144,6 @@ sals$age_class[sals$age_class == "" | is.na(sals$age_class)] <- "U"
 sals$age_class <- as.factor(sals$age_class)
 sals$recap <- as.factor(sals$recap)
 sals$recap[sals$recap == "" | is.na(sals$recap)] <- 0 #change blank recap to zero
-sals$stand <- as.integer(sals$stand) #to remove trailing zero from stand numbers
 summary(sals)
 
 # save as csv
