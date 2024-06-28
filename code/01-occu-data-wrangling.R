@@ -14,7 +14,6 @@
 rm(list=ls())
 setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
 
-library(plyr)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
@@ -117,15 +116,37 @@ sals_2023 <- sals_2023 %>%
   select(-stands) #replace "stands" col above with new "stand" col
 
 #delete unnecessary col, add year, format date, delete leading zero
-sals_2023 <- sals_2023[, -7] #delete "under" column
+sals_2023 <- sals_2023[, -8] #delete "under" column
 sals_2023$year <- 2023 #add year column
 sals_2023$date_mdy <- as.Date(sals_2023$date, format = "%m/%d/%Y") #format date
 sals_2023$subplot <- as.numeric(gsub("^0+", "", sals_2023$subplot)) #remove leading zero
 
-sals_2023 <- sals_2023[,c(10,11,1,12,3,4,2,5,6,7,8,9,13)] #reordering columns
+#add unique site code, combo of stand#_replicate#_year
+sals_2023$site_id <- paste(sals_2023$stand, "_", sals_2023$site_rep, "_", sals_2023$year)
 
+#create a new column for sal_id
+#single digit for each animal found within each site
+#this groups the rows by the site identifier, then numbers each row sequentially within sites
+sals_2023 <- sals_2023 %>%
+  group_by(site_id) %>%
+  mutate(sal_rep = row_number())
+
+#add unique sal code for each animal, combo of site id and sal replicate
+sals_2023$sal_id <- paste(sals_2023$site_id,"_",sals_2023$sal_rep)
+#back to data frame, somehow became a tibble
+sals_2023 <- as.data.frame(sals_2023) 
+
+#reorder
+new_order <- c("site_id","landowner","stand","site_rep","trt","year","date",
+               "date_mdy","sal_id","sal_rep","obs","subplot","pass","spp",
+               "cover_obj","substrate","age_class")
+sals_2023 <- sals_2023[,new_order]
+
+
+#save as csv
 write.csv(sals_2023, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/sals.2023.csv", 
           row.names = FALSE)
+
 
 
 
@@ -137,31 +158,58 @@ sals_2024 <- read.csv("oss_2024_sals.csv",
 
 sals_2024$date_mdy <- as.Date(sals_2024$date, format = "%m/%d/%Y")
 
-sals_2024 <- sals_2024[,c(1:7,10:13,15,16,14,8,9)]
+#add unique site code, combo of stand#_replicate#_year
+sals_2024$site_id <- paste(sals_2024$stand, "_", sals_2024$site_rep, "_", sals_2024$year)
 
+#create a new column for sal_id
+#single digit for each animal found within each site
+#this groups the rows by the site identifier, then numbers each row sequentially within sites
+sals_2024 <- sals_2024 %>%
+  group_by(site_id) %>%
+  mutate(sal_rep = row_number())
+
+#add unique sal code for each animal, combo of site id and sal replicate
+sals_2024$sal_id <- paste(sals_2024$site_id,"_",sals_2024$sal_rep)
+#back to data frame
+sals_2024 <- as.data.frame(sals_2024)
+
+#reorder
+new_order <- c("site_id","landowner","stand","site_rep","trt","year","date",
+               "date_mdy","sal_id","sal_rep","obs","subplot","pass","spp",
+               "cover_obj","substrate","age_class","svl","sample_id","recap")
+sals_2024 <- sals_2024[,new_order]
+
+
+#save as csv
 write.csv(sals_2024, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/sals.2024.csv", 
           row.names = FALSE)
+
+
 
 
 
 #data frame with both years of sal data
 sals <- bind_rows(sals_2024,sals_2023)
 
-#change columns to factor to check
+#change column classes to check df summary
 sals$landowner <- as.factor(sals$landowner)
 sals$trt <- as.factor(sals$trt)
 sals$subplot <- as.factor(sals$subplot)
-
 sals$age_class <- as.character(sals$age_class)
+#deal with missing values from 2023 set
 sals$age_class[sals$age_class == "" | is.na(sals$age_class)] <- "U"
 sals$age_class <- as.factor(sals$age_class)
 sals$recap <- as.factor(sals$recap)
 sals$recap[sals$recap == "" | is.na(sals$recap)] <- 0 #change blank recap to zero
+
+
 summary(sals)
+head(sals)
 
 # save as csv
 write.csv(sals, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/sals.complete.csv", 
           row.names = FALSE)
+
 
 #### Site Data -----------------------------------------------------------------
 
