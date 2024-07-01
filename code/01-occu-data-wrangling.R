@@ -29,9 +29,9 @@ library(tidyverse)
 # downed wood data - done
 # length class col = 0 if row is a stump
 
+
 #2023 data
 dwd_2023 <- read.csv("oss_2023_dwd.csv")
-dwd_2023 <- dwd_2023[, -10] #delete random extra column
 
 #identify rows with NA in decay class column
 na_rows <- which(is.na(dwd_2023$decay_cl))
@@ -46,9 +46,14 @@ dwd_2023 <- dwd_2023 %>%
   mutate(landowner = str_extract(stands, "^([A-Za-z]+)"),
          stand = str_extract(stands, "(?<=\\D)(\\d+)")) %>% #call new column "stand"
   select(-stands) #remove original "stands" column 
-dwd_2023 <- dwd_2023[, -5] #delete "id" column
+dwd_2023 <- dwd_2023[, -6] #delete "id" column
 dwd_2023$date_mdy <- as.Date(dwd_2023$date, format = "%m/%d/%Y") #format date, add column
 dwd_2023$subplot <- as.numeric(gsub("^0+", "", dwd_2023$subplot)) #remove leading 0 so both years match
+
+
+#add site_id column
+dwd_2023$site_id <- paste(dwd_2023$stand,"_",dwd_2023$site_rep,"_",dwd_2023$year)
+
 
 #make columns factors to check for data entry errors
 dwd_2023$trt <- as.factor(dwd_2023$trt)
@@ -69,6 +74,10 @@ dwd_2024 <- read.csv("oss_2024_dwd.csv",
 dwd_2024$date_mdy <- as.Date(dwd_2024$date, format = "%m/%d/%Y")
 
 
+#add site_id column
+dwd_2024$site_id <- paste(dwd_2024$stand,"_",dwd_2024$site_rep,"_",dwd_2024$year)
+
+
 
 #combine both years of downed wood
 dwd.complete <- rbind(dwd_2023, dwd_2024)
@@ -77,12 +86,12 @@ dwd.complete <- rbind(dwd_2023, dwd_2024)
 dwd.complete$length_cl[dwd.complete$length_cl == "" | is.na(dwd.complete$length_cl)] <- 0
 dwd.complete$length_cl <- as.factor(dwd.complete$length_cl) #making it a factor
 
-summary(dwd.complete)
 
-#unique number of stands by year
-unique_stands_by_year <- dwd.complete %>%
-       group_by(year) %>%
-       summarize(unique_stands = n_distinct(stand))
+new_order <- c("site_id","landowner","stand","site_rep","trt","year","subplot",
+               "date","date_mdy","dwd_type","size_cl","decay_cl","char_cl","length_cl"               )
+dwd.complete <- dwd.complete[,new_order]
+
+summary(dwd.complete)
 
 
 # save as csv
@@ -222,12 +231,14 @@ site_2024 <- read.csv("oss_2024_site.csv")
 site_2024$date_mdy <- as.Date(site_2024$date, format = "%m/%d/%y") #format date
 summary(site_2024)
 
-#subset 2023/2024 data so that merged will only include cols they both have in common
+#subset 2023/2024 data to include only columns in common
 site_2023_subset <- names(site_2023) %in% names(site_2024) #vector of 2023 col names that match 2024 col names
 site_2024_subset <- names(site_2024) %in% names(site_2023) #vector of 2024 col names that match 2023 col  names
 
-#rbind them to include only those cols in common
+#rbind to include only those cols in common
 site_2023_2024 <- bind_rows(site_2023[site_2023_subset],site_2024[site_2024_subset])
+
+
 
 #2023 has data for all subplots, so we need to work on that
 #subset new data frame to inlcude only cols we care about for 2023
@@ -238,16 +249,29 @@ new_site_2023_subset <- subset(site_2023_2024, subset = year==2023)
 site_2023_avg <- aggregate(cbind(temp,hum,elev)~stand,new_site_2023_subset,mean)
 
 #prepare to merge site_2023_avg cols with other site cols
-new_site_2023_subset[, c(5:7)] <- list(NULL) #remove old temp,hum,elev cols
+new_site_2023_subset[, c(6:8)] <- list(NULL) #remove old temp,hum,elev cols
 new_site_2023_subset <- unique(new_site_2023_subset) #keep only one of each stand, remove duplicates
 site_2023_joined <- inner_join(site_2023_avg,new_site_2023_subset,by="stand") #merge
 summary(site_2023_joined)
 
-#combine by subsetted 2023 data with the 2024 site data and format
+
+
+#combine subsetted 2023 data with the 2024 site data and format
 site.complete <- bind_rows(site_2023_joined,subset(site_2023_2024,subset=year==2024))
 site.complete$landowner <- as.factor(site.complete$landowner)
 site.complete$trt <- as.factor(site.complete$trt)
 site.complete$stand <- as.integer(site.complete$stand)
+
+
+
+#add unique site code, combo of stand#_replicate#_year
+site.complete$site_id <- paste(site.complete$stand, "_", site.complete$site_rep,
+                               "_", site.complete$year)
+
+#reorder
+new_order <- c("site_id","landowner","stand","site_rep","trt","year", "date",
+               "date_mdy","elev","temp","hum")
+site.complete <- site.complete[,new_order]
 
 summary(site.complete)
 
@@ -274,6 +298,12 @@ subplot_24_subset <- names(subplot_24) %in% names(site_2023)
 #combine
 subplot_23_24 <- bind_rows(site_2023[subplot_23_subset],subplot_24[subplot_24_subset])
 
+
+#add site_id column
+subplot_23_24$site_id <- paste(subplot_23_24$stand,"_",subplot_23_24$site_rep,
+                               "_",subplot_23_24$year)
+
+
 #format
 subplot_23_24$landowner <- as.factor(subplot_23_24$landowner)
 subplot_23_24$trt <- as.factor(subplot_23_24$trt)
@@ -282,18 +312,19 @@ subplot_23_24$weather <- as.factor(subplot_23_24$weather)
 summary(subplot_23_24)
 
 
-#subsetting so i can look at the years separately
-site <- read.csv("site.complete.csv", 
-                 colClasses = c(landowner="factor", stand="character", trt="factor"))
-summary(site)
-site23 <- subset(site, year==2023)
-site24 <- subset(site, year==2024)
-summary(site23)
-summary(site24)
+
+#reorder
+new_order <- c("site_id","landowner","stand","site_rep","trt","year", "date",
+               "date_mdy","subplot","lat","long","time","weather","canopy_cov",
+               "dwd_cov","veg_cov","fwd_cov","soil_moist_avg")
+subplot_23_24 <- subplot_23_24[,new_order]
+
 
 
 # save as csv
 write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/subplot.complete.csv", 
           row.names = FALSE)
+
+
 
 
