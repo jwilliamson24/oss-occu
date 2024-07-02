@@ -39,6 +39,9 @@ sals_2024 <- read.csv("sals.2024.csv")
 sals$detect <- 1
 
 
+#### bar plot of standardized counts per treatment by species -----------------------------------------
+
+
 # Make count by spp data frame
 
 # Group by site_id and spp, then count
@@ -86,8 +89,6 @@ trt_counts_merged$trt <- factor(trt_counts_merged$trt,
 
 
 
-#### bar plot of standardized counts per treatment by species -----------------------------------------
-
 # Standardized barplot per treatment 
 png("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/03-initial-figures/barplot_stzd_counts.png")
 ggplot(trt_counts_merged, aes(x=trt, y=stzd.count, fill=trt, color=spp)) +
@@ -100,8 +101,50 @@ ggplot(trt_counts_merged, aes(x=trt, y=stzd.count, fill=trt, color=spp)) +
 dev.off()
 
 
-# bar plot counts by date 2024
+
+
+#### bar plot of scounts by date ---------------------------------------------------------
+
+
+# group by date and year and add count column
+days_count <- sals %>%
+  group_by(date_mdy, year) %>%
+  summarize(n = n())
+names(days_count) <- c("date","year","count")
+days_count <- as.data.frame(days_count)
+
+# adding month column
+days_count$month <- month(days_count$date)
+
+days_count_2023 <- subset(days_count, year = 2023)
+
+barplot(days_count$count,
+        space=1,
+        main="Counts by Date",
+        ylab="Daily Count",
+        xlab="month",
+        col=terrain.colors
+        (length(unique(days_count$month)))
+        [as.factor(days_count$month)])
+
+
+
+
+
 
 # boxpot trt effect size
 
+
+
+
+
+
+
+
 # boxplot trt occu prob
+
+
+
+
+
+
