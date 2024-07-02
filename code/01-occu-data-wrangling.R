@@ -1,4 +1,6 @@
-#### 01-occu-data-wrangling.R ####
+## -------------------------------------------------------------------------------------------------------
+##
+## 01-occu-data-wrangling.R 
 ##
 ## Creates working csv's for all four data sheets/types:
 ## downed wood data = dwd.complete.csv
@@ -9,7 +11,8 @@
 ## Jasmine Williamson
 ## Date Created: 06-20-2024
 ##
-##
+## -------------------------------------------------------------------------------------------------------
+
 
 rm(list=ls())
 setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")

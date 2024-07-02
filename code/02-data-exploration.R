@@ -1,11 +1,13 @@
-#### 02-data-exploration.R ####
+## -------------------------------------------------------------------------------------------------------
+##
+## 02-data-exploration.R 
 ##
 ## Initial efforts to organize, explore, and summarize 2023-2024 data
 ##
 ## Jasmine Williamson
 ## Date Created: 06-10-2024
 ##
-##
+## -------------------------------------------------------------------------------------------------------
 
 rm(list=ls())
 setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
