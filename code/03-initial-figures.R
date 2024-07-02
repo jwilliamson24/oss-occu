@@ -103,7 +103,7 @@ dev.off()
 
 
 
-#### bar plot of scounts by date ---------------------------------------------------------
+#### bar plot of counts by date ---------------------------------------------------------
 
 
 # group by date and year and add count column
@@ -116,32 +116,100 @@ days_count <- as.data.frame(days_count)
 # adding month column
 days_count$month <- month(days_count$date)
 
-days_count_2023 <- subset(days_count, year = 2023)
+days_count_2023 <- subset(days_count, year == 2023)
+days_count_2024 <- subset(days_count, year == 2024)
 
+# Define colors
+colors <- c("lightgreen", "#f9d62e", "pink", "steelblue")
+
+
+# both years
+# Manually map colors to each unique month
+color_map <- setNames(colors, unique(days_count$month))
+days_count$month <- as.factor(days_count$month)
 barplot(days_count$count,
         space=1,
         main="Counts by Date",
         ylab="Daily Count",
+        xlab="Month",
+        col=color_map[days_count$month])
+
+
+# 2023
+color_map <- setNames(colors, unique(days_count_2023$month))
+days_count_2023$month <- as.factor(days_count_2023$month)
+barplot(days_count_2023$count,
+        space=1,
+        main="Counts by Date",
+        ylab="Daily Count",
         xlab="month",
-        col=terrain.colors
-        (length(unique(days_count$month)))
-        [as.factor(days_count$month)])
+        col=color_map[days_count$month])
+
+
+# 2024
+color_map <- setNames(colors, unique(days_count_2024$month))
+days_count_2024$month <- as.factor(days_count_2024$month)
+barplot(days_count_2024$count,
+        space=1,
+        main="Counts by Date",
+        ylab="Daily Count",
+        xlab="month",
+        col=color_map[days_count$month])
+
+
+
+#### Transparent temp trend line ---------------------------------------------------------
+
+
+# 2023 (trend line also found in Pleth_conf_exploratory)
+site_2023 <- subset(site, year == 2023)
+
+ggplot(site_2023, aes(x = date_mdy, y = temp, group = 1)) +
+  geom_point(color="blue") +
+  geom_line(color="blue", linetype="solid", size=2) + 
+  theme_classic() +
+  theme(
+    panel.background = element_rect(fill='transparent'),
+    plot.background = element_rect(fill='transparent', color=NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.background = element_rect(fill='transparent'),
+    legend.box.background = element_rect(fill='transparent')
+  )
+
+
+
+# 2024
+site_2024 <- subset(site, year == 2024)
+  
+ggplot(site_2024, aes(x = date_mdy, y = temp, group = 1)) +
+  geom_point(color="blue") +
+  geom_line(color="blue", linetype="solid", size=2) + 
+  theme_classic() +
+  theme(
+    panel.background = element_rect(fill='transparent'),
+    plot.background = element_rect(fill='transparent', color=NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.background = element_rect(fill='transparent'),
+    legend.box.background = element_rect(fill='transparent')
+  )
+
+
+
+#### boxplot trt effect size ---------------------------------------------------------
 
 
 
 
 
 
-# boxpot trt effect size
 
 
 
+#### boxplot trt occu prob ---------------------------------------------------------
 
 
-
-
-
-# boxplot trt occu prob
 
 
 

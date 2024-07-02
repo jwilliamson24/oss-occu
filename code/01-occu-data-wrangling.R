@@ -231,7 +231,7 @@ site_2023$date_mdy <- as.Date(site_2023$date, format = "%m/%d/%Y") #format date
 summary(site_2023)
 
 site_2024 <- read.csv("oss_2024_site.csv")
-site_2024$date_mdy <- as.Date(site_2024$date, format = "%m/%d/%y") #format date
+site_2024$date_mdy <- as.Date(site_2024$date, format = "%m/%d/%Y") #format date
 summary(site_2024)
 
 #subset 2023/2024 data to include only columns in common
