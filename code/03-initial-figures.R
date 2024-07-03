@@ -1,13 +1,12 @@
-## -------------------------------------------------------------------------------------------------------
 ##
 ## 03-initial-figures.R 
 ##
 ## Figures using the code from 2023 data summary
 ##
 ## Jasmine Williamson
-## Date Created: 07-02-2024
+## Date Created: 07-01-2024
 ##
-## -------------------------------------------------------------------------------------------------------
+#### settings ---------------------------------------------------------------------------------------------
 
 rm(list=ls())
 setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
@@ -18,8 +17,10 @@ library(RColorBrewer)
 library(tidyverse)
 library(ggpattern)
 library(dplyr)
+library(ggthemes)
 
-#### Load data --------------------------------------------------------------------------------------------
+
+#### load data --------------------------------------------------------------------------------------------
 
 site <- read.csv("site.complete.csv")
 dwd <- read.csv("dwd.complete.csv")
@@ -33,7 +34,7 @@ sals <- read.csv("sals.complete.csv",
 sals_2023 <- read.csv("sals.2023.csv")
 sals_2024 <- read.csv("sals.2024.csv")
 
-#### Format data -----------------------------------------------------------------------------------------
+#### format data -----------------------------------------------------------------------------------------
 
 # add detection col
 sals$detect <- 1
@@ -119,9 +120,9 @@ days_count$month <- month(days_count$date)
 days_count_2023 <- subset(days_count, year == 2023)
 days_count_2024 <- subset(days_count, year == 2024)
 
-# Define colors
-colors <- c("lightgreen", "#f9d62e", "pink", "steelblue")
 
+# Define colors
+colors <- c("salmon","chartreuse3", "turquoise3", "purple")
 
 # both years
 # Manually map colors to each unique month
@@ -136,37 +137,46 @@ barplot(days_count$count,
 
 
 # 2023
-color_map <- setNames(colors, unique(days_count_2023$month))
-days_count_2023$month <- as.factor(days_count_2023$month)
-barplot(days_count_2023$count,
-        space=1,
-        main="Counts by Date",
-        ylab="Daily Count",
-        xlab="month",
-        col=color_map[days_count$month])
+ggplot(days_count_2023, aes(x = date, y = count, fill = month)) +
+  geom_col() + 
+  theme_classic() + 
+  labs(title = "Counts by Date", x = "Date", y = "Daily Count") +
+  scale_fill_manual(values = colors) +
+  theme(panel.background = element_rect(fill = "transparent", color = NA),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        plot.title = element_text(hjust = 0.5), # Center the title
+        axis.text.x = element_text(angle = 45, hjust = 1), # Rotate x-axis labels
+        legend.background = element_rect(fill = "transparent", color = NA), # Transparent legend background
+        legend.box.background = element_rect(fill = "transparent", color = NA)) 
+ggsave("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/03-initial-figures/barplot_2023_counts_by_date.png",
+       plot = last_plot(), bg = "transparent")
 
 
 # 2024
-color_map <- setNames(colors, unique(days_count_2024$month))
-days_count_2024$month <- as.factor(days_count_2024$month)
-barplot(days_count_2024$count,
-        space=1,
-        main="Counts by Date",
-        ylab="Daily Count",
-        xlab="month",
-        col=color_map[days_count$month])
+ggplot(days_count_2024, aes(x = date, y = count, fill = month)) +
+  geom_col() + 
+  theme_classic() + 
+  labs(title = "Counts by Date", x = "Date", y = "Daily Count") +
+  scale_fill_manual(values = colors) +
+  theme(panel.background = element_rect(fill = "transparent", color = NA),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        plot.title = element_text(hjust = 0.5), # Center the title
+        axis.text.x = element_text(angle = 45, hjust = 1), # Rotate x-axis labels
+        legend.background = element_rect(fill = "transparent", color = NA), # Transparent legend background
+        legend.box.background = element_rect(fill = "transparent", color = NA)) 
+ggsave("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/03-initial-figures/barplot_2024_counts_by_date.png",
+       plot = last_plot(), bg = "transparent")
 
 
-
-#### Transparent temp trend line ---------------------------------------------------------
+#### transparent temp trend line ---------------------------------------------------------
 
 
 # 2023 (trend line also found in Pleth_conf_exploratory)
 site_2023 <- subset(site, year == 2023)
 
-ggplot(site_2023, aes(x = date_mdy, y = temp, group = 1)) +
-  geom_point(color="blue") +
-  geom_line(color="blue", linetype="solid", size=2) + 
+p <- ggplot(site_2023, aes(x = date_mdy, y = temp, group = 1)) +
+  geom_point(color="steelblue") +
+  geom_line(color="steelblue", linetype="solid", linewidth=2) + 
   theme_classic() +
   theme(
     panel.background = element_rect(fill='transparent'),
@@ -176,15 +186,18 @@ ggplot(site_2023, aes(x = date_mdy, y = temp, group = 1)) +
     legend.background = element_rect(fill='transparent'),
     legend.box.background = element_rect(fill='transparent')
   )
+ggsave(filename = "temp_line_2023.png", plot = p, device = "png", 
+       path = "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/03-initial-figures",
+       width = 15, height = 8, units = "in", dpi = 300, bg = "transparent")
 
 
 
 # 2024
 site_2024 <- subset(site, year == 2024)
-  
-ggplot(site_2024, aes(x = date_mdy, y = temp, group = 1)) +
-  geom_point(color="blue") +
-  geom_line(color="blue", linetype="solid", size=2) + 
+
+p1 <- ggplot(site_2024, aes(x = date_mdy, y = temp, group = 1)) +
+  geom_point(color="lightgreen") +
+  geom_line(color="lightgreen", linetype="solid", size=2) + 
   theme_classic() +
   theme(
     panel.background = element_rect(fill='transparent'),
@@ -194,25 +207,9 @@ ggplot(site_2024, aes(x = date_mdy, y = temp, group = 1)) +
     legend.background = element_rect(fill='transparent'),
     legend.box.background = element_rect(fill='transparent')
   )
-
-
-
-#### boxplot trt effect size ---------------------------------------------------------
-
-
-
-
-
-
-
-
-
-#### boxplot trt occu prob ---------------------------------------------------------
-
-
-
-
-
+ggsave(filename = "temp_line_2024.png", plot = p1, device = "png", 
+       path = "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/03-initial-figures",
+       width = 15, height = 8, units = "in", dpi = 300, bg = "transparent")
 
 
 
