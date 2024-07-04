@@ -7,7 +7,21 @@
 ## Jasmine Williamson
 ## Date Created: 2023-11-02
 ##
-## --------------------------------------------------------------------------------------------------------
+## 
+
+
+# where i left off: 7/4/24
+# i figured out how to format the detection covariated from long format into wide format.
+# the code below works for soil moisture and weather
+# i also created a site covs data frame that includes many of the covs i will want
+# 
+# what i still need to do:
+# i want to create another detection df for downed wood count per subplot
+# i want to add more covs to the site data frame
+
+
+
+## settings -----------------------------------------------------------------------------------------------
 
 rm(list=ls())
 setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
@@ -18,8 +32,9 @@ library(stats)
 library(MASS)
 library(tidyverse)
 
-## Load Data----------------------------------------------------------------------------------------------
+## load data----------------------------------------------------------------------------------------------
 
+dwd <- read.csv("dwd.complete.csv")
 site <- read.csv("site.complete.csv")
 df <- read.csv("subplot.complete.csv")
 sals <- read.csv("sals.complete.csv", 
@@ -30,7 +45,7 @@ sals <- read.csv("sals.complete.csv",
 
 
 
-## Format and scale: subplot/det covs from long to wide dataframes ----------------------------------------
+## format and scale: subplot/det covs from long to wide dataframes ----------------------------------------
 
 # soil moisture 
 
@@ -78,7 +93,25 @@ rownames(weather_wide) <- weather_wide[,1]
 weather <- weather_wide[,-1]
 
 
+
+# dwd
+
+#i want a df with the avg number of pieces of downed wood in each subplot
+
+
+
+
 ## Format site/occu cov ----------------------------------------------------------------------------------
+
+site_new <- subset(site[,c('site_id','trt','date_mdy','elev','temp','hum')])
+
+
+
+
+
+
+# all the code below this is from the 2023 document. the code above this has been updated
+# as of 7/4/2024, with the goal of repeating this unmarked code with all data
 
 ## Format Data  ------------------------------------------------------------------------------------------
 
