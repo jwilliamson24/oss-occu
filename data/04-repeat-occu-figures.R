@@ -31,10 +31,16 @@ sals <- read.csv("sals.complete.csv",
                                 pass="factor", spp="factor", cover_obj="factor", 
                                 substrate="factor", age_class="factor"))
 
+
 #### format data -----------------------------------------------------------------------------------------
 
+# site = df with all sites and treatments
+# spp_count = df with sal counts, enes.obs, and oss.obs
+# 
         ###### struggling to get the occupancy df created in the right way____________________________________________________________
 
+## goal:
+## df with rows for every site and subplot, cols with temp, hum, soil moist, enes obs, oss obs, all obs
 
 # add detection col
 sals$detect <- 1
