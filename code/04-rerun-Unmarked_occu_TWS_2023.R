@@ -11,13 +11,17 @@
 
 
 # where i left off: 7/4/24
-# i figured out how to format the detection covariated from long format into wide format.
+# i figured out how to format the detection covariates from long format into wide format.
 # the code below works for soil moisture and weather
 # i also created a site covs data frame that includes many of the covs i will want
 # 
 # what i still need to do:
 # i want to create another detection df for downed wood count per subplot
 # i want to add more covs to the site data frame
+
+# 7/9/24
+# created occu dfs for oss and enes
+# moved them from long to wide format
 
 
 
@@ -108,10 +112,54 @@ site_new <- subset(site[,c('site_id','trt','date_mdy','elev','temp','hum')])
 
 
 
+## Format spp occu data ----------------------------------------------------------------------------------
+
+sals.new <- sals[,c(1,12,14)] #subset of sals with site, subplot, spp
+
+#oss detection df
+sals.oss <- subset(sals.new, spp=="OSS")
+sals.oss <- sals.oss[,-3]
+sals.oss <- sals.oss %>%
+  distinct(site_id, subplot) #only keeping single detection per subplot
+sals.oss$detect <- 1
+
+#enes detection df
+sals.enes <- subset(sals.new, spp=="ENES")
+sals.enes <- sals.enes[,-3]
+sals.enes <- sals.enes %>%
+  distinct(site_id, subplot)
+sals.enes$detect <- 1
+
+#creating occupancy df with non-detections
+df.new <- df[,c(1,9)] #new df with all subplots to merge sals df with
+df.new$subplot <- as.factor(df.new$subplot)
+
+
+#oss occupancy df
+df.merge.oss <- full_join(df.new,sals.oss,by=c("site_id","subplot")) #merge by site and subplot
+df.merge.oss$detect <- ifelse(is.na(df.merge.oss$detect), 0, df.merge.oss$detect) #make NA's = 0
+
+#make into wide format occu df
+df.wide.oss <- df.merge.oss %>%
+  pivot_wider(names_from = subplot, values_from = detect)
+df.wide.oss <- as.data.frame(df.wide.oss)
+rownames(df.wide.oss) <- df.wide.oss[,1]
+df.wide.oss <- df.wide.oss[,-1]
+
+#enes occupancy df
+df.merge.enes <- full_join(df.new,sals.enes,by=c("site_id","subplot")) #merge by site and subplot
+df.merge.enes$detect <- ifelse(is.na(df.merge.enes$detect), 0, df.merge.enes$detect) #make NA's = 0
+
+#make into wide format occu df
+df.wide.enes <- df.merge.enes %>%
+  pivot_wider(names_from = subplot, values_from = detect)
+df.wide.enes <- as.data.frame(df.wide.enes)
+rownames(df.wide.enes) <- df.wide.enes[,1]
+df.wide.enes <- df.wide.enes[,-1]
 
 
 # all the code below this is from the 2023 document. the code above this has been updated
-# as of 7/4/2024, with the goal of repeating this unmarked code with all data
+# as of 7/9/2024, with the goal of repeating this unmarked code with all data
 
 ## Format Data  ------------------------------------------------------------------------------------------
 

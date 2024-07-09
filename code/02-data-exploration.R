@@ -103,7 +103,7 @@ trt.detect
 # 5  UU    127
 
 
-#### troubleshooting sals data frames ------------------------------------------------
+#### troubleshooting sals data frames - done ------------------------------------------------
 
 
 # stands are repeated throughout data; stand names are not unique identifier
@@ -203,18 +203,7 @@ trt.detect
 
   
 
-#### correl efforts from peterson code example-----------------------------------------------
 
-#merge sal richness and site data into one data frame
-#this will add NA's in detect column for sites without detections
-#will be used to look at correllations between detections and site variables
-sal.correl <- merge(sal.richness,site, all=TRUE)
-#change NA's to zeros in detect column
-sal.correl$detect <- ifelse(is.na(sal.correl$detect),0,sal.correl$detect)
-
-#look at the correlation between detections and temp
-cor(sal.correl$detect,sal.correl$temp)
-# -0.4 is a low negative correllation, as temp inc detect decreases
 
 
 
