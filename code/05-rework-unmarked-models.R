@@ -49,7 +49,6 @@ library(tidyverse)
 
 ## load data----------------------------------------------------------------------------------------------
 
-dwd <- read.csv("dwd.complete.csv")
 site <- read.csv("site.complete.csv")
 subplot <- read.csv("subplot.complete.csv")
 sals <- read.csv("sals.complete.csv", 
@@ -117,7 +116,7 @@ sitecovs$trt <- factor(sitecovs$trt,
                        levels = c("UU", "BU", "HB", "HU", "BS"))
 
 # Scale Occupancy Covariates
-sitecovs$site <- as.character(sitecovs$site)
+sitecovs$site_id <- as.character(sitecovs$site)
 # Identify numeric sitecovs
 numeric_sitecovs <- sitecovs[sapply(sitecovs, is.numeric)]
 # Scale the numeric sitecovs
