@@ -124,6 +124,8 @@ scaled_numeric_sitecovs <- as.data.frame(scale(numeric_sitecovs))
 # Combine the scaled numeric sitecovs with non-numeric sitecovs
 scaled_sitecovs <- cbind(scaled_numeric_sitecovs, sitecovs[setdiff(names(sitecovs), names(numeric_sitecovs))])
 
+write.csv(scaled_sitecovs, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/scaled.sitecovs.csv",
+          row.names = FALSE)
 
 
 ## name and scale covs for unmarked object ----------------------------------------------------------
