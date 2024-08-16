@@ -115,4 +115,8 @@ runSim <- function(sets, nsim, params, model, n.chains, n.thin, n.iter, n.burnin
 sets <- expand.grid(R=c(20, 30, 40, 50, 60), S=c(5, 7, 9), posttrt=c(0.1, 0.3), det=c(0.15, 0.30, 0.50))
 params <- c("aInt.mean", "bTrt", "bYr", "bTrtYr", "gInt")
 nsim=500
-system.time(temp <- runSim(sets=sets, nsim=nsim, params=params, model=model.h, n.chains=3, n.thin=10, n.iter=10000, n.burnin=5000, dfile="C:/"))
+system.time(temp <- runSim(sets=sets, nsim=nsim, params=params, model=model.h, n.chains=3, n.thin=10, n.iter=10000, n.burnin=5000, 
+                           dfile="C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/2015/output"))
+
+
+
