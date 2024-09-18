@@ -22,18 +22,18 @@ model.h1 <- function(){
   
   # priors for occupancy model
   beta0 ~ dnorm(0, 0.333)
-  betaTF ~ dnorm(0, 1)
-  betaYr14 ~ dnorm(0, 1)
+  betaTF ~ dnorm(0, 1) # tree farm - where's ownership?
+  betaYr14 ~ dnorm(0, 1) # years
   betaYr15 ~ dnorm(0, 1)
   betaYr16 ~ dnorm(0, 1)
   betaYr17 ~ dnorm(0, 1)
   betaYr18 ~ dnorm(0, 1)
   betaYr19 ~ dnorm(0, 1)
   betaPre ~ dnorm(0, 4) # Trt and Control sites should be similar pre-harvest
-  betaPost ~ dnorm(0, 0.25)
-  betaDW ~ dnorm(0, 0.25)
-  sd.b0 ~ dgamma(1, 2)
-  tau.b0 <- 1/(sd.b0 * sd.b0)
+  betaPost ~ dnorm(0, 0.25) 
+  betaDW ~ dnorm(0, 0.25) # dwd count
+  sd.b0 ~ dgamma(1, 2) # st dev? 
+  tau.b0 <- 1/(sd.b0 * sd.b0) # dont know what this is
   
   # treatment effect estimator
   TrtEffect <- betaPost - betaPre
@@ -45,13 +45,13 @@ model.h1 <- function(){
   mu.a3 ~ dnorm(0, 1) # AT^2
   mu.a4 ~ dnorm(0, 1) # Trt*AT
   mu.a5 ~ dnorm(0, 1) # Trt*AT^2
-  sd.a0 ~ dgamma(1, 2)
+  sd.a0 ~ dgamma(1, 2) # stdev for each plot level effect?
   sd.a1 ~ dgamma(2, 1) # hyper-prior for Trt effect; allow for greater prior uncertainty than other effects.
   sd.a2 ~ dgamma(1, 2)
   sd.a3 ~ dgamma(1, 2)
   sd.a4 ~ dgamma(1, 2)
   sd.a5 ~ dgamma(1, 2)
-  tau.a0 <- 1/(sd.a0 * sd.a0)
+  tau.a0 <- 1/(sd.a0 * sd.a0) # what are all these?
   tau.a1 <- 1/(sd.a1 * sd.a1)
   tau.a2 <- 1/(sd.a2 * sd.a2)
   tau.a3 <- 1/(sd.a3 * sd.a3)
@@ -60,7 +60,7 @@ model.h1 <- function(){
   
   # detection model random effects (by year)
   for(i in 1:nyear){
-    a0[i] ~ dnorm(mu.a0, tau.a0)
+    a0[i] ~ dnorm(mu.a0, tau.a0) # each plot level effect by year
     aTrt[i] ~ dnorm(mu.a1, tau.a1)
     aAT[i] ~ dnorm(mu.a2, tau.a2)
     aAT2[i] ~ dnorm(mu.a3, tau.a3)
@@ -68,7 +68,7 @@ model.h1 <- function(){
     aTrtAT2[i] ~ dnorm(mu.a5, tau.a5)
   }
   
-  for(i in 1:nstand){
+  for(i in 1:nstand){ 
     # occupancy stand-level effects
     mu1[i] <- beta0 + betaTF*TFCL1[i] 
     mu1i[i] ~ dnorm(mu1[i], tau.b0)

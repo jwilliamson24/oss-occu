@@ -63,16 +63,17 @@ myFun <- function(n, y, p){
 
   # fit the model
   system.time(out.oh1 <- jags(test.data.o, inits.o, params.o, model.h1, n.chains=4,
-                              #n.thin=10, n.iter=1100, n.burnin=100)) # 212s
-                              n.thin=10, n.iter=11000, n.burnin=1000)) # 1968s
+                              n.thin=10, n.iter=1100, n.burnin=100)) # 212s
+                              #n.thin=10, n.iter=11000, n.burnin=1000)) # 1968s
 
   # check diagnostics
   hist(out.oh1$BUGSoutput$summary[,8]) # ~all <1.05
   out.oh1$BUGSoutput$summary[rownames(out.oh1$BUGSoutput$summary) %in% c("TrtEffect", "betaPre", "betaPost", "beta0", "betaDW", "betaTF",
                                                                          "betaYr14", "betaYr15", "betaYr16", "betaYr17", "betaYr18", "betaYr19",
                                                                          "mu.a0", "mu.a1"),]
+  #dont really know what this is doing
   p.eff.oh1 <- out.oh1$BUGSoutput$sims.list$p.eff
-  d.oh1 <- myFun(1000, y=as.numeric(osslist$yo), p=p.eff.oh1)
+  d.oh1 <- myFun(400, y=as.numeric(osslist$yo), p=p.eff.oh1) #jw 9/18 i changed to 400 from 1000 bc error: Error in p[i, ] : subscript out of bounds
   summary(d.oh1) # 0.54 => consistent with model
 
 
@@ -93,8 +94,8 @@ myFun <- function(n, y, p){
   
   # fit the model
   system.time(out.eh1 <- jags(test.data.e, inits.e, params.e, model.h1, n.chains=4,
-                              #n.thin=10, n.iter=1100, n.burnin=100))
-                              n.thin=10, n.iter=11000, n.burnin=1000)) # 1864s
+                              n.thin=10, n.iter=1100, n.burnin=100))
+                              #n.thin=10, n.iter=11000, n.burnin=1000)) # 1864s
 
   # diagnostic checks
   out.eh1$BUGSoutput$summary[rownames(out.eh1$BUGSoutput$summary) %in% c("TrtEffect", "betaPre", "betaPost", "beta0", "betaDW", "betaTF",
@@ -103,7 +104,7 @@ myFun <- function(n, y, p){
   hist(out.eh1$BUGSoutput$summary[,8]) # small fraction (<1%?) gt than 1.05
 
   p.eff.eh1 <- out.eh1$BUGSoutput$sims.list$p.eff
-  d.eh1 <- myFun(1000, y=as.numeric(osslist$ye), p=p.eff.eh1)
+  d.eh1 <- myFun(400, y=as.numeric(osslist$ye), p=p.eff.eh1) #jw 9/18 i changed to 400 from 1000
   summary(d.eh1) # 0.54 => consistent with model
   
 
@@ -114,7 +115,7 @@ myFun <- function(n, y, p){
 # OSS
 
   # model setup
-  Nst.o <- apply(osslist$yo, 1, max, na.rm=T)
+  zst.o <- apply(osslist$yo, 1, max, na.rm=T)
   inits.o <- function(){list(N=zst.o)}
   params.o <- c("beta0", "betaTF", "betaYr14", "betaYr15", "betaYr16", "betaYr17", "betaYr18", "betaYr19",
                 "betaDW", "betaPre", "betaPost", "TrtEffect", 
@@ -129,8 +130,8 @@ myFun <- function(n, y, p){
 
   # fit the model  
   system.time(out.oa1 <- jags(test.data.o, inits.o, params.o, model.a1, n.chains=4,
-                             #n.thin=10, n.iter=1100, n.burnin=100)) # s
-                             n.thin=10, n.iter=11000, n.burnin=1000)) # 4000s
+                             n.thin=10, n.iter=1100, n.burnin=100)) # s
+                             #n.thin=10, n.iter=11000, n.burnin=1000)) # 4000s
                              #n.thin=20, n.iter=42000, n.burnin=2000)) # s
   hist(out.oa1$BUGSoutput$summary[,8]) # small fraction (<1%?) less than 1.05
   #rownames(out.oa1$BUGSoutput$summary[out.oa1$BUGSoutput$summary[,8]>1.1,])
@@ -141,7 +142,7 @@ myFun <- function(n, y, p){
 
   # diagnostic check  
   p.eff.oa1 <- out.oa1$BUGSoutput$sims.list$p
-  d.oa1 <- myFun(1000, y=as.numeric(osslist$yo), p=p.eff.oa1)
+  d.oa1 <- myFun(400, y=as.numeric(osslist$yo), p=p.eff.oa1)
   summary(d.oa1) # 0.55
   
 
@@ -163,8 +164,8 @@ myFun <- function(n, y, p){
   
   # fit the model  
   system.time(out.ea1 <- jags(test.data.e, inits.e, params.e, model.a1, n.chains=4,
-                              #n.thin=10, n.iter=1100, n.burnin=100)) # 229s
-                              n.thin=10, n.iter=11000, n.burnin=1000))
+                              n.thin=10, n.iter=1100, n.burnin=100)) # 229s
+                              #n.thin=10, n.iter=11000, n.burnin=1000))
                               #n.thin=20, n.iter=42000, n.burnin=2000)) # s
   hist(out.ea1$BUGSoutput$summary[,8]) # small fraction (<1%?) less than 1.05
   #rownames(out.ea1$BUGSoutput$summary[out.ea1$BUGSoutput$summary[,8]>1.1,])
@@ -174,7 +175,7 @@ myFun <- function(n, y, p){
   
   # diagnostic check  
   p.eff.ea1 <- out.ea1$BUGSoutput$sims.list$p
-  d.ea1 <- myFun(1000, y=as.numeric(osslist$ye), p=p.eff.ea1)
+  d.ea1 <- myFun(400, y=as.numeric(osslist$ye), p=p.eff.ea1)
   summary(d.ea1) # 0.58
   
   
