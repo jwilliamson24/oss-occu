@@ -10,6 +10,8 @@ library(R2jags)
 library(grid)
 library(gridExtra)
 library(abind)
+library(tidyr)
+library(ggplot2)
 
 rm(list=ls())
 
@@ -74,7 +76,8 @@ ea1.sl <- out.ea1$BUGSoutput$sims.list
   oh1.occ <- expand.grid(Quantity=c("Mean", "x5", "x25", "x75", "x95"), Year=2013:2019, Trt=c("Control", "Treatment"))
   oh1.occ$Occ <- as.numeric(apply(temp.oh1, 2, function(x) expit(c(mean(x), quantile(x, probs=c(0.05, 0.25, 0.75, 0.95))))))
   oh1.occ$HarvestState <- ifelse(oh1.occ$Year>2015 & oh1.occ$Trt=="Treatment", "Cut", "Timbered")
-  oh1.occ2 <- spread(oh1.occ, Quantity, Occ)
+  #oh1.occ2 <- spread(oh1.occ, Quantity, Occ) # replaced with code below, spread is now pivot_wider
+  oh1.occ2 <- pivot_wider(oh1.occ, names_from = Quantity, values_from = Occ)
   oh1.occ2$Species <- rep("OSS", nrow(oh1.occ2))
   
 
@@ -95,7 +98,8 @@ ea1.sl <- out.ea1$BUGSoutput$sims.list
   eh1.occ <- expand.grid(Quantity=c("Mean", "x5", "x25", "x75", "x95"), Year=2013:2019, Trt=c("Control", "Treatment"))
   eh1.occ$Occ <- as.numeric(apply(temp.eh1, 2, function(x) expit(c(mean(x), quantile(x, probs=c(0.05, 0.25, 0.75, 0.95))))))
   eh1.occ$HarvestState <- ifelse(eh1.occ$Year>2015 & eh1.occ$Trt=="Treatment", "Cut", "Timbered")
-  eh1.occ2 <- spread(eh1.occ, Quantity, Occ)
+  #eh1.occ2 <- spread(eh1.occ, Quantity, Occ) # replaced with code below, spread is now pivot_wider
+  eh1.occ2 <- pivot_wider(eh1.occ, names_from = Quantity, values_from = Occ)
   eh1.occ2$Species <- rep("ENES", nrow(eh1.occ2))
   
 

@@ -22,24 +22,24 @@ model.h1 <- function(){
   
   # priors for occupancy model
   beta0 ~ dnorm(0, 0.333)
-  betaTF ~ dnorm(0, 1) # tree farm - where's ownership?
+  betaTF ~ dnorm(0, 1) # tree farm, add in another block? ### add in an ownership term
   betaYr14 ~ dnorm(0, 1) # years
   betaYr15 ~ dnorm(0, 1)
   betaYr16 ~ dnorm(0, 1)
-  betaYr17 ~ dnorm(0, 1)
+  betaYr17 ~ dnorm(0, 1) ### need to add in my years
   betaYr18 ~ dnorm(0, 1)
   betaYr19 ~ dnorm(0, 1)
   betaPre ~ dnorm(0, 4) # Trt and Control sites should be similar pre-harvest
-  betaPost ~ dnorm(0, 0.25) 
+  betaPost ~ dnorm(0, 0.25) ### need to change these for my 5 trt - four betas, bc excluding control
   betaDW ~ dnorm(0, 0.25) # dwd count
   sd.b0 ~ dgamma(1, 2) # st dev? 
   tau.b0 <- 1/(sd.b0 * sd.b0) # dont know what this is
   
   # treatment effect estimator
-  TrtEffect <- betaPost - betaPre
+  TrtEffect <- betaPost - betaPre ### redefine using comparisons I'm interested in
   
   # priors for detection random effects
-  mu.a0 ~ dnorm(0, 0.333)
+  mu.a0 ~ dnorm(0, 0.333) ### need to add mu/sd/tau terms for all my trt betas, including interactions, write out model to keep track
   mu.a1 ~ dnorm(0, 1) # Trt
   mu.a2 ~ dnorm(0, 1) # AT
   mu.a3 ~ dnorm(0, 1) # AT^2
@@ -59,7 +59,7 @@ model.h1 <- function(){
   tau.a5 <- 1/(sd.a5 * sd.a5)
   
   # detection model random effects (by year)
-  for(i in 1:nyear){
+  for(i in 1:nyear){ ### rewrite using all trt terms from above
     a0[i] ~ dnorm(mu.a0, tau.a0) # each plot level effect by year
     aTrt[i] ~ dnorm(mu.a1, tau.a1)
     aAT[i] ~ dnorm(mu.a2, tau.a2)
@@ -70,15 +70,15 @@ model.h1 <- function(){
   
   for(i in 1:nstand){ 
     # occupancy stand-level effects
-    mu1[i] <- beta0 + betaTF*TFCL1[i] 
+    mu1[i] <- beta0 + betaTF*TFCL1[i] # block term
     mu1i[i] ~ dnorm(mu1[i], tau.b0)
     b0[i] <- mu1i[i] - mu1[i] # stand-level random effect
     for(k in 1:nyear){
       # occupancy stand-year level effects
       mu2ik[i,k] <- mu1i[i] + betaYr14*Year2014[k,i] + betaYr15*Year2015[k,i] + betaYr16*Year2016[k,i] + 
-        betaYr17*Year2017[k, i] + betaYr18*Year2018[k, i] + betaYr19*Year2019[k, i] + 
-        betaPre*PreTrt2[k,i] + betaPost*PostTrt2[k,i]
-    }
+        betaYr17*Year2017[k, i] + betaYr18*Year2018[k, i] + betaYr19*Year2019[k, i] + ### add in 2023-2024
+        betaPre*PreTrt2[k,i] + betaPost*PostTrt2[k,i] ### change trt terms
+    } 
   }
   
   for(i in 1:nall){
@@ -88,7 +88,7 @@ model.h1 <- function(){
     z[i] ~ dbern(psi[i])
     # detection model
     logit(p[i]) <- a0[Year3[i]] + aTrt[Year3[i]]*Trt3[i] + aAT[Year3[i]]*AT3[i] + aAT2[Year3[i]]*AT3[i]*AT3[i] +
-      aTrtAT[Year3[i]]*Trt3[i]*AT3[i] + aTrtAT2[Year3[i]]*Trt3[i]*AT3[i]*AT3[i]
+      aTrtAT[Year3[i]]*Trt3[i]*AT3[i] + aTrtAT2[Year3[i]]*Trt3[i]*AT3[i]*AT3[i] ### add in all trt/interaction terms from eq2 paper
     p.eff[i] <- z[i] * p[i]
     
     for(j in 1:nvisit){
