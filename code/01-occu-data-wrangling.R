@@ -6,6 +6,7 @@
 ## site data = site.complete.csv
 ## subplot data = subplot.complete.csv
 ## salamander data = sals.complete.csv
+## all data = habitat.occu.complete.csv
 ##
 ## Jasmine Williamson
 ## Date Created: 06-20-2024
@@ -224,6 +225,8 @@ write.csv(sals, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/dat
 
 #### Site Data -----------------------------------------------------------------
 
+# making one data frame that includes site data for both years, one row for each site
+
 site_2023 <- read.csv("oss_2023_sitesubplot.csv")
 site_2023$year <- 2023 #add year column to 2023 data
 site_2023$date_mdy <- as.Date(site_2023$date, format = "%m/%d/%Y") #format date
@@ -255,7 +258,6 @@ new_site_2023_subset[, c(6:8)] <- list(NULL) #remove old temp,hum,elev cols
 new_site_2023_subset <- unique(new_site_2023_subset) #keep only one of each stand, remove duplicates
 site_2023_joined <- inner_join(site_2023_avg,new_site_2023_subset,by="stand") #merge
 summary(site_2023_joined)
-
 
 
 #combine subsetted 2023 data with the 2024 site data and format
@@ -328,5 +330,132 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
           row.names = FALSE)
 
 
+#### All Site/Subplot/Occupancy Together -----------------------------------------------------------------
+
+### create one df that has site and subplot data for both years, one row for each subplot
 
 
+### 2023 site data, which includes subplot data
+
+    habitat_2023 <- read.csv("oss_2023_sitesubplot.csv")
+    habitat_2023$year <- 2023 #add year column to 2023 data
+    habitat_2023$date_mdy <- as.Date(habitat_2023$date, format = "%m/%d/%Y") #format date
+    summary(habitat_2023)
+    colnames(habitat_2023)
+    drop <- c(20:30)
+    habitat_2023 <- habitat_2023[, -drop]
+    
+    #add unique site code, combo of stand#_replicate#_year
+    habitat_2023$site_id <- paste(habitat_2023$stand, "_", habitat_2023$site_rep,
+                                  "_", habitat_2023$year)
+    #add unique plot code, combo of stand#_replicate#_year_subplot
+    habitat_2023$plot_id <- paste(habitat_2023$stand, "_", habitat_2023$site_rep,
+                              "_", habitat_2023$year, "_", habitat_2023$subplot)
+    
+    colnames(habitat_2023)
+    drop <- c("subplot_code","litter_avg","time","site_rep")
+    habitat_2023 <- habitat_2023[,!(names(habitat_2023) %in% drop)]
+
+### 2024 site and subplot data merge
+
+    #site data
+    site_2024 <- read.csv("oss_2024_site.csv")
+    site_2024$date_mdy <- as.Date(site_2024$date, format = "%m/%d/%Y") #format date
+    summary(site_2024)
+    
+    #add unique site code, combo of stand#_replicate#_year_subplot
+    site_2024$site_id <- paste(site_2024$stand, "_", site_2024$site_rep,
+                               "_", site_2024$year)    
+    
+    #subplot data
+    subplot_24 <- read.csv("oss_2024_subplot.csv", 
+                               colClasses = c(landowner="factor", stand="character", trt="factor"))
+    subplot_24$date_mdy <- as.Date(subplot_24$date, format="%m/%d/%Y") #format date
+    subplot_24$stand <- as.integer(subplot_24$stand) #change stand so matches 2023 for merging
+    
+    #add unique site code, combo of stand#_replicate#_year
+    subplot_24$site_id <- paste(subplot_24$stand, "_", subplot_24$site_rep,
+                               "_", subplot_24$year)
+    summary(subplot_24)
+    
+    #2024 merge
+    df1 <- subplot_24
+    df2 <- site_2024
+    #search columns from df2 that are not in df1
+    # df2_unique <- df2[, !(names(df2) %in% names(df1))]
+    # print(df2_unique)
+    #keep only ones I want
+    df2 <- df2[,c("temp","elev","hum","site_id","tree_farm")] 
+    
+    df_merged <- merge(df1, df2, by="site_id")
+    
+    sort(colnames(habitat_2023))
+    sort(colnames(df_merged))
+    drop <- c("moisture_1","moisture_2","moisture_3","site_rep","time","acc","time")
+    habitat_2024 <- df_merged[,!(names(df_merged) %in% drop)]
+    
+    #create plot_id that has subplot in it
+    habitat_2024$plot_id <- paste(habitat_2024$site_id, "_", habitat_2024$subplot)
+    
+    
+    
+### merge 2023 and 2024
+
+    df1 <- habitat_2023
+    df2 <- habitat_2024
+    
+    # sort(colnames(df1))
+    # sort(colnames(df2))
+    
+    merge3 <- df1%>%
+      full_join(df2)
+    
+    new_order <- c("plot_id", "site_id","landowner","tree_farm", "stand","subplot",
+                   "trt","year","date","date_mdy","lat","long","weather",
+                   "elev","temp","hum","canopy_cov","veg_cov","dwd_cov","fwd_cov",
+                   "soil_moist_avg","obs")
+    habitat_23_24 <- merge3[,new_order]
+    
+    
+    na_count <- colSums(is.na(habitat_23_24)) # need to add obs for 2023 data...wasnt entered in master data sheet ############################
+    print(na_count)
+
+
+### add salamander occupancy data
+    
+    sals <- read_csv("sals.complete.csv")
+    #add unique subplot code
+    sals$plot_id <- paste(sals$site_id,"_", sals$subplot)
+    
+    #subset data
+    sals_occu <- sals[,c("plot_id","spp")]
+
+    # Count species occurrences and reshape the data
+    condensed_df <- sals_occu %>%
+      group_by(plot_id, spp) %>%
+      summarise(count = n(), .groups = 'drop') %>%  # Count occurrences for each species
+      pivot_wider(names_from = spp, values_from = count, values_fill = list(count=0))  # Reshape data
+    
+    
+    #merging 
+    df1 <- habitat_23_24
+    df2 <- condensed_df
+    df_merged <- merge(df1, df2, by="plot_id", all.x=TRUE)
+    
+    
+    #changing NA's in occu columns to zeros
+    cols_to_update <- c("PLDU","ENES","OSS","AMGR","TAGR","ANFE")  
+    # Replace NA with 0 for specific columns across all rows
+    df_merged[cols_to_update][is.na(df_merged[cols_to_update])] <- 0
+
+    na_count <- colSums(is.na(df_merged))
+    print(na_count)
+ 
+       
+### save as csv
+    
+    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/habitat.occu.complete.csv", 
+              row.names = FALSE)
+    
+    
+    
