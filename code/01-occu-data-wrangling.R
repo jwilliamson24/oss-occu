@@ -20,6 +20,8 @@ setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
 library(dplyr)
 library(tidyr)
 library(tidyverse)
+library(DescTools)
+
 
 ## Notes on site data 6/24/24
 #realized that stand numbers are not equal by treatment
@@ -330,9 +332,10 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
           row.names = FALSE)
 
 
-#### All Site/Subplot/Occupancy Together -----------------------------------------------------------------
+#### Subplot level matrix w/ count data -----------------------------------------------------------------
 
-### create one df that has site and subplot data for both years, one row for each subplot
+### create one df that has site and subplot data for both years, one row for each subplot,
+### and count data for each species
 
 
 ### 2023 site data, which includes subplot data
@@ -454,8 +457,87 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
        
 ### save as csv
     
-    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/habitat.occu.complete.csv", 
+    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/multivariate-analysis/habitat.occu.complete.csv", 
               row.names = FALSE)
+    
+  
+### save as rds so it keeps the class types
+    
+    df_merged[,c("landowner","tree_farm","trt","weather","obs")] <- 
+      lapply(df_merged[,c("landowner","tree_farm","trt","weather","obs")], as.factor)
+    
+    df_merged$date_mdy <- as.Date(df_merged$date, format = "%m/%d/%Y")
+    df_merged$jul_date <- as.numeric(format(df_merged$date_mdy,"%j"))
+    
+    new_order <- c("plot_id", "site_id","landowner","tree_farm", "stand","subplot",
+                   "trt","year","date","date_mdy","jul_date","lat","long","weather",
+                   "elev","temp","hum","canopy_cov","veg_cov","dwd_cov","fwd_cov",
+                   "soil_moist_avg","obs","OSS","ENES","PLDU","TAGR","ANFE","AMGR")
+    df_merged <- df_merged[,new_order]
+    
+    na_count <- colSums(is.na(df_merged))
+    print(na_count)
+    
+    
+    saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/multivariate-analysis/habitat.occu.complete.rds")
+    
+    
+#### Site-level matrix with count data  -----------------------------------------------------------------
+    
+### reduce matrix to site level because i want less rows and less zeros
+### aggregate subplot level data to the site level, averaging most of the variables
+    
+    dat <- readRDS("habitat.occu.complete.rds")
+
+    # Group by 'site' and summarize
+    site_level_df <- dat %>%
+      group_by(site_id) %>%  # Group by site
+      summarize(
+        landowner = first(landowner),  # Average species count
+        tree_farm = first(tree_farm),  # Average for var1
+        stand = first(stand),  # Average for var2
+        trt = first(trt),
+        year = first(year),
+        jul_date = first(jul_date),
+        lat = first(lat),
+        long = first(long),
+        weather = Mode(weather),
+        elev = round(mean(elev),2),
+        temp = round(mean(temp),1),
+        hum = round(mean(hum),1),
+        canopy_cov = round(mean(canopy_cov),1),
+        veg_cov = round(mean(veg_cov),1),
+        dwd_cov = round(mean(dwd_cov),1),
+        fwd_cov = round(mean(fwd_cov),1),
+        soil_moist = round(mean(soil_moist_avg),2),
+        oss = sum(OSS),
+        enes = sum(ENES)
+      )
+    
+    # check df
+    length(site_level_df$site_id)
+    length(unique(site_level_df$site_id))
+    # Find rows with non-unique site_id values (both duplicates and original rows)
+    non_unique_site_id_df <- site_level_df %>%
+      filter(site_id %in% site_id[duplicated(site_id)])
+    
+    # removing duplicate site rows:
+    # some sites had equal amounts of two different weather types, so the mode function left two rows for that site.
+    # in these cases, I have chosen to delete one of the rows
+    site_level_df <- site_level_df[-113,] #deleted C, kept PC.
+    site_level_df <- site_level_df[-32,] #deleted C, kept PC. partly cloudy feels representative of the mix of C and PC.
+    site_level_df <- site_level_df[-13,] #deleted PC, kept SN. felt important to know it was snowing
+    
+    # View the summarized site-level dataframe
+
+    str(site_level_df)
+    site_level_df <- as.data.frame(site_level_df)
+    
+    saveRDS(site_level_df, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/multivariate-analysis/site_level_df.rds")   
+    
+    
+    
+    
     
     
     
