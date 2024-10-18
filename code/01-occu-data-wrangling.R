@@ -6,7 +6,8 @@
 ## site data = site.complete.csv
 ## subplot data = subplot.complete.csv
 ## salamander data = sals.complete.csv
-## all data = habitat.occu.complete.csv
+## subplot-level, site, & sals = habitat.occu.complete.csv or .rds
+## all data site level = site_level_df.rds
 ##
 ## Jasmine Williamson
 ## Date Created: 06-20-2024
@@ -73,15 +74,13 @@ dwd_2023$landowner <- as.factor(dwd_2023$landowner)
 
 #2024 data
 dwd_2024 <- read.csv("oss_2024_dwd.csv", 
-                colClasses = c(landowner="factor", stand="character", trt="factor", 
+                colClasses = c(landowner="factor", trt="factor", 
                                subplot="factor", dwd_type="factor", size_cl="factor",
                                decay_cl="factor", char_cl="factor"))
-dwd_2024$date_mdy <- as.Date(dwd_2024$date, format = "%m/%d/%Y")
 
-
-#add site_id column
-dwd_2024$site_id <- paste(dwd_2024$stand,"_",dwd_2024$site_rep,"_",dwd_2024$year)
-
+dwd_2024$date_mdy <- as.Date(dwd_2024$date, format = "%m/%d/%Y") #format date
+dwd_2024$stand <- round(dwd_2024$stand, 0) #remove decimals from stand column
+dwd_2024$site_id <- paste(dwd_2024$stand,"_",dwd_2024$site_rep,"_",dwd_2024$year) #add site_id column
 
 
 #combine both years of downed wood
@@ -420,7 +419,7 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
     habitat_23_24 <- merge3[,new_order]
     
     
-    na_count <- colSums(is.na(habitat_23_24)) # need to add obs for 2023 data...wasnt entered in master data sheet ############################
+    na_count <- colSums(is.na(habitat_23_24)) # need to add obs for 2023 data...wasnt entered in master data sheet
     print(na_count)
 
 
@@ -457,7 +456,7 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
        
 ### save as csv
     
-    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/multivariate-analysis/habitat.occu.complete.csv", 
+    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/habitat.occu.complete.csv", 
               row.names = FALSE)
     
   
@@ -479,7 +478,7 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
     print(na_count)
     
     
-    saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/multivariate-analysis/habitat.occu.complete.rds")
+    saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/habitat.occu.complete.rds")
     
     
 #### Site-level matrix with count data  -----------------------------------------------------------------
@@ -488,6 +487,7 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
 ### aggregate subplot level data to the site level, averaging most of the variables
     
     dat <- readRDS("habitat.occu.complete.rds")
+    #str(habitat.occu.complete)
 
     # Group by 'site' and summarize
     site_level_df <- dat %>%
@@ -533,11 +533,70 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
     str(site_level_df)
     site_level_df <- as.data.frame(site_level_df)
     
-    saveRDS(site_level_df, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/multivariate-analysis/site_level_df.rds")   
+ 
     
     
+#### Add dwd data to site-level matrix  -----------------------------------------------------------------
+    
+### Aggregate downed wood data to site level    
+    
+    dat <- read.csv("dwd.complete.csv")
+    dat$date_mdy <- as.Date(dat$date, format = "%m/%d/%Y")
+    dat$jul_date <- as.numeric(format(dat$date_mdy,"%j"))
+    dat$char_cl <- as.integer(dat$char_cl)
+    str(dat)
+    
+    # Group by 'site' and summarize
+    site_dwd <- dat %>%
+      group_by(site_id) %>%  # Group by site
+      summarize(
+        landowner = first(landowner),  # Average species count
+        stand = first(stand),  # Average for var2
+        trt = first(trt),
+        year = first(year),
+        jul_date = first(jul_date),
+        dwd_count = n(),
+        stumps = sum(dwd_type=="S"),
+        logs = sum(dwd_type=="L"),
+        size_cl = round(mean(size_cl),1),
+        decay_cl = round(mean(decay_cl),1),
+        char_cl = round(mean(char_cl),1),
+        length_cl = round(mean(length_cl),1)
+      )
     
     
+### check df
+    length(site_dwd$site_id)
+    length(unique(site_dwd$site_id))
+    # Find rows with non-unique site_id values (both duplicates and original rows)
+    non_unique <- site_dwd %>%
+      filter(site_id %in% site_id[duplicated(site_id)])
+    str(site_dwd)
+    site_dwd <- as.data.frame(site_dwd)
     
+    
+### add dwd density per m^2
+    # dwd_count col = total number of pieces found on all seven plots
+    # surveyed seven 9x9m plots, =567 square meters
+    site_dwd$dwd_dens <- round(site_dwd$dwd_count/567,2)
+
+### merge with site-level matrix  
+    
+    df1 <- site_level_df
+    df2 <- site_dwd
+    
+    drop <- c(2:6) #drop cols in dwd that are already in site_level
+    df2 <- df2[, -drop]
+    
+    df_merged <- df1 %>%
+      left_join(df2, by = "site_id")
+    
+    
+### save 
+    
+    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.csv", 
+              row.names = FALSE)
+    
+    saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.rds")  
     
     
