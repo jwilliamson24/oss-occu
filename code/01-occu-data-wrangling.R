@@ -573,12 +573,6 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
       filter(site_id %in% site_id[duplicated(site_id)])
     str(site_dwd)
     site_dwd <- as.data.frame(site_dwd)
-    
-    
-### add dwd density per m^2
-    # dwd_count col = total number of pieces found on all seven plots
-    # surveyed seven 9x9m plots, =567 square meters
-    site_dwd$dwd_dens <- round(site_dwd$dwd_count/567,2)
 
 ### merge with site-level matrix  
     
@@ -591,12 +585,26 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
     df_merged <- df1 %>%
       left_join(df2, by = "site_id")
     
+### reorder    
+    new_order <- c("site_id","landowner","tree_farm", "stand","trt",
+                   "year","jul_date","lat","long","weather","elev","temp","hum",
+                   "canopy_cov","veg_cov","dwd_cov","fwd_cov","soil_moist","dwd_count",
+                   "stumps","logs","size_cl","decay_cl","char_cl","length_cl","oss","enes")
+    df_merged <- df_merged[,new_order]
     
-### save 
-    
-    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.csv", 
+### save
+
+    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.csv",
               row.names = FALSE)
+
+    saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.rds")
     
-    saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.rds")  
+
+
+
+
+    
+    
+    
     
     
