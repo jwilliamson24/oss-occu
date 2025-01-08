@@ -9,7 +9,8 @@
 ## -------------------------------------------------------------------------------------------------------
 
 rm(list=ls())
-setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
+#setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
+setwd("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
 
 library(dplyr)
 library(tidyr)
@@ -24,8 +25,8 @@ sals <- read.csv("sals.complete.csv",
                                 pass="factor", spp="factor", cover_obj="factor", 
                                 substrate="factor", age_class="factor"))
 
-sals_2023 <- read.csv("sals.2023.csv")
-sals_2024 <- read.csv("sals.2024.csv")
+#sals_2023 <- read.csv("sals.2023.csv")
+#sals_2024 <- read.csv("sals.2024.csv")
 
 
 
@@ -90,6 +91,10 @@ detections
 # 5 PLDU      5
 # 6 TAGR      3
 
+sals_2024 <- subset(sals, year == 2024)
+detections24 <- aggregate(sals_2024[c(21)], by=sals_2024[c(14)], sum)
+detections24
+
 
 #detections just per treatment group
 trt.detect <- aggregate(sals[c(21)], by=sals[c(5)], sum)
@@ -101,6 +106,7 @@ trt.detect
 # 3  HB     70
 # 4  HU     47
 # 5  UU    127
+
 
 
 #### troubleshooting sals data frames - done ------------------------------------------------
@@ -200,11 +206,26 @@ trt.detect
   site.detect.3 <- unique(sals_2024[,c(3,5,6,12)])
   length(site.detect.3$stand) # = 137
   
-
   
+#### matrix of oss occupied sites with coords for ODFW ------------------------------------------------
+  
+  oss <- subset(sals, spp=="OSS")
+  oss_subset <- oss[, c("site_id","subplot","spp")]
 
+  subplot_subset <- subplot[, c("site_id","subplot","lat","long")]
 
-
-
+  merged <- merge(oss_subset, subplot_subset, by = c("site_id","subplot"))
+  
+  merged$state <- "OR"
+  merged <- merged[,-2]
+  
+  merged <- merged[, c("spp","site_id","state","lat","long")]
+  
+  # Remove duplicate rows based on the "site" column
+  merged_unique <- merged %>%
+    distinct(site_id, .keep_all = TRUE)
+  
+  
+write.csv(merged_unique, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/oss_points.csv")
 
 #### end --------------------------------------------------------------------------
