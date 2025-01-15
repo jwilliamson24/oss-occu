@@ -21,6 +21,7 @@ library(tidyverse)
 library(mcmcplots)
 library(MCMCvis)
 library(boot)
+library(tidyr)
 source('attach.nimble_v2.R')
 
 
@@ -600,17 +601,17 @@ median(trt.int.inv[,5]) # 0.5549356    UU
 ## base R boxplot for treatment effect -----------------------------------------------------------------------------------------------
 
 # Renaming and reordering the treatment intercepts for the boxplot
-trt.int.inv <- inv.logit(TreatmentIntercept)
-treatment_matrix <- trt.int.inv # Using the inv logit treatment estimates
+trt.int.inv2 <- inv.logit(TreatmentIntercept)
+treatment_matrix2 <- trt.int.inv2 # Using the inv logit treatment estimates
 
 new.names <- c("Salvage Logged", "Wildfire", "Harvest, Wildfire", "Harvest", "Control")
-colnames(treatment_matrix) <- new.names
+colnames(treatment_matrix2) <- new.names
 desired.order <- c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged")
 
 box.colors <- c('lightgreen','steelblue', 'coral2', '#f9d62e', '#b967ff' )
 
 #boxplot of Treatment Estimates - occu prob for each treatment
-boxplot(treatment_matrix[, match(desired.order, colnames(treatment_matrix))], 
+boxplot(treatment_matrix2[, match(desired.order, colnames(treatment_matrix2))], 
         main = "Treatment Intercepts for All Species", 
         xlab = "Treatment", ylab = "Occupancy Probability",
         col = box.colors)
@@ -619,32 +620,72 @@ boxplot(treatment_matrix[, match(desired.order, colnames(treatment_matrix))],
 ## ggplot boxplot treatment effect -----------------------------------------------------------------------------------------------
 
 #define treatments using the inv logit treatment estimates
-treatment_matrix <- trt.int.inv 
+treatment_matrix2 <- trt.int.inv2 
 #treatments are numbered, need to give them names
 new.names <- c("Salvage Logged", "Wildfire", "Harvest, Wildfire", "Harvest", "Control") 
-colnames(treatment_matrix) <- new.names
+colnames(treatment_matrix2) <- new.names
 
 
-treatment_matrix <- as.data.frame(treatment_matrix)
+treatment_matrix2 <- as.data.frame(treatment_matrix2)
 #reshape data to long format bc ggplot required
-long_format <- gather(treatment_matrix, key = "Treatment", value = "Occupancy_Probability")
+long_format2 <- gather(treatment_matrix2, key = "Treatment", value = "Occupancy_Probability")
 
 #specify treatment order for plot
-long_format$Treatment <- factor(long_format$Treatment, 
+long_format2$Treatment <- factor(long_format2$Treatment, 
                                 levels = c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged")) # Replace "DesiredOrder", "Treat1", etc., with your actual treatment names in the desired order
 
 
 box.colors <- c('lightgreen','steelblue', 'coral2', '#f9d62e', '#b967ff' )
 
-p <- ggplot(long_format, aes(x = Treatment, y = Occupancy_Probability, fill = Treatment)) +
+p2 <- ggplot(long_format2, aes(x = Treatment, y = Occupancy_Probability, fill = Treatment)) +
   geom_boxplot() +
   theme_classic() +
   scale_fill_manual(values = box.colors) +
   labs(title = "Treatment Intercepts for ENES", x = "Treatment", y = "Occupancy Probability") +
   theme(plot.title = element_text(hjust = 0.5)) # Center the title
 
-ggsave(filename = "enes_trt_occu_prob.png", plot = p, device = "png", 
+ggsave(filename = "enes_trt_occu_prob.png", plot = p2, device = "png", 
        path = "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/06-rework-nimble-models",
        width = 10, height = 6, units = "in", dpi = 300)
 
 
+## ggplot with both species -----------------------------------------------------------------------------------------------
+
+
+## OSS
+  treatment_matrix <- trt.int.inv 
+  #treatments are numbered, need to give them names
+  new.names <- c("Salvage Logged", "Wildfire", "Harvest, Wildfire", "Harvest", "Control") 
+  colnames(treatment_matrix) <- new.names
+  
+  long_format_1 <- gather(as.data.frame(treatment_matrix), key = "Treatment", value = "Occupancy_Probability")
+  long_format_1$Treatment <- factor(long_format_1$Treatment, levels = c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged"))
+  long_format_1$Species <- "OSS"  # Add a species column
+
+
+## ENES
+  treatment_matrix2 <- trt.int.inv2  
+  colnames(treatment_matrix2) <- new.names
+  
+  long_format_2 <- gather(as.data.frame(treatment_matrix2), key = "Treatment", value = "Occupancy_Probability")
+  long_format_2$Treatment <- factor(long_format_2$Treatment, levels = c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged"))
+  long_format_2$Species <- "ENES"  # Add a species column
+
+
+## Combine both datasets
+  combined_data <- rbind(long_format_1, long_format_2)
+
+
+## boxplot
+  #box.colors <- c('lightgreen','steelblue', 'coral2', '#f9d62e', '#b967ff')
+  
+  p3 <- ggplot(combined_data, aes(x = Treatment, y = Occupancy_Probability, fill = Species)) +
+    geom_boxplot(position = position_dodge(width = 0.75)) +  # Dodging for grouped boxplots
+    theme_classic() +
+    scale_fill_manual(values = c("#1f77b4", 'coral2')) +  # Use different colors for the species
+    labs(title = "Treatment Intercepts for Both Species", x = "Treatment", y = "Occupancy Probability") +
+    theme(plot.title = element_text(hjust = 0.5)) # Center the title
+
+ggsave(filename = "both_trt_occu_prob.png", plot = p3, device = "png", 
+         path = "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/figures/06-rework-nimble-models",
+         width = 10, height = 6, units = "in", dpi = 300)
