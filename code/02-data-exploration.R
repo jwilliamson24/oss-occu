@@ -44,16 +44,17 @@ summary(site24)
 #Site: temp, humidity, elevation
 #goal: calc mean, sd, min, max and bind those rows together in summ table
 head(site)
-site.names <- names(site) #save col names
+site_num <- site[sapply(site, is.numeric)]
+site.names <- names(site_num) #save col names
 site.sum.table <- c() #create empty summary table to fill
 
-for (i in 2:4) { #for cols 2-4 in site (the numerical ones)
-  site.sum.table <- rbind(site.sum.table, c(mean(site[,i]), sd(site[,i]), 
-                                            min(site[,i]), max(site[,i])))
+for (i in seq_along(site_num)) { #for cols 2-4 in site (the numerical ones)
+  site.sum.table <- rbind(site.sum.table, c(mean(site_num[,i]), sd(site_num[,i]), 
+                                            min(site_num[,i]), max(site_num[,i])))
 } #calc mean, sd, min, max and bind those rows together in the summ table
 
 #cbind site names and then add column names
-site.sum.table <- cbind(as.data.frame(site.names[2:4]),site.sum.table)
+site.sum.table <- cbind(as.data.frame(site.names),site.sum.table)
 colnames(site.sum.table) <- c("variable","mean","sd","min","max")
 
 
@@ -207,7 +208,7 @@ trt.detect
   length(site.detect.3$stand) # = 137
   
   
-#### matrix of oss occupied sites with coords for ODFW ------------------------------------------------
+#### matrix of oss occupied sites with coords for ODFW 1/9/24 -----------------------------------------
   
   oss <- subset(sals, spp=="OSS")
   oss_subset <- oss[, c("site_id","subplot","spp")]

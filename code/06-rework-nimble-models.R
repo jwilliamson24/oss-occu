@@ -12,7 +12,8 @@
 ## settings -----------------------------------------------------------------------------------------------
 
 rm(list=ls())
-setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
+#setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
+setwd("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
 library(nimble)
 library(ggplot2)
 library(data.table)
@@ -389,11 +390,32 @@ boxplot(det.probs.inv)
 
 # Inv logit TreatmentIntercept to get Occupancy Estimates
 trt.int.inv <- inv.logit(TreatmentIntercept)
-median(trt.int.inv[,1]) # 0.6392119    BS
+median(trt.int.inv[,1]) # 0.6392119    BS 
 median(trt.int.inv[,2]) # 0.8090534    BU
 median(trt.int.inv[,3]) # 0.5784290    HB
 median(trt.int.inv[,4]) # 0.6915276    HU
 median(trt.int.inv[,5]) # 0.9920444    UU
+
+# median occupancy probabilities are:
+#   
+# BS: 63.9%
+# BU: 80.9%
+# HB: 57.8%
+# HU: 69.2%
+# UU: 99.2%
+
+CI_BS <- quantile(trt.int.inv[,1], probs = c(0.025, 0.975))  # For BS 0.3971932 0.9028864
+CI_BU <- quantile(trt.int.inv[,2], probs = c(0.025, 0.975))  # For BU 0.5463141 0.9998092
+CI_HB <- quantile(trt.int.inv[,3], probs = c(0.025, 0.975))  # For HB 0.3422422 0.8158058 
+CI_HU <- quantile(trt.int.inv[,4], probs = c(0.025, 0.975))  # For HU 0.4646734 0.9109540 
+CI_UU <- quantile(trt.int.inv[,5], probs = c(0.025, 0.975))  # For UU 0.7595295 0.9999382
+
+
+
+## calculations for abstract writing
+ 
+percentage_difference_lower <- ((CI_UU[1] - CI_HB[1]) / CI_UU[1]) * 100
+percentage_difference_upper <- ((CI_UU[2] - CI_HB[2]) / CI_UU[2]) * 100
 
 
 
