@@ -61,34 +61,34 @@ enes.long <- read.csv("enes.occu.long.csv")
 
 #### subplot-level matrix:
 # "date" "site" "temp" "humidity" "soil.moist" "all.obs" "oss.obs" "enes.obs" 
-
-subplot_subset <- subset(subplot[,c(8,1,9,18)]) #subset subplot info
-
-df1 <- subset(site[,c(1,10,11)]) #subset site info
-dfmerge <- full_join(subplot_subset,df1,by="site_id") #merge site and subplot
-#prev line joins temp and hum to subplot matrix, which automatically repeats the 
-#temp and hum in blank subplot cells from same site id for both years because
-#its currently only listed for each site
-
-colnames(oss.long)[3] <- "oss.obs"
-colnames(enes.long)[3] <- "enes.obs"
-colnames(all.long)[3] <- "all.obs"
-
-merge1 <- merge(dfmerge, all.long, by=c("site_id","subplot"))
-merge1 <- merge(merge1, oss.long, by=c("site_id","subplot"))
-complete.merge <- merge(merge1,enes.long,by=c("site_id","subplot"))
-
-colnames(complete.merge) <- c("site","subplot","date","soil.moist","temp",
-                              "humidity","all.obs","oss.obs","enes.obs")
+    
+    subplot_subset <- subset(subplot[,c(8,1,9,18)]) #subset subplot info
+    
+    df1 <- subset(site[,c(1,10,11)]) #subset site info
+    dfmerge <- full_join(subplot_subset,df1,by="site_id") #merge site and subplot
+    #prev line joins temp and hum to subplot matrix, which automatically repeats the 
+    #temp and hum in blank subplot cells from same site id for both years because
+    #its currently only listed for each site
+    
+    colnames(oss.long)[3] <- "oss.obs"
+    colnames(enes.long)[3] <- "enes.obs"
+    colnames(all.long)[3] <- "all.obs"
+    
+    merge1 <- merge(dfmerge, all.long, by=c("site_id","subplot"))
+    merge1 <- merge(merge1, oss.long, by=c("site_id","subplot"))
+    complete.merge <- merge(merge1,enes.long,by=c("site_id","subplot"))
+    
+    colnames(complete.merge) <- c("site","subplot","date","soil.moist","temp",
+                                  "humidity","all.obs","oss.obs","enes.obs")
 
 
 #### site-level matrix:
 # "site" and "treatment
-site_subset <- subset(site[,c(1,5)])
-site_subset$trt <- as.factor(site_subset$trt)
-site_subset$trt <- as.numeric(site_subset$trt)
-table(site_subset$trt)
-colnames(site_subset)[2] <- "treatment"
+    site_subset <- subset(site[,c(1,5)])
+    site_subset$trt <- as.factor(site_subset$trt)
+    site_subset$trt <- as.numeric(site_subset$trt)
+    table(site_subset$trt)
+    colnames(site_subset)[2] <- "treatment"
 
 #  1 = BS     
 #  2 = BU     
@@ -100,19 +100,12 @@ colnames(site_subset)[2] <- "treatment"
 
 ## name data for model --------------------------------------------------------------------------------------------------
 data <- complete.merge
-#data$site <- as.numeric(data$site)
 data$all.obs <- as.numeric(data$all.obs)
 data$oss.obs <- as.numeric(data$oss.obs)
 data$enes.obs <- as.numeric(data$enes.obs)
 
 data2 <- site_subset
 table(data2$treatment)
-
-#  1 = BS     
-#  2 = BU     
-#  3 = HB     
-#  4 = HU     
-#  5 = UU     
 
 scaled_temp <- c(scale(data$temp))
 
