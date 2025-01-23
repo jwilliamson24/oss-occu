@@ -227,7 +227,8 @@
     
 ## these are somewhat correlated but the value is below 0.55 so I wont remove them right now.
     
-    
+    write.csv(env_subset_corr, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/env_subset_corr.csv",
+              row.names = FALSE)       
     
     
     

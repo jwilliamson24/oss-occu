@@ -150,7 +150,7 @@
 write.csv(dwd_merge, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/dwd.extra.metrics.csv",
           row.names = FALSE)    
     
-    
+#### reclassify log size categories as one continuous variable ---------------------------------    
 
     
     
@@ -165,3 +165,10 @@ write.csv(dwd_merge, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academi
     
         
     
+
+
+
+
+
+
+
