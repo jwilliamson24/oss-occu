@@ -591,7 +591,8 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
                    "canopy_cov","veg_cov","dwd_cov","fwd_cov","soil_moist","dwd_count",
                    "stumps","logs","size_cl","decay_cl","char_cl","length_cl","oss","enes")
     df_merged <- df_merged[,new_order]
-    
+
+
 ### save
 
     write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.csv",
@@ -599,11 +600,15 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
 
     saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.rds")
     
+#### editing without reloading everything 01/23/25    -----------------------------
 
+    dat <- read.csv("site_level_matrix.csv")
+    dat$long <- paste0("-", dat$long)
 
-
-
+    write.csv(dat, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.csv",
+              row.names = FALSE)
     
+    saveRDS(dat, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.rds")
     
     
     
