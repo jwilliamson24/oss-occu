@@ -28,11 +28,13 @@
 #### load and subset data ---------------------------------------------------------------------------------------
 
     #site-level data
-    dat <- readRDS("site_level_matrix.rds")
+    #dat <- readRDS("site_level_matrix.rds") used this df originally
+    
+    dat <- read.csv("sites_with_aspect.csv") #switched to this df on 01/25 when i added aspect from DEM
     row.names(dat) <- dat[,1]
     
     sals <- dat[26:27]
-    env <- dat[1:25]
+    env <- dat[c(1:25,28)]
     
     #extra dwd metrics
     dwd <- read.csv("dwd.extra.metrics.csv")
@@ -43,6 +45,9 @@
     
     #add dwd dens and avg volume from dwd to env df
     env_merge <- cbind(env_sub, dwd[,c("dwd_dens","avg_volume")])
+    
+   
+    
 
 
 #### standardize environmental data -----------------------------------------------------------------
