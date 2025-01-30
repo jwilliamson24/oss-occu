@@ -14,6 +14,7 @@
     library(terra)
     library(dplyr)
     library(raster)
+    library(zoo)
     
     #set directory to new "prism" folder in data folder
     prism_set_dl_dir("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/prism")
@@ -32,68 +33,15 @@
     
 #### download and extract prism -----------------------------------------------------------------------------------------
     
-    #dates_needed <- seq(as.Date("2023-03-10"), as.Date("2023-06-10"), by = "day") #vector with all dates from mar 10 - jun 10 2023
-    dates_needed <-unique(site_sub$date_mdy)
-    get_prism_dailys(type = "ppt", dates = dates_needed, keepZip = FALSE)
     
+    dates_needed <- seq(as.Date("2023-03-10"), as.Date("2023-06-10"), by = "day") #vector with all dates from mar 10 - jun 10 2023
+    #dates_needed <-unique(site_sub$date_mdy) # make list of survey dates that we need data for
+    get_prism_dailys(type = "ppt", dates = dates_needed, keepZip = FALSE) # get daily precip
+    
+    # store files
     raster_files <- list.files("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/prism", pattern = "*.bil", full.names = TRUE)
     
-#### download and extract prism -----------------------------------------------------------------------------------------
-    
-    # # Loop through dates and extract values ------------------------------------------none of this is verified, just trials
-    # 
-    # results <- data.frame(site_id = site_sub$site_id)
-    # 
-    # for (date in dates_needed) {
-    #   raster_file <- paste0("PRISM_ppt_stable_4kmD2_", gsub("-", "", date), "_bil.bil")
-    #   r <- rast(raster_file)
-    #   values <- extract(r, site_sub[, c("long", "lat")])
-    #   results[date] <- values[, 2]  # Extracted precipitation values
-    # }
-    # 
-    # # Save as Excel-friendly format
-    # write.csv(results, "precipitation_data.csv", row.names = FALSE)
-    # 
-    # 
-    # 
-    # # Create an empty data frame to store results
-    # precip_data <- data.frame(site_id = site_sub$site_id, survey_date = site_sub$date_mdy, precip_mm = NA)
-    # 
-    # # Loop through each site and extract precipitation
-    # for (i in 1:nrow(site_sub)) {
-    #   # Find the matching raster for the survey date (adjust date formatting)
-    #   date_str <- gsub("-", "", as.character(site_sub$date_mdy[i]))  # Convert Date to YYYYMMDD format
-    #   raster_file <- raster_files[grepl(date_str, raster_files)]  # Match raster file by date
-    #   
-    #   if (length(raster_file) > 0) {
-    #     # Load the raster file
-    #     r <- rast(raster_file)
-    #     
-    #     # Extract precipitation at the site coordinates (lat, long)
-    #     precip_value <- extract(r, sites[i, c("long", "lat")])
-    #     
-    #     # Store the precipitation value in the results data frame
-    #     precip_data$precip_mm[i] <- precip_value
-    #   } else {
-    #     warning(paste("No raster file found for date:", site_sub$date_mdy[i]))
-    #   }
-    # }
-    # 
-    # # View results
-    # head(precip_data)
-    # 
-    # # Save to CSV or Excel
-    # write.csv(precip_data, "site_precip_data.csv", row.names = FALSE)
-    # 
-    # 
-    # 
-    # r <- raster("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/prism/PRISM_ppt_stable_4kmD2_20230314_bil/PRISM_ppt_stable_4kmD2_20230314_bil.bil")
-    # plot(r)  # See if it loads and plots correctly
-    
-
-#-------
-    
-    # Get list of subdirectories (i.e., each day folder)
+    # Get list of subdirectories that were stored (each day folder)
     prism_folders <- list.dirs("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/prism", full.names = TRUE, recursive = FALSE)
     
     # Get list of only .bil files within each folder
@@ -101,66 +49,136 @@
       list.files(folder, pattern = "\\.bil$", full.names = TRUE)
     })
     
-    # View file paths for debugging
     head(unlist(bil_files))
     
     
-    # Format site survey dates as YYYYMMDD strings for matching
+#### connect prism data to site locations -----------------------------------------------------------------------------
+    
+    # Format dates as YYYYMMDD strings for matching
     site_sub$survey_date_str <- format(site_sub$date_mdy, "%Y%m%d")
     
-    # Initialize a data frame to store precipitation data
-    precip_data <- data.frame(site_id = site_sub$site_id, survey_date = site_sub$date_mdy, precip_mm = NA) ############### works to here
+    # data frame to store precip data
+    precip_data <- data.frame(site_id = site_sub$site_id, survey_date = site_sub$date_mdy, precip_mm = NA)           
     
-    # Loop through sites and match their survey date with the corresponding .bil file
-    for (i in 1:nrow(site_sub)) {
-      # Find the correct .bil file for each survey date
+    # Initialize with NA to ensure all 127 rows are filled
+    precip_data$precip_mm <- rep(NA, nrow(site_sub))
+    
+    
+    # sequence each row in site_sub and attach the corresponding precip value by location and date
+    for (i in seq_len(nrow(site_sub))) {  
       date_str <- site_sub$survey_date_str[i]
       
-      # Look for .bil file matching the survey date
-      matching_file <- unlist(lapply(bil_files, function(x) grep(date_str, x, value = TRUE)))
-      
-      if (length(matching_file) > 0) {
-        # Load the raster from the matched file
-        r <- terra::rast(matching_file)
+      if (!is.na(date_str)) {  # Check for NA 
+        matching_file <- unlist(lapply(bil_files, function(x) grep(date_str, x, value = TRUE)))
         
-        # Extract precipitation value for the site location (lat, lon)
-        precip_value <- terra::extract(r, site_sub[i, c("long", "lat")])
-        
-        # Store the precipitation value
-        precip_data$precip_mm[i] <- precip_value
-      } else {
-        warning(paste("No .bil file found for date:", site_sub$date_mdy[i]))
+        if (length(matching_file) > 0) {
+          r <- terra::rast(matching_file)
+          precip_value <- terra::extract(r, site_sub[i, c("long", "lat")], ID = TRUE) # extract locations
+          
+          if (!is.null(precip_value) && length(precip_value) > 0) {
+            precip_data$precip_mm[i] <- precip_value[, 2]  # Extract precip column
+          }
+        }
       }
     }
     
-    # View results
-    head(precip_data)
+    # Check that all rows are filled
+    table(is.na(precip_data$precip_mm))  # yes - 127 total rows
     
-
-  #  -------
+   
+     
+#### merge and save -------------------------------------------------------------------------------------
     
-    # Loop through sites and match their survey date with the corresponding .bil file
-    for (i in 1:nrow(site_sub)) {
-      # Find the correct .bil file for each survey date
-      date_str <- site_sub$survey_date_str[i]
+    # add precip and survey date to the large site level df
+    merged <- cbind(dat,precip_data)
+    merged <- merged[,-29]    
+    
+    write.csv(merged, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/site_data_aspect_precip")
+    
+    
+  
+#### precip data for every date march-june -------------------------------------------------------------------------------------
+    
+    # Get list of all PRISM .bil files (daily precipitation)
+    bil_files_all <- unlist(lapply(prism_folders, function(folder) {
+      list.files(folder, pattern = "\\.bil$", full.names = TRUE)
+    }))
+    
+    # Extract date from filenames (containing YYYYMMDD)
+    bil_files <- unlist(bil_files) #unlist to turn into a vector of .bil file paths
+    bil_dates <- as.Date(sub(".*_(\\d{8})_bil\\.bil$", "\\1", bil_files), format = "%Y%m%d")
+    
+    # Initialize empty dataframe for daily precipitation per site
+    daily_precip_data <- data.frame()
+    
+    for (i in seq_along(bil_files)) {
+      r <- rast(bil_files[i])  # Load raster for a specific date
       
-      # Look for .bil file matching the survey date
-      matching_file <- unlist(lapply(bil_files, function(x) grep(date_str, x, value = TRUE)))
+      # Extract precip values for site locations
+      precip_values <- extract(r, site_sub[, c("long", "lat")])
       
-      if (length(matching_file) > 0) {
-        # Load the raster from the matched file
-        r <- terra::rast(matching_file)
-        
-        # Extract precipitation value for the site location (lat, lon)
-        precip_value <- terra::extract(r, site_sub[i, c("long", "lat")], ID = TRUE)
-        
-        # Ensure that only one value is assigned (e.g., extract the first value)
-        precip_data$precip_mm[i] <- precip_value[1, "value"]  # Extract the first value from the result
-      } else {
-        warning(paste("No .bil file found for date:", site_sub$date_mdy[i]))
-      }
+      # Store results
+      daily_precip_data <- rbind(daily_precip_data, 
+                                 data.frame(site_id = site_sub$site_id, 
+                                            date = bil_dates[i], 
+                                            precip_mm = precip_values[, 2]))  # Adjust column index if needed
     }
     
-    # View results
-    head(precip_data)
+    # Save daily precipitation data for future use
+    write.csv(daily_precip_data, "daily_precip_data.csv", row.names = FALSE)
+    
+    
+#### merge with site location data -------------------------------------------------------------------------------------
+    
+    #daily_precip_data <- read.csv("daily_precip_data.csv")
+  
+    
+    # Rename date column for merging
+    daily_precip_data <- daily_precip_data %>%
+      rename(date_mdy = date)
+    
+    daily_precip_data$date_mdy <- as.Date(daily_precip_data$date_mdy)
+    
+    # Merge daily precip data with site data
+    merged_data <- full_join(site_sub, daily_precip_data, by = c("site_id", "date_mdy"))
+    
+    
+#### calculate last rain date column  -----------------------------------------------------------------------------------------   ### code works above here
+    
+    
+    
+    # Step 1: Mark rain event days (precip_mm > 0)
+    merged_data <- merged_data %>%
+      group_by(site_id) %>%
+      mutate(
+        rain_event = ifelse(precip_mm > 0, as.Date(merged_data$date_mdy), NA)  # Mark rain event dates
+      ) %>%
+      ungroup()
+    
+    # Step 2: Propagate the last rain date using na.locf
+    merged_data <- merged_data %>%
+      group_by(site_id) %>%
+      mutate(
+        # Fill missing rain event dates with the previous non-NA value (i.e., last rain date)
+        last_rain_date = zoo::na.locf(rain_event, na.rm = FALSE, fromLast = FALSE)
+      ) %>%
+      ungroup()
+    
+    # Step 3: Calculate the days since the last rain (if last_rain_date is not NA)
+    merged_data <- merged_data %>%
+      mutate(
+        days_since_rain = ifelse(!is.na(last_rain_date), as.numeric(difftime(date_mdy, last_rain_date, units = "days")), NA)
+      )
+    
+    # Check the result
+    head(merged_data)
+    
+    
+    
+    ### try calculating time since rain from the daily precip df that only has site id, date, and precip amount
+    ## then merge back with site with the new addt cols for time since precip
+    
+    
+    
+    
     
