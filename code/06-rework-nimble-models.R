@@ -14,6 +14,7 @@
 rm(list=ls())
 #setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
 setwd("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
+library(tidyr)
 library(nimble)
 library(ggplot2)
 library(data.table)
@@ -21,7 +22,6 @@ library(tidyverse)
 library(mcmcplots)
 library(MCMCvis)
 library(boot)
-library(tidyr)
 source('attach.nimble_v2.R')
 
 
@@ -357,7 +357,7 @@ g <- matrix(NA, nrow=nvar(z), ncol=2)
 for (v in 1:nvar(z)) { g[v,] <- gelman.diag(z[,v])$psrf }
 PSRF <- bind_cols(colnames(z$chain1),g) %>% rename(Parameter = ...1 ,PSRF = ...2 ,PSRFUpperCI = ...3) 
 
-PSRF # Values are below 1.05, so that's good
+PSRF # Values are mostly below 1.05 (good), but some are over
 
 
 ## interpreting model outputs----------------------------------------------------------------------------------------------------
@@ -375,6 +375,8 @@ MCMCtrace(object = mcmc.output.3$samples,
 #this looks good:
 #caterpillars on traceplot are mostly lined up/overlapping
 #parameter estimate lines on density plot are mostly overlapping
+
+#unsure about trtint 2 and 4 trace plots
 
 
 mean(det.probs.inv) # = 0.26108
