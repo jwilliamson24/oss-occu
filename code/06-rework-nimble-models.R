@@ -121,7 +121,7 @@ all.spp.model.2 <- nimbleCode ({
     TreatmentIntercept[t] ~ dunif(-10,10)
   }#t
   
-  DetectionIntercept ~ dunif(-5,5)
+  DetectionIntercept ~ dunif(-5,5) # different detection intercept for each treatment? but leave betas the same, same shape. 1/30
   betaTemp ~ dunif(-5, 5)
   betaTemp2 ~ dunif(-5, 0)
   

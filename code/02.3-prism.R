@@ -16,7 +16,7 @@
     library(raster)
     library(zoo)
     
-    #set directory to new "prism" folder in data folder
+    #set directory to new "prism" folder in data folder - this is where the PRISM data will download to in later step
     prism_set_dl_dir("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/prism")
  
 #### load data ------------------------------------------------------------------------------------------------------
@@ -34,9 +34,11 @@
 #### download and extract prism -----------------------------------------------------------------------------------------
     
     
-    dates_needed <- seq(as.Date("2023-03-10"), as.Date("2023-06-10"), by = "day") #vector with all dates from mar 10 - jun 10 2023
-    #dates_needed <-unique(site_sub$date_mdy) # make list of survey dates that we need data for
-    get_prism_dailys(type = "ppt", dates = dates_needed, keepZip = FALSE) # get daily precip
+    dates_needed23 <- seq(as.Date("2023-02-10"), as.Date("2023-06-10"), by = "day") #vector with all dates from mar 10 - jun 10 2023
+    dates_needed24 <- seq(as.Date("2024-02-10"), as.Date("2024-06-10"), by = "day")
+    dates_needed <- c(dates_needed23,dates_needed24)
+    
+    get_prism_dailys(type = "ppt", dates = dates_needed, keepZip = FALSE) # download daily precip data from PRISM
     
     # store files
     raster_files <- list.files("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/prism", pattern = "*.bil", full.names = TRUE)
@@ -48,8 +50,6 @@
     bil_files <- lapply(prism_folders, function(folder) {
       list.files(folder, pattern = "\\.bil$", full.names = TRUE)
     })
-    
-    head(unlist(bil_files))
     
     
 #### connect prism data to site locations -----------------------------------------------------------------------------
@@ -86,18 +86,8 @@
     table(is.na(precip_data$precip_mm))  # yes - 127 total rows
     
    
-     
-#### merge and save -------------------------------------------------------------------------------------
-    
-    # add precip and survey date to the large site level df
-    merged <- cbind(dat,precip_data)
-    merged <- merged[,-29]    
-    
-    write.csv(merged, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/site_data_aspect_precip")
-    
-    
   
-#### precip data for every date march-june -------------------------------------------------------------------------------------
+#### daily precip data for every date march-june -------------------------------------------------------------------------------------
     
     # Get list of all PRISM .bil files (daily precipitation)
     bil_files_all <- unlist(lapply(prism_folders, function(folder) {
@@ -124,18 +114,21 @@
                                             precip_mm = precip_values[, 2]))  # Adjust column index if needed
     }
     
-    # Save daily precipitation data for future use
+    
+    daily_precip_data$precip_mm <- round(daily_precip_data$precip_mm,2) # round precip to 2 decimal places
+    
+    # Save 
     write.csv(daily_precip_data, "daily_precip_data.csv", row.names = FALSE)
     
     
 #### merge with site location data -------------------------------------------------------------------------------------
     
+    # dont need this
+    
     #daily_precip_data <- read.csv("daily_precip_data.csv")
   
-    
     # Rename date column for merging
-    daily_precip_data <- daily_precip_data %>%
-      rename(date_mdy = date)
+    colnames(daily_precip_data)[colnames(daily_precip_data) == "date"] <- "date_mdy"
     
     daily_precip_data$date_mdy <- as.Date(daily_precip_data$date_mdy)
     
@@ -143,42 +136,75 @@
     merged_data <- full_join(site_sub, daily_precip_data, by = c("site_id", "date_mdy"))
     
     
-#### calculate last rain date column  -----------------------------------------------------------------------------------------   ### code works above here
+#### calculate last rain date column  -----------------------------------------------------------------------------------------
+    
+    
+    rain_df <- daily_precip_data
+    
+    # create rain event column - did it rain that day?
+    rain_df$rain_event <- ifelse(rain_df$precip_mm >= 1, 1, 0) # rain 1mm or more = 1 (yes), <1mm = 0 (no)
+    
+    # Ensure data is sorted by site_id and date
+    rain_df <- rain_df[order(rain_df$site_id, rain_df$date_mdy), ]
+    
+    # Initialize the new column with NA
+    rain_df$last_rain_date <- NA
+    
+    # Loop through each row
+    for (i in seq_len(nrow(rain_df))) {
+      # Only fill last_rain_date for non-rain days
+      if (rain_df$rain_event[i] == 0) {
+        # Find the last rain event within the same site
+        past_rain_dates <- rain_df$date_mdy[rain_df$site_id == rain_df$site_id[i] & 
+                                               rain_df$rain_event == 1 & 
+                                               rain_df$date_mdy < rain_df$date_mdy[i]]
+        
+        # Assign the most recent rain date (if any)
+        if (length(past_rain_dates) > 0) {
+          rain_df$last_rain_date[i] <- max(past_rain_dates)
+        }
+      }
+    }
+    
+    
+    # convert to YYYY-MM-DD date
+    rain_df$last_rain_date <- as.Date(rain_df$last_rain_date, origin = "1970-01-01")
+    
+
+    # Ensure both are Date objects
+    rain_df$date_mdy <- as.Date(rain_df$date_mdy)
+    rain_df$last_rain_date <- as.Date(rain_df$last_rain_date)
+    
+    # Calculate days_since_rain
+    rain_df$days_since_rain <- ifelse(!is.na(rain_df$last_rain_date), 
+                                       as.numeric(difftime(rain_df$date_mdy, rain_df$last_rain_date, units = "days")),
+                                       NA)
+    
+    # make NA = 0 days since rain
+    rain_df$days_since_rain[is.na(rain_df$days_since_rain)] <- 0
+    
+    # merge with my site level data to only keep data for my sites/dates
+    merged_df <- left_join(site_sub, rain_df, by = c("site_id", "date_mdy"))
+    
+    # Save entire rain data frame
+    write.csv(merged_df, "site_rain_data.csv", row.names = FALSE)
+    
+    
+#### merge with larger site level data frame for later use -------------------------------------------------------------------------
+    
+    # remove unnecessary cols from merged df above and then join with dat
+    new_merged_df <- merged_df[c("site_id", "date_mdy", "precip_mm","days_since_rain")]
+    
+    # combine
+    all_merged_df <- full_join(dat,new_merged_df, by = c("site_id"))
+    
+    # save
+    write.csv(all_merged_df, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/site_aspect_precip_all_vars.csv") 
+
     
     
     
-    # Step 1: Mark rain event days (precip_mm > 0)
-    merged_data <- merged_data %>%
-      group_by(site_id) %>%
-      mutate(
-        rain_event = ifelse(precip_mm > 0, as.Date(merged_data$date_mdy), NA)  # Mark rain event dates
-      ) %>%
-      ungroup()
-    
-    # Step 2: Propagate the last rain date using na.locf
-    merged_data <- merged_data %>%
-      group_by(site_id) %>%
-      mutate(
-        # Fill missing rain event dates with the previous non-NA value (i.e., last rain date)
-        last_rain_date = zoo::na.locf(rain_event, na.rm = FALSE, fromLast = FALSE)
-      ) %>%
-      ungroup()
-    
-    # Step 3: Calculate the days since the last rain (if last_rain_date is not NA)
-    merged_data <- merged_data %>%
-      mutate(
-        days_since_rain = ifelse(!is.na(last_rain_date), as.numeric(difftime(date_mdy, last_rain_date, units = "days")), NA)
-      )
-    
-    # Check the result
-    head(merged_data)
     
     
     
-    ### try calculating time since rain from the daily precip df that only has site id, date, and precip amount
-    ## then merge back with site with the new addt cols for time since precip
-    
-    
-    
-    
-    
+        
