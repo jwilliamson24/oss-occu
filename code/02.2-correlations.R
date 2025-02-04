@@ -30,17 +30,18 @@
     #site-level data
     #dat <- readRDS("site_level_matrix.rds") used this df originally
     
-    dat <- read.csv("sites_with_aspect.csv") #switched to this df on 01/25 when i added aspect from DEM
+    dat <- read.csv("site_aspect_precip_all_vars.csv") #switched to this df on 02/04 when i added aspect and precipitation vars
+    dat <- subset(dat, select = -X)
     row.names(dat) <- dat[,1]
     
     sals <- dat[26:27]
-    env <- dat[c(1:25,28)]
+    env <- dat[c(1:25,28:31)]
     
     #extra dwd metrics
     dwd <- read.csv("dwd.extra.metrics.csv")
     
     #env cont
-    drop <- c("lat","long","stand","tree_farm","landowner","year","weather","trt","jul_date","elev","site_id")
+    drop <- c("lat","long","stand","tree_farm","landowner","year","weather","trt","jul_date","elev","site_id","date_mdy")
     env_sub <- env[,!(colnames(env) %in% drop)]
     
     #add dwd dens and avg volume from dwd to env df
@@ -101,7 +102,7 @@
       Var2 = colnames(P.corr)[cor_pairs[, 2]],
       Correlation = P.corr[cor_pairs]
     )
-
+    result
 
     # > result
     # Var1       Var2 Correlation
@@ -193,10 +194,10 @@
     grid.arrange(grobs = plots, ncol = 3)
  
        
-#### reorganize env subset df and try corr again -------------------------------------
+#### prune correlated env subset vars and run corr again -------------------------------------
     
 # avg volume seems to have a slightly larger positive relationship with oss than length class does
-# so I will remove length class because that will remove the correllation with canopy cover as well
+# so I will remove length class because that will remove the correlation with canopy cover as well
     
     
     env_subset_corr <- env_subset_corr[,!colnames(env_subset_corr) %in% "length_cl"]
@@ -226,14 +227,15 @@
     )
     result
     
-    # Var1     Var2 Correlation
-    # 1 canopy_cov decay_cl   0.5273213
-    # 2    fwd_cov  char_cl  -0.5417591  
+    # Var1      Var2 Correlation
+    # 1 canopy_cov  decay_cl   0.5273213
+    # 2    fwd_cov   char_cl  -0.5417591
+    # 3       temp precip_mm  -0.5345670
     
 ## these are somewhat correlated but the value is below 0.55 so I wont remove them right now.
     
     write.csv(env_subset_corr, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/env_subset_corr.csv",
-              row.names = FALSE)       
+              row.names = TRUE)       
     
     
     
