@@ -11,18 +11,18 @@
 
 ## settings -----------------------------------------------------------------------------------------------
 
-rm(list=ls())
-#setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
-setwd("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
-library(tidyr)
-library(nimble)
-library(ggplot2)
-library(data.table)
-library(tidyverse)
-library(mcmcplots)
-library(MCMCvis)
-library(boot)
-source('attach.nimble_v2.R')
+  rm(list=ls())
+  #setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
+  setwd("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
+  library(tidyr)
+  library(nimble)
+  library(ggplot2)
+  library(data.table)
+  library(tidyverse)
+  library(mcmcplots)
+  library(MCMCvis)
+  library(boot)
+  source('attach.nimble_v2.R')
 
 
 ## saved model outputs -----------------------------------------------------------------------------------

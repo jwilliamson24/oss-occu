@@ -172,7 +172,7 @@
     ggplot(merged, aes(x = avg_volume, y = oss)) +
       geom_point(color = "blue", size = 2) +  
       geom_smooth(method = "lm", color = "red", se = TRUE) 
-    
+
     
     # Function to generate scatter plots for each covariate
     generate_plot <- function(covariate) {
@@ -187,13 +187,15 @@
         theme_minimal()
     }
     
-    # Generate the plots for all covariates
-    plots <- lapply(env_subset_corr, generate_plot)
+    # Create plots for each covariate (only for numeric columns)
+    covariates <- names(merged)[sapply(merged, is.numeric)]  # Filter only numeric columns
     
-    # Arrange all plots into a grid (e.g., 2 rows and 2 columns)
+    # Generate the plots
+    plots <- lapply(covariates, generate_plot)
+    
+    # Arrange all plots into a grid
     grid.arrange(grobs = plots, ncol = 3)
- 
-       
+    
 #### prune correlated env subset vars and run corr again -------------------------------------
     
 # avg volume seems to have a slightly larger positive relationship with oss than length class does
@@ -236,6 +238,37 @@
     
     write.csv(env_subset_corr, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/env_subset_corr.csv",
               row.names = TRUE)       
+  
+      
+#### run corr with sal variables in dataset --------------------------------------------
     
     
+    
+    corr.sal <- cor(merged, method = "pearson", use = "complete.obs") 
+    
+    corrplot(corr.sal, 
+             type = "upper", 
+             order = "hclust", 
+             tl.col = "black", 
+             tl.srt = 45)  
+    
+    # Set a threshold
+    threshold <- 0.5
+    
+    # Get pairs with correlation above the threshold
+    cor_pairs <- which(abs(corr.sal) > threshold, arr.ind = TRUE)
+    
+    # Filter to keep only unique pairs (avoid duplicates and self-correlations)
+    cor_pairs <- cor_pairs[cor_pairs[, 1] < cor_pairs[, 2], ]
+    
+    # Display the variable pairs and their correlation values
+    result <- data.frame(
+      Var1 = rownames(corr.sal)[cor_pairs[, 1]],
+      Var2 = colnames(corr.sal)[cor_pairs[, 2]],
+      Correlation = corr.sal[cor_pairs]
+    )
+    result
+    
+    
+    # what does it mean if none of the variables correlate highly with oss count?
     
