@@ -9,7 +9,7 @@
 # 'hierarchical' model (i.e., random effects model)
 #
 #   Occupancy:  stand-level effects:  tree farm, ownership
-#               stand-year level:     Year, treatment group {control, pre-trt, post-trt}
+#               stand-year level:     Year, treatment group 
 #               plot-level effects:   downed wood count
 #               random effects:       random intercept by stand
 #   detection:  plot-level effects:   Trt, AT, AT^2

@@ -122,9 +122,14 @@
     scaled_temp <- c(scale(data$temp))
 
 #how to treat days since rain as detection covariate? priors?    
-    ggplot(complete.merge, aes(x = days.since.rain, y = oss.obs)) +
-      geom_point(color = "blue", size = 2) +  
-      geom_smooth(method = "lm", color = "red", se = TRUE) 
+    # ggplot(complete.merge, aes(x = days.since.rain, y = oss.obs)) +
+    #   geom_point(color = "blue", size = 2) +  
+    #   geom_smooth(method = "lm", color = "red", se = TRUE) 
+    
+    # days since rain and occu have slight negative relationship,
+    # set prior as normal distribution with a negative mean (mu = -1) and a moderate stdev (sd = 1).
+    
+    
     
 ## ALL SPP MODEL ------------------------------------------------------------------------------------------------
 
@@ -302,9 +307,10 @@ oss.model <- nimbleCode ({
   
   for(t in 1:n.treatments){
     TreatmentIntercept[t] ~ dunif(-10,10)
-    DetectionIntercept[t] ~ dunif(-5,5)
+    #DetectionIntercept[t] ~ dunif(-5,5) # separate det int per treatment
   }#t
   
+  DetectionIntercept ~ dunif(-5,5) # single det int
   betaTemp ~ dunif(-5, 5)
   betaTemp2 ~ dunif(-5, 0)
   betaRain ~ dnorm(-1, 1) #days since rain and occu have slight negative relationship,
@@ -322,7 +328,8 @@ oss.model <- nimbleCode ({
   # Observation model = Detection
   # need two pieces: one for p(det prob coeff) and one defining Y distribution
   for(j in 1:n.obs) {
-    logit(p[j]) <- DetectionIntercept[treatment[site[j]]] + 
+    logit(p[j]) <- #DetectionIntercept[treatment[site[j]]] + 
+                   DetectionIntercept +
                    betaTemp*temp[j] + 
                    betaTemp2*temp[j]^2 +
                    betaRain*days.since.rain[j]
@@ -366,8 +373,8 @@ mcmc.output.3 <- nimbleMCMC(code = oss.model,
                             samplesAsCodaMCMC = TRUE)
 
 attach.nimble(mcmc.output.3$samples)
-save(mcmc.output.3, file="./oss_model.RData")
-load("./oss_model.RData")
+# save(mcmc.output.3, file="./oss_model.RData")
+# load("./oss_model.RData")
 
 
 ## assessing convergence------------------------------------------------------------------------------------------------------
@@ -514,76 +521,78 @@ enes.model <- nimbleCode ({
   # Priors 
   # uninformative, vague priors
   
-  for(t in 1:n.treatments){
-    TreatmentIntercept[t] ~ dunif(-10,10)
-    DetectionIntercept[t] ~ dunif(-5,5)
-  }#t
-  
-  betaTemp ~ dunif(-5, 5)
-  betaTemp2 ~ dunif(-5, 0)
-  betaRain ~ dnorm(-1, 1)
-  
-  # Likelihood
-  
-  # Process/Biological model = Occupancy
-  # need two pieces: one defining psi(occu prob coeff) and covariates, and one defining z dist
-  for(i in 1:n.sites) {
-    logit(psi[i]) <- TreatmentIntercept[treatment[i]]  #psi=occupancy probability
-    z[i] ~ dbern(psi[i])  # z=1 if occupied, z=latent true occupancy
-  }#i
-  
-  # Observation model = Detection
-  # need two pieces: one for p(det prob coeff) and one defining Y distribution
-  for(j in 1:n.obs) {
-    logit(p[j]) <- DetectionIntercept[treatment[site[j]]] + 
-                    betaTemp*temp[j] + 
-                    betaTemp2*temp[j]^2 +
-                    betaRain*days.since.rain[j]
-    #using temp as covariate with a quadratic relationship
-    #p=detection probability for site i and survey j
-    Y[j] ~ dbern(p[j] * z[site[j]]) #Y=my actual data observations
-    #z=1 or 0, turns this on or off
-  }#j
-  
-})
-
-# Parameters monitored
-parameters <- c("z","p","TreatmentIntercept","DetectionIntercept","betaTemp", "betaTemp2", "betaRain")
-
-# MCMC Settings
-ni <- 80000
-nt <- 80
-nb <- 40000
-nc <- 3
-
-# Data
-nimble.data = list(Y=data$enes.obs,
-                   temp=scaled_temp,
-                   days.since.rain=data$days.since.rain)
-
-nimble.constants = list(n.sites = length(unique(data$site)),
-                        n.treatments = length(unique(data2$treatment)),
-                        treatment=data2$treatment,
-                        site=as.numeric(as.factor(data$site)),
-                        n.obs = length(data$all.obs))
-
-mcmc.output.4 <- nimbleMCMC(code = enes.model,
-                            data = nimble.data,
-                            constants=nimble.constants,
-                            monitors = parameters,
-                            niter = ni,
-                            nburnin = nb,
-                            nchains = nc,
-                            thin=nt,
-                            summary=TRUE,
-                            samplesAsCodaMCMC = TRUE)
+      for(t in 1:n.treatments){
+        TreatmentIntercept[t] ~ dunif(-10,10)
+        DetectionIntercept[t] ~ dunif(-5,5) # separate det int per treatment
+      }#t
+      
+      #DetectionIntercept ~ dunif(-5,5) # single det intercept
+      betaTemp ~ dunif(-5, 5)
+      betaTemp2 ~ dunif(-5, 0)
+      #betaRain ~ dnorm(-1, 1)
+      
+      # Likelihood
+      
+      # Process/Biological model = Occupancy
+      # need two pieces: one defining psi(occu prob coeff) and covariates, and one defining z dist
+      for(i in 1:n.sites) {
+        logit(psi[i]) <- TreatmentIntercept[treatment[i]]  #psi=occupancy probability
+        z[i] ~ dbern(psi[i])  # z=1 if occupied, z=latent true occupancy
+      }#i
+      
+      # Observation model = Detection
+      # need two pieces: one for p(det prob coeff) and one defining Y distribution
+      for(j in 1:n.obs) {
+        logit(p[j]) <-  DetectionIntercept[treatment[site[j]]] + 
+                        #DetectionIntercept +
+                        betaTemp*temp[j] + 
+                        betaTemp2*temp[j]^2 #+
+                        #betaRain*days.since.rain[j]
+        #using temp as covariate with a quadratic relationship
+        #p=detection probability for site i and survey j
+        Y[j] ~ dbern(p[j] * z[site[j]]) #Y=my actual data observations
+        #z=1 or 0, turns this on or off
+      }#j
+      
+    })
+    
+    # Parameters monitored
+    parameters <- c("z","p","TreatmentIntercept","DetectionIntercept","betaTemp", "betaTemp2")#, "betaRain")
+    
+    # MCMC Settings
+    ni <- 80000
+    nt <- 80
+    nb <- 40000
+    nc <- 3
+    
+    # Data
+    nimble.data = list(Y=data$enes.obs,
+                       temp=scaled_temp)#,
+                       #days.since.rain=data$days.since.rain)
+    
+    nimble.constants = list(n.sites = length(unique(data$site)),
+                            n.treatments = length(unique(data2$treatment)),
+                            treatment=data2$treatment,
+                            site=as.numeric(as.factor(data$site)),
+                            n.obs = length(data$all.obs))
+    
+    mcmc.output.4 <- nimbleMCMC(code = enes.model,
+                                data = nimble.data,
+                                constants=nimble.constants,
+                                monitors = parameters,
+                                niter = ni,
+                                nburnin = nb,
+                                nchains = nc,
+                                thin=nt,
+                                summary=TRUE,
+                                samplesAsCodaMCMC = TRUE)
 
 #######     warning: logProb of data node Y[724]: logProb is -Inf. what does this mean??
 
-
-attach.nimble(mcmc.output.4$samples)
-save(mcmc.output.4, file="./enes_model.RData")
-load("./enes_model.RData")
+    
+    attach.nimble(mcmc.output.4$samples)
+    # save(mcmc.output.4, file="./enes_model.RData")
+    # load("./enes_model.RData")
 
 
 ## Assessing Convergence------------------------------------------------------------------------------------------------------
@@ -591,17 +600,17 @@ load("./enes_model.RData")
 # mcmcplot(mcmc.output.4$samples)
 
 # Gelman-Rubin diagnostic (AKA RHat or PSRF)
-z <- mcmc.output.4$samples
-g <- matrix(NA, nrow=nvar(z), ncol=2)
-for (v in 1:nvar(z)) { g[v,] <- gelman.diag(z[,v])$psrf }
-PSRF <- bind_cols(colnames(z$chain1),g) %>% rename(Parameter = ...1 ,PSRF = ...2 ,PSRFUpperCI = ...3) 
-
-PSRF # some values were 1.05 and above, but i dont know what that means. 
-# fixed that after I changed iterations from 40000 to 80000
-
+    z <- mcmc.output.4$samples
+    g <- matrix(NA, nrow=nvar(z), ncol=2)
+    for (v in 1:nvar(z)) { g[v,] <- gelman.diag(z[,v])$psrf }
+    PSRF <- bind_cols(colnames(z$chain1),g) %>% rename(Parameter = ...1 ,PSRF = ...2 ,PSRFUpperCI = ...3) 
+    
+    PSRF # some values were 1.05 and above, but i dont know what that means. 
+    # fixed that after I changed iterations from 40000 to 80000
+    
 # ACF plots
-acf(DetectionIntercept)
-acf(TreatmentIntercept)
+    acf(DetectionIntercept)
+    acf(TreatmentIntercept)
 
 ## name model outputs specific to OSS ------------------------------------------------------------------------------------
 
@@ -611,77 +620,88 @@ acf(TreatmentIntercept)
 ## Interpreting Model Outputs----------------------------------------------------------------------------------------------------
 #z
 
-# Inverse logit the detection intercept to get detection probabilities
-det.probs.inv <- inv.logit(DetectionIntercept)
-hist(det.probs.inv)
-
 # Looking at trace plots and parameter estimates
-MCMCtrace(object = mcmc.output.4$samples,
-          pdf = FALSE, # no export to PDF
-          ind = TRUE, # separate density lines per chain
-          params = c("DetectionIntercept", "betaTemp", "TreatmentIntercept"))
+    MCMCtrace(object = mcmc.output.4$samples,
+              pdf = FALSE, # no export to PDF
+              ind = TRUE, # separate density lines per chain
+              params = c("DetectionIntercept", "betaTemp", "TreatmentIntercept"))
 #treatment 2 and 3 caterpillars dont look great
 
+    
+# Inverse logit the detection intercept to get detection probabilities
+    det.probs.inv <- inv.logit(DetectionIntercept)
+    hist(det.probs.inv)
+    
 
-mean(det.probs.inv) # = 0.2403386
-mean(det.probs.inv>0)  # = 1
-median(det.probs.inv)  # = 0.2394667
-boxplot(det.probs.inv)
+# For use with single Det Intercept
+    mean(det.probs.inv) # = 0.2403386
+    mean(det.probs.inv>0)  # = 1
+    median(det.probs.inv)  # = 0.2394667
+    boxplot(det.probs.inv)
+    
+
+# Inv logit DetectionIntercept to get Detection Estimates
+    median(det.probs.inv[,1]) 
+    median(det.probs.inv[,2])
+    median(det.probs.inv[,3]) 
+    median(det.probs.inv[,4]) 
+    median(det.probs.inv[,5]) 
+
 
 # Inv logit TreatmentIntercept to get Occupancy Estimates
-trt.int.inv <- inv.logit(TreatmentIntercept)
-median(trt.int.inv[,1]) # 0.6271816    BS
-median(trt.int.inv[,2]) # 0.5330411    BU
-median(trt.int.inv[,3]) # 0.4669251    HB
-median(trt.int.inv[,4]) # 0.5864338    HU
-median(trt.int.inv[,5]) # 0.5549356    UU
+    trt.int.inv <- inv.logit(TreatmentIntercept)
+    median(trt.int.inv[,1]) # 0.6271816    BS
+    median(trt.int.inv[,2]) # 0.5330411    BU
+    median(trt.int.inv[,3]) # 0.4669251    HB
+    median(trt.int.inv[,4]) # 0.5864338    HU
+    median(trt.int.inv[,5]) # 0.5549356    UU
 
 
 
 ## base R boxplot for treatment effect -----------------------------------------------------------------------------------------------
 
 # Renaming and reordering the treatment intercepts for the boxplot
-trt.int.inv2 <- inv.logit(TreatmentIntercept)
-treatment_matrix2 <- trt.int.inv2 # Using the inv logit treatment estimates
-
-new.names <- c("Salvage Logged", "Wildfire", "Harvest, Wildfire", "Harvest", "Control")
-colnames(treatment_matrix2) <- new.names
-desired.order <- c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged")
-
-box.colors <- c('lightgreen','steelblue', 'coral2', '#f9d62e', '#b967ff' )
-
-#boxplot of Treatment Estimates - occu prob for each treatment
-boxplot(treatment_matrix2[, match(desired.order, colnames(treatment_matrix2))], 
-        main = "Treatment Intercepts for All Species", 
-        xlab = "Treatment", ylab = "Occupancy Probability",
-        col = box.colors)
+    trt.int.inv2 <- inv.logit(TreatmentIntercept)
+    treatment_matrix2 <- trt.int.inv2 # Using the inv logit treatment estimates
+    
+    new.names <- c("Salvage Logged", "Wildfire", "Harvest, Wildfire", "Harvest", "Control")
+    colnames(treatment_matrix2) <- new.names
+    desired.order <- c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged")
+    
+    box.colors <- c('lightgreen','steelblue', 'coral2', '#f9d62e', '#b967ff' )
+    
+    #boxplot of Treatment Estimates - occu prob for each treatment
+    boxplot(treatment_matrix2[, match(desired.order, colnames(treatment_matrix2))], 
+            main = "Treatment Intercepts for All Species", 
+            xlab = "Treatment", ylab = "Occupancy Probability",
+            col = box.colors)
 
 
 ## ggplot boxplot treatment effect -----------------------------------------------------------------------------------------------
 
-new.names <- c("Salvage Logged", "Wildfire", "Harvest, Wildfire", "Harvest", "Control") 
-colnames(enes.occu.prob) <- new.names
-enes.occu.prob <- as.data.frame(enes.occu.prob)
-
-enes.long <- gather(enes.occu.prob, key = "Treatment", value = "Occupancy_Probability") #reshape data to long format bc ggplot required
-
-#specify treatment order for plot
-enes.long$Treatment <- factor(enes.long$Treatment, 
-                                levels = c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged")) # Replace "DesiredOrder", "Treat1", etc., with your actual treatment names in the desired order
-
-
-box.colors <- c('lightgreen','steelblue', 'coral2', '#f9d62e', '#b967ff' )
-
-p2 <- ggplot(enes.long, aes(x = Treatment, y = Occupancy_Probability, fill = Treatment)) +
-  geom_boxplot() +
-  theme_classic() +
-  scale_fill_manual(values = box.colors) +
-  labs(title = "Treatment Intercepts for ENES", x = "Treatment", y = "Occupancy Probability") +
-  theme(plot.title = element_text(hjust = 0.5)) # Center the title
-
+    new.names <- c("Salvage Logged", "Wildfire", "Harvest, Wildfire", "Harvest", "Control") 
+    colnames(enes.occu.prob) <- new.names
+    enes.occu.prob <- as.data.frame(enes.occu.prob)
+    
+    enes.long <- gather(enes.occu.prob, key = "Treatment", value = "Occupancy_Probability") #reshape data to long format bc ggplot required
+    
+    #specify treatment order for plot
+    enes.long$Treatment <- factor(enes.long$Treatment, 
+                                    levels = c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged")) # Replace "DesiredOrder", "Treat1", etc., with your actual treatment names in the desired order
+    
+    
+    box.colors <- c('lightgreen','steelblue', 'coral2', '#f9d62e', '#b967ff' )
+    
+    p2 <- ggplot(enes.long, aes(x = Treatment, y = Occupancy_Probability, fill = Treatment)) +
+      geom_boxplot() +
+      theme_classic() +
+      scale_fill_manual(values = box.colors) +
+      labs(title = "Treatment Intercepts for ENES", x = "Treatment", y = "Occupancy Probability") +
+      theme(plot.title = element_text(hjust = 0.5)) # Center the title
+    
 ggsave(filename = "enes_trt_occu_prob.png", plot = p2, device = "png", 
-       path = "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/06-rework-nimble-models",
-       width = 10, height = 6, units = "in", dpi = 300)
+           path = "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/06-rework-nimble-models",
+           width = 10, height = 6, units = "in", dpi = 300)
 
 
 ## ggplot with both species -----------------------------------------------------------------------------------------------
@@ -703,6 +723,6 @@ ggsave(filename = "enes_trt_occu_prob.png", plot = p2, device = "png",
     labs(title = "Treatment Intercepts for Both Species", x = "Treatment", y = "Occupancy Probability") +
     theme(plot.title = element_text(hjust = 0.5)) # Center the title
 
-ggsave(filename = "both_occu_prob_0204.png", plot = p3, device = "png", 
+ggsave(filename = "both_occu_prob_rain.png", plot = p3, device = "png", 
          path = "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/figures/06-rework-nimble-models",
          width = 10, height = 6, units = "in", dpi = 300)

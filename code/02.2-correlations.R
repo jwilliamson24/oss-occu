@@ -25,6 +25,7 @@
     library(gridExtra)
     source("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/multivariate-analysis/biostats.R")
 
+    
 #### load and subset data ---------------------------------------------------------------------------------------
 
     #site-level data
@@ -147,7 +148,7 @@
     
     
     # Var1       Var2 Correlation
-    # 1 canopy_cov  length_cl   0.6621768       
+    # 1 canopy_cov  length_cl   0.6621768       #remove length_cl
     # 2  length_cl avg_volume   0.6592068
     
     

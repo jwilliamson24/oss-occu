@@ -30,9 +30,9 @@ model.h1 <- function(){
   betaYr23 ~ dnorm(0, 1) # just 2023-2024 data
   betaYr24 ~ dnorm(0, 1)
   #betaPre ~ dnorm(0, 4) # Trt and Control sites should be similar pre-harvest
-  #betaPost ~ dnorm(0, 0.25) # unsure about the values for my treatment betas
+  #betaPost ~ dnorm(0, 0.25) 
   betaHarv ~ dnorm(0, 0.25) # treatments: control, harvest, burn, harvburn, salvage
-  betaBurn ~ dnorm(0, 0.25)
+  betaBurn ~ dnorm(0, 0.25) # unsure about the values for my treatment betas
   betaHarvBurn ~ dnorm(0, 0.25)
   betaSalv ~ dnorm(0, 0.25)
   betaDW ~ dnorm(0, 0.25) # dwd count
@@ -96,7 +96,7 @@ model.h1 <- function(){
   tau.a14 <- 1/(sd.a14 * sd.a14)
 
   # detection model random effects (by year)
-  for(i in 1:nyear){ ### rewrite using all trt terms from above
+  for(i in 1:nyear){ ### use all terms from above?
     a0[i] ~ dnorm(mu.a0, tau.a0) # each plot level effect by year
     aHarv[i] ~ dnorm(mu.a1, tau.a1) # harvest
     aAT[i] ~ dnorm(mu.a2, tau.a2) # ambient temp

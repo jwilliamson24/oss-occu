@@ -63,7 +63,7 @@ myFun <- function(n, y, p){
 
   # fit the model
   system.time(out.oh1 <- jags(test.data.o, inits.o, params.o, model.h1, n.chains=4,
-                              n.thin=10, n.iter=1100, n.burnin=100)) # 212s
+                              n.thin=10, n.iter=1100, n.burnin=100)) # 49s
                               #n.thin=10, n.iter=11000, n.burnin=1000)) # 1968s
 
   # check diagnostics
@@ -94,7 +94,7 @@ myFun <- function(n, y, p){
   
   # fit the model
   system.time(out.eh1 <- jags(test.data.e, inits.e, params.e, model.h1, n.chains=4,
-                              n.thin=10, n.iter=1100, n.burnin=100))
+                              n.thin=10, n.iter=1100, n.burnin=100)) #47s
                               #n.thin=10, n.iter=11000, n.burnin=1000)) # 1864s
 
   # diagnostic checks
@@ -130,7 +130,7 @@ myFun <- function(n, y, p){
 
   # fit the model  
   system.time(out.oa1 <- jags(test.data.o, inits.o, params.o, model.a1, n.chains=4,
-                             n.thin=10, n.iter=1100, n.burnin=100)) # s
+                             n.thin=10, n.iter=1100, n.burnin=100)) # 104s
                              #n.thin=10, n.iter=11000, n.burnin=1000)) # 4000s
                              #n.thin=20, n.iter=42000, n.burnin=2000)) # s
   hist(out.oa1$BUGSoutput$summary[,8]) # small fraction (<1%?) less than 1.05
@@ -164,7 +164,7 @@ myFun <- function(n, y, p){
   
   # fit the model  
   system.time(out.ea1 <- jags(test.data.e, inits.e, params.e, model.a1, n.chains=4,
-                              n.thin=10, n.iter=1100, n.burnin=100)) # 229s
+                              n.thin=10, n.iter=1100, n.burnin=100)) # 101s
                               #n.thin=10, n.iter=11000, n.burnin=1000))
                               #n.thin=20, n.iter=42000, n.burnin=2000)) # s
   hist(out.ea1$BUGSoutput$summary[,8]) # small fraction (<1%?) less than 1.05

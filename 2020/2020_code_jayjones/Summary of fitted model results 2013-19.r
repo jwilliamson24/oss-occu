@@ -316,12 +316,12 @@ ea1.sl <- out.ea1$BUGSoutput$sims.list
   
   nsim <- 2000
   
-# 3a. OSS Occ model
+# 3a. OSS Occ model                                           ####################### code stops working here
 
   exp(c(mean(0.5*oh1.sl$betaDW), quantile(0.5*oh1.sl$betaDW, probs=c(0.05, 0.25, 0.5, 0.75, 0.95)))) # 1.2 (1.1, 1.3)
   
   oh1.dw.mat <- matrix(nrow=8, ncol=nsim)
-  samp <- sample(1:length(oh1.sl$beta0), nsim)
+  samp <- sample(1:length(oh1.sl$beta0), nsim)   #Error in sample.int(length(x), size, replace, prob) : cannot take a sample larger than the population when 'replace = FALSE'
   for(i in 1:nsim){
     oh1.dw.mat[,i] <- oh1.sl$beta0[samp[i]] + oh1.sl$betaTF[samp[i]]/2 + oh1.sl$betaDW[samp[i]]*((0:7)-3)/2 +
       oh1.sl$betaYr14[samp[i]]/7 + oh1.sl$betaYr15[samp[i]]/7 + oh1.sl$betaYr16[samp[i]]/7 + oh1.sl$betaYr17[samp[i]]/7 +
