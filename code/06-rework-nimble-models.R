@@ -140,10 +140,10 @@
       
       for(t in 1:n.treatments){
         TreatmentIntercept[t] ~ dunif(-10,10)
-        #DetectionIntercept[t] ~ dunif(-5,5) # separate det int per treatment
+        DetectionIntercept[t] ~ dunif(-5,5) # separate det int per treatment
       }#t
       
-      DetectionIntercept ~ dunif(-5,5) # single det int
+      #DetectionIntercept ~ dunif(-5,5) # single det int
       betaTemp ~ dunif(-5, 5)
       betaTemp2 ~ dunif(-5, 0)
       betaRain ~ dnorm(-1, 1) #days since rain and occu have slight negative relationship,
