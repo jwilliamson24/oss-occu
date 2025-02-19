@@ -2,19 +2,19 @@
 ##
 ## 08-new-relationships.R 
 ##
-## Look at relationships between habitat and sal variables including new habitat covariates
+## Task: Look at relationships between habitat and sal variables including new habitat covariates
 ##
-## Jasmine Williamson
 ## Date Created: 02-05-2025
+## Jasmine Williamson
 ##
-## 
-## goals --------------------------------------------------------------------------------------------------
+
+## goals
 
 # i want to Look at relationships between habitat and sal variables 
 # including new habitat covariates: precip, days since rain, aspect
 # and including insights from the random forest importanct plot
 
-## insights --------------------------------------------------------------------------------------------------
+## insights
 
 # this might be a waste of time
 

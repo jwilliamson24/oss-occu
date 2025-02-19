@@ -2,7 +2,7 @@
 ##
 ## 06-rework-nimble-models.R 
 ##
-## Rerun the nimble occupancy models from 2023 bayesian class
+## Task: Rerun the nimble occupancy models from 2023 bayesian class
 ##
 ## Jasmine Williamson
 ## Date Created: 07-10-2024
