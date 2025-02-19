@@ -47,7 +47,7 @@
 
 ## naive occupancy ------------------------------------------------------------------------------------------
     
-    # Compute naive occupancy: proportion of sites with at least one detection
+# Compute naive occupancy: proportion of sites with at least one detection
     oss_naive_occu <- mean(rowSums(oss.dets) > 0)
     
         # 0.6062992
@@ -63,10 +63,8 @@
         #  4 = HU     
         #  5 = UU
     
-    #oss
-    
-    # Identify which sites have at least one detection
-    oss_site_occupancy <- rowSums(oss.dets) > 0
+# oss
+    oss_site_occupancy <- rowSums(oss.dets) > 0 # Identify which sites have at least one detection
     
     # add occu to site and trt
     site_subset$oss_occu <- oss_site_occupancy
@@ -80,10 +78,8 @@
     # 4         4 0.4444444
     # 5         5 0.7600000
     
-    # enes
-    
-    # Identify which sites have at least one detection
-    enes_site_occupancy <- rowSums(enes.dets) > 0
+# enes
+    enes_site_occupancy <- rowSums(enes.dets) > 0 # Identify which sites have at least one detection
     
     # add occu to site and trt
     site_subset$enes_occu <- enes_site_occupancy
@@ -187,6 +183,7 @@
       scale_fill_manual(values = box.colors) +
       labs(title = "Treatment Intercepts for OSS", x = "Treatment", y = "Occupancy Probability") +
       theme(plot.title = element_text(hjust = 0.5)) # Center the title
+    p
     
     ggsave(filename = "oss_trt_occu_prob_0204.png", plot = p, device = "png", 
            path = "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/figures/06-rework-nimble-models",
@@ -214,6 +211,7 @@
       scale_fill_manual(values = box.colors) +
       labs(title = "Treatment Intercepts for ENES", x = "Treatment", y = "Occupancy Probability") +
       theme(plot.title = element_text(hjust = 0.5)) # Center the title
+    p2
     
     ggsave(filename = "enes_trt_occu_prob.png", plot = p2, device = "png", 
            path = "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/figures/06-rework-nimble-models",

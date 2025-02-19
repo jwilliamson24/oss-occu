@@ -27,15 +27,17 @@
 
 ## saved model outputs -----------------------------------------------------------------------------------
 
-# all species model:
-# load("./all.spp_model_2.RData")
-
-# oss model:
-# load("./oss_model.RData")
-
-# enes model:
-# load("./enes_model.RData")
-
+    # all species model:
+    # load("./all.spp_model_2.RData")
+    
+    # oss model:
+    # load("./oss_model.RData")
+    # attach.nimble(mcmc.output.3$samples)
+  
+    # enes model:
+    # load("./enes_model.RData")
+    # attach.nimble(mcmc.output.4$samples)
+  
 
 ## load Data--------------------------------------------------------------------------------------------------
 
@@ -61,25 +63,22 @@
 ## format data --------------------------------------------------------------------------------------------------
 # we need two parts: one subplot-level matrix, and one site-level matrix
 
-
-#### subplot-level matrix:
-# "date" "site" "temp" "humidity" "soil.moist" "all.obs" "oss.obs" "enes.obs" 
+# subplot-level matrix:
+    # "date" "site" "temp" "humidity" "soil.moist" "all.obs" "oss.obs" "enes.obs" 
     
     # subset and merge the various dataframes
-    subplot_subset <- subset(subplot[,c(8,1,9,18)]) #subset subplot variables
-    
-    df1 <- subset(site[,c(1,10,11)]) #subset site variables
-    
-    precip <- subset(env_subset_corr[,c(1,14)]) #subset precip to just site id and days since rain
-    colnames(precip)[1] <- "site_id"
+    df1 <- subset(site[,c(1,10,11)]) #subset site vars
+    df2 <- subset(subplot[,c(8,1,9,18)]) #subset subplot vars
+    df3 <- subset(env_subset_corr[,c(1,14)]) #subset precip: site and days since rain
+    colnames(df3)[1] <- "site_id"
     
     #merge site subset with precip subset
-    df2 <- full_join(df1,precip,by="site_id")
+    df4 <- full_join(df1,df3,by="site_id")
     
-    dfmerge <- full_join(subplot_subset,df2,by="site_id") #merge site and subplot
-    #prev line joins temp and hum to subplot matrix, which automatically repeats the 
-    #temp and hum in blank subplot cells from same site id for both years because
-    #its currently only listed for each site
+    #merge subplot df and new site df
+    dfmerge <- full_join(df2,df4,by="site_id") 
+        #joins site vars to subplot matrix, which automatically repeats the values in blank 
+        #subplot cells from same site id for both years bc its currently only listed for each site
     
     #rename sal columns
     colnames(oss.long)[3] <- "oss.obs"
@@ -91,36 +90,36 @@
     merge1 <- merge(merge1, oss.long, by=c("site_id","subplot"))
     complete.merge <- merge(merge1,enes.long,by=c("site_id","subplot"))
     
-    colnames(complete.merge) <- c("site","subplot","date","soil.moist","temp",
+    colnames(complete.merge) <- c("site","subplot","date","soil.moist","temp", 
                                   "humidity","days.since.rain","all.obs","oss.obs","enes.obs")
 
 
-#### site-level matrix:
-# "site" and "treatment
-    site_subset <- subset(site[,c(1,5)])
-    site_subset$trt <- as.factor(site_subset$trt)
-    site_subset$trt <- as.numeric(site_subset$trt)
-    table(site_subset$trt)
-    colnames(site_subset)[2] <- "treatment"
-
-#  1 = BS     
-#  2 = BU     
-#  3 = HB     
-#  4 = HU     
-#  5 = UU   
+# site-level matrix:
+    # "site" and "treatment"
+    df5 <- subset(site[,c(1,5)])
+    df5$trt <- as.numeric(as.factor(df5$trt))
+    table(df5$trt)
+    colnames(df5)[2] <- "treatment"
+    
+    #  1 = BS     
+    #  2 = BU     
+    #  3 = HB     
+    #  4 = HU     
+    #  5 = UU   
 
 
 ## name data for model --------------------------------------------------------------------------------------------------
+    
     data <- complete.merge
+    
     data$all.obs <- as.numeric(data$all.obs)
     data$oss.obs <- as.numeric(data$oss.obs)
     data$enes.obs <- as.numeric(data$enes.obs)
     
-    data2 <- site_subset
-    table(data2$treatment)
-    
     scaled_temp <- c(scale(data$temp))
 
+    data2 <- df5
+    
 #how to treat days since rain as detection covariate? priors?    
     # ggplot(complete.merge, aes(x = days.since.rain, y = oss.obs)) +
     #   geom_point(color = "blue", size = 2) +  
@@ -146,8 +145,7 @@
       #DetectionIntercept ~ dunif(-5,5) # single det int
       betaTemp ~ dunif(-5, 5)
       betaTemp2 ~ dunif(-5, 0)
-      betaRain ~ dnorm(-1, 1) #days since rain and occu have slight negative relationship,
-      # set prior as normal distribution with a negative mean (mu = -1) and a moderate stdev (sd = 1).
+      betaRain ~ dnorm(-1, 1) 
       
       # Likelihood
       
@@ -161,12 +159,14 @@
       # Observation model = Detection
       # need two pieces: one for p(det prob coeff) and one defining Y distribution
       for(j in 1:n.obs) {
-        logit(p[j]) <- #DetectionIntercept[treatment[site[j]]] + 
-                       DetectionIntercept +
+        logit(p[j]) <- DetectionIntercept[treatment[site[j]]] + 
+                       #prob of detecting a sal in observation j depends on the trt assigned to the site that obs belongs to
+                       #DetectionIntercept +
+                       #DetectionIntercept[treatment[j]] +
                        betaTemp*temp[j] + 
-                       betaTemp2*temp[j]^2 +
+                       betaTemp2*temp[j]^2 + #using temp as covariate with a quadratic relationship
                        betaRain*days.since.rain[j]
-        #using temp as covariate with a quadratic relationship
+        
         #p=detection probability for site i and survey j
         Y[j] ~ dbern(p[j] * z[site[j]]) #Y=my actual data observations
         #z=1 or 0, turns this on or off
@@ -263,7 +263,7 @@ attach.nimble(mcmc.output.3$samples)
       # Observation model = Detection
       # need two pieces: one for p(det prob coeff) and one defining Y distribution
       for(j in 1:n.obs) {
-        logit(p[j]) <-  DetectionIntercept[treatment[site[j]]] + 
+        logit(p[j]) <-  DetectionIntercept[treatment[j]] + 
                         #DetectionIntercept +
                         betaTemp*temp[j] + 
                         betaTemp2*temp[j]^2 #+
@@ -291,8 +291,8 @@ attach.nimble(mcmc.output.3$samples)
                        #days.since.rain=data$days.since.rain)
     
     nimble.constants = list(n.sites = length(unique(data$site)),
-                            n.treatments = length(unique(data2$treatment)),
-                            treatment=data2$treatment,
+                            n.treatments = length(unique(data$treatment)),
+                            treatment=data$treatment,
                             site=as.numeric(as.factor(data$site)),
                             n.obs = length(data$all.obs))
     
