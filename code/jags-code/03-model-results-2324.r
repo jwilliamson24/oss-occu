@@ -34,11 +34,11 @@
 # 0. read in the data
 # --------------------------------
 
-load("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/LS-jas data wrangling/output_files/oss_enes_data_packaged_jw.RData")
+load("data/jags/oss_enes_data_packaged_jw.RData")
     
 str(osslist)
 
-load("jags-occu-model-objects.RData")
+load("data/jags/jags-occu-model-objects.RData")
 
 
 
@@ -47,17 +47,17 @@ load("jags-occu-model-objects.RData")
 # ----------------------------
 
 # naive occupancy
-mean(apply(osslist$yo, 1, max, na.rm=T), na.rm=T) # 0.21 oss
-mean(apply(osslist$ye, 1, max, na.rm=T), na.rm=T) # 0.15 enes
-mean(apply(osslist$yo, 1, max, na.rm=T) + apply(osslist$ye, 1, max, na.rm=T) > 0, na.rm=T) # 0.29 any
-mean(apply(osslist$yo, 1, max, na.rm=T) * apply(osslist$ye, 1, max, na.rm=T)) # 0.06 both
-mean(apply(osslist$yo, 1, max, na.rm=T) - apply(osslist$ye, 1, max, na.rm=T) > 0, na.rm=T) # 0.14 oss only
-mean(apply(osslist$yo, 1, max, na.rm=T) - apply(osslist$ye, 1, max, na.rm=T) < 0, na.rm=T) # 0.08 enes only
+    mean(apply(osslist$yo, 1, max, na.rm=T), na.rm=T) # 0.18 oss
+    mean(apply(osslist$ye, 1, max, na.rm=T), na.rm=T) # 0.12 enes
+    mean(apply(osslist$yo, 1, max, na.rm=T) + apply(osslist$ye, 1, max, na.rm=T) > 0, na.rm=T) # 0.26 either
+    mean(apply(osslist$yo, 1, max, na.rm=T) * apply(osslist$ye, 1, max, na.rm=T)) # 0.04 both
+    mean(apply(osslist$yo, 1, max, na.rm=T) - apply(osslist$ye, 1, max, na.rm=T) > 0, na.rm=T) # 0.14 oss only
+    mean(apply(osslist$yo, 1, max, na.rm=T) - apply(osslist$ye, 1, max, na.rm=T) < 0, na.rm=T) # 0.08 enes only
 
-# unit-level naive occupancy
-mean(unlist(lapply(split(apply(osslist$yo, 1, max, na.rm=T), osslist$Stand3), max)))
-mean(unlist(lapply(split(apply(osslist$ye, 1, max, na.rm=T), osslist$Stand3), max)))
-mean(unlist(lapply(split(apply(osslist$yo, 1, max, na.rm=T) + apply(osslist$ye, 1, max, na.rm=T) >0, osslist$Stand3), max)))
+# unit-level naive occupancy (whats the different here?)
+    mean(unlist(lapply(split(apply(osslist$yo, 1, max, na.rm=T), osslist$Stand3), max))) # 0.61 oss
+    mean(unlist(lapply(split(apply(osslist$ye, 1, max, na.rm=T), osslist$Stand3), max))) # 0.44 enes
+    mean(unlist(lapply(split(apply(osslist$yo, 1, max, na.rm=T) + apply(osslist$ye, 1, max, na.rm=T) >0, osslist$Stand3), max))) # 0.71 both
 
 
 # ---------------------------
@@ -71,7 +71,7 @@ eh1.sl <- out.eh1$BUGSoutput$sims.list
 # ea1.sl <- out.ea1$BUGSoutput$sims.list
 
 
-# 2a. OSS occupancy
+# 2a. OSS occupancy           ################ Edited code to the chunk below. Not sure what to do with all this
 
   # trt effect estimator
   out.oh1$BUGSoutput$summary[rownames(out.oh1$BUGSoutput$summary) %in% 
