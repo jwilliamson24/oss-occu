@@ -157,8 +157,8 @@ sals_2023 <- sals_2023[,new_order]
 
 
 #save as csv
-write.csv(sals_2023, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/sals.2023.csv", 
-          row.names = FALSE)
+# write.csv(sals_2023, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/sals.2023.csv", 
+#           row.names = FALSE)
 
 
 
@@ -194,8 +194,8 @@ sals_2024 <- sals_2024[,new_order]
 
 
 #save as csv
-write.csv(sals_2024, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/sals.2024.csv", 
-          row.names = FALSE)
+# write.csv(sals_2024, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/sals.2024.csv", 
+#           row.names = FALSE)
 
 
 

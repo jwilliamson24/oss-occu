@@ -47,12 +47,8 @@ sals <- read.csv("sals.complete.csv",
                                 pass="factor", spp="factor", cover_obj="factor", 
                                 substrate="factor", age_class="factor"))
 
-oss.dets <- read.csv("oss.occu.wide.csv")
-enes.dets <- read.csv("enes.occu.wide.csv")
 
 all.long <- read.csv("all.occu.long.csv")
-oss.long <- read.csv("oss.occu.long.csv")
-enes.long <- read.csv("enes.occu.long.csv")
 
 # add df with precip data
 env_subset_corr <- read.csv("env_subset_corr.csv")
@@ -82,17 +78,13 @@ dfmerge <- full_join(subplot_subset,df2,by="site_id") #merge site and subplot
 #its currently only listed for each site
 
 #rename sal columns
-colnames(oss.long)[3] <- "oss.obs"
-colnames(enes.long)[3] <- "enes.obs"
 colnames(all.long)[3] <- "all.obs"
 
 #merge sal columns with env variables
-merge1 <- merge(dfmerge, all.long, by=c("site_id","subplot"))
-merge1 <- merge(merge1, oss.long, by=c("site_id","subplot"))
-complete.merge <- merge(merge1,enes.long,by=c("site_id","subplot"))
+complete.merge <- merge(dfmerge, all.long, by=c("site_id","subplot"))
 
 colnames(complete.merge) <- c("site","subplot","date","soil.moist","temp",
-                              "humidity","days.since.rain","all.obs","oss.obs","enes.obs")
+                              "humidity","days.since.rain","all.obs")
 
 
 #### site-level matrix:
@@ -113,8 +105,6 @@ colnames(site_subset)[2] <- "treatment"
 ## name data for model --------------------------------------------------------------------------------------------------
 data <- complete.merge
 data$all.obs <- as.numeric(data$all.obs)
-data$oss.obs <- as.numeric(data$oss.obs)
-data$enes.obs <- as.numeric(data$enes.obs)
 
 data2 <- site_subset
 table(data2$treatment)

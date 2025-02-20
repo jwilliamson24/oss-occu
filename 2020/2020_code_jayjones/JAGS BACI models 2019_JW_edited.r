@@ -145,7 +145,7 @@ model.h1 <- function(){
       aHU[Year3[i]]*HU3[i] + aHUAT[Year3[i]]*HU3[i]*AT3[i] + aHUAT2[Year3[i]]*HU3[i]*AT3[i]*AT3[i] + #harv
       aBU[Year3[i]]*BU3[i] + aBUAT[Year3[i]]*BU3[i]*AT3[i] + aBUAT2[Year3[i]]*BU3[i]*AT3[i]*AT3[i] + #burn
       aHB[Year3[i]]*HB3[i] + aHBAT[Year3[i]]*HB3[i]*AT3[i] + aHBAT2[Year3[i]]*HB3[i]*AT3[i]*AT3[i] + #harvburn
-      aBS[Year3[i]]*BS3[i] + aBSAT[Year3[i]]*BS3[i]*AT3[i] + aBSAT2[Year3[i]]*BS3[i]*AT3[i]*AT3[i] + #salv
+      aBS[Year3[i]]*BS3[i] + aBSAT[Year3[i]]*BS3[i]*AT3[i] + aBSAT2[Year3[i]]*BS3[i]*AT3[i]*AT3[i]  #salv
      
     p.eff[i] <- z[i] * p[i]                 
     

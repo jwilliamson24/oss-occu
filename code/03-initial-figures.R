@@ -31,9 +31,10 @@ sals <- read.csv("sals.complete.csv",
                                 pass="factor", spp="factor", cover_obj="factor", 
                                 substrate="factor", age_class="factor"))
 
-sals_2023 <- read.csv("sals.2023.csv")
-sals_2024 <- read.csv("sals.2024.csv")
-
+#sals_2023 <- read.csv("sals.2023.csv")
+sals_2023 <- subset(sals, year == "2023")
+#sals_2024 <- read.csv("sals.2024.csv")
+sals_2024 <- subset(sals, year == "2024")
 #### format data -----------------------------------------------------------------------------------------
 
 # add detection col

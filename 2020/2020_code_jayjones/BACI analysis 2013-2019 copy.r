@@ -36,7 +36,7 @@
 # 2. load JAGS models
 # --------------------------------
 
-source("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/2020/2020_code_jayjones/JAGS BACI models 2019_JW_edited copy.r")
+source("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/2020/2020_code_jayjones/JAGS BACI models 2019_JW_edited.r")
 #source("JAGS BACI models 2019.r")
   
   
@@ -76,6 +76,9 @@ myFun <- function(n, y, p){
                 "betaBU", "betaHB", "betaBS", "betaDW", "SalvEffect", "BurnEffect",
                 "mu.a0", "mu.a1", "mu.a2", "mu.a3", "mu.a4", "mu.a5", "mu.a6", "mu.a7", "mu.a8", "mu.a9", "mu.a10",
                 "mu.a11", "mu.a12", "mu.a13", "mu.a14", "p.eff", "b0", "sd.b0", "a0")
+  
+  ### THIS NEEDS TO BE UPDATED
+  ### Add in the level 3 treatment variables (HU3, etc)
   test.data.o <- with(osslist, list(y=yo, nyear=nyear, nstand=nstand, Year2024=Year2024, TFCL1=TFCL1, TFNC1=TFNC1, 
                                     HB2=HB2, BS2=BS2, HU2=HU2, BU2=BU2, DW3=(DW3-3)/2, AT3=(AT3-12)/5.5, Trt3=TrtGrp3, #what is he doing here with these calculations?
                                     nall=nall, nvisit=nvisit, Year3=Year3, Stand3=Stand3))
@@ -109,6 +112,8 @@ myFun <- function(n, y, p){
                 "betaDW", "TrtEffect", "betaPre", "betaPost",
                 "mu.a0", "mu.a1", "mu.a2", "mu.a3", "mu.a4", "mu.a5", "p.eff",
                 "b0", "sd.b0", "a0")
+  
+  ### THIS NEEDS TO BE UPDATED
   test.data.e <- with(osslist, list(y=ye, nyear=nyear, nstand=nstand, Year2014=Year2014, Year2015=Year2015, 
                                     Year2016=Year2016, Year2017=Year2017, Year2018=Year2018, Year2019=Year2019,
                                     TFCL1=TFCL1, PreTrt2=PreTrt2, 

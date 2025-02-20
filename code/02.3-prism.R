@@ -118,7 +118,7 @@
     daily_precip_data$precip_mm <- round(daily_precip_data$precip_mm,2) # round precip to 2 decimal places
     
     # Save 
-    write.csv(daily_precip_data, "daily_precip_data.csv", row.names = FALSE)
+    #write.csv(daily_precip_data, "daily_precip_data.csv", row.names = FALSE)
     
     
 #### merge with site location data -------------------------------------------------------------------------------------

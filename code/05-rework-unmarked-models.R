@@ -1,6 +1,6 @@
 ## -------------------------------------------------------------------------------------------------------
 ##
-## 05-rework-unmarked-models.R 
+## 05-unmarked-models-trt.R 
 ##
 ## Rerun the occupancy models using package Unmarked from 2023 analysis
 ##
@@ -57,8 +57,8 @@
                                     pass="factor", spp="factor", cover_obj="factor", 
                                     substrate="factor", age_class="factor"))
     
-    oss.dets <- read.csv("oss.occu.df.csv")
-    enes.dets <- read.csv("enes.occu.df.csv")
+    oss.dets <- read.csv("oss.occu.wide.csv")
+    enes.dets <- read.csv("enes.occu.wide.csv")
 
 
 
@@ -154,24 +154,37 @@
       obsCovs = list(weather = weather, soilmoist = scaled_soilmoist), 
       siteCovs = scaled_sitecovs)
 
-# Run four models to determine Psi and P covariates
+# Run several models to determine Psi and P covariates
+    # occu(~det covs ~occu covs, data=, se=TRUE)
 
     #1: psi(.) p(.)
     m1 <- occu(~1 ~1, data=UMF.oss.scaled)
     #AIC: 819.7476
     
-    # 2: psi(treatment) p(.)
-    # m2 <- occu(~1 ~trt, data=UMF.oss.scaled)
+    #2: psi(treatment) p(.)
+    m2 <- occu(~1 ~trt, data=UMF.oss.scaled)
     #AIC: 819.3336 
     
-    # 3: psi(.) p(x) , x = date, treatment, or soil moisture                
-    # m3 <- occu(~soilmoist ~1, data=UMF.oss.scaled)
-    #AIC: 820.4457 
+    #3: psi(.) p(days since rain)                 
+    m3 <- occu(~days_since_rain ~1, data=UMF.oss.scaled)
+    #AIC: 
     
-    # 4: psi(treatment) p(x) , x = date, treatment, or soil moisture
-    # m4 <- occu(~1 ~temp, data=UMF.oss.scaled)
+    #4: psi(treatment) p(days since rain) 
+    m4 <- occu(~days_since_rain ~trt, data=UMF.oss.scaled)
     #AIC: 821.3062 
-
+    
+    #5: psi(treatment) p(temp + days since rain) 
+    m5 <- occu(~temp + days_since_rain ~trt, data=UMF.oss.scaled)
+    #AIC: 
+    
+    #6: psi(treatment) p(soil moist + days since rain)
+    m6 <- occu(~soilmoist + days_since_rain ~trt, data=UMF.oss.scaled)
+    #AIC: 
+    
+    #7: psi(treatment) p(soil moist + veg cov + days since rain)
+    m7 <- occu(~soilmoist + veg_cov + days_since_rain ~trt, data=UMF.oss.scaled)
+    #AIC: 
+    
 
 
 ## Extract treatment occupancy predictions and plot ------------------------------------------------------------
