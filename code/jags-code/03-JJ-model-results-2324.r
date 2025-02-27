@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------------------------
 ##
-## 03-model-results-2324
+## 03-JJ-model-results-2324
 ##
 ## Task: Summarize fitted model results for OSS/ENES JAGS Occupancy Model 2023-2024
 ##

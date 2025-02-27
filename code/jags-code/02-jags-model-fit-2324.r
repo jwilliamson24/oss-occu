@@ -27,7 +27,7 @@
 # 1. read in the data
 # --------------------------------
   
-load("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/LS-jas data wrangling/output_files/oss_enes_data_packaged_jw.RData")
+load("resources/LS-jas data wrangling/output_files/oss_enes_data_packaged_jw.RData")
 str(osslist)
 
 
@@ -36,7 +36,7 @@ str(osslist)
 # 2. load JAGS occu model
 # --------------------------------
 
-source("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/2020/2020_code_jayjones/JAGS BACI models 2019_JW_edited.r")
+source("code/jags-code/01-jags-model-2324.r")
   
 
   
