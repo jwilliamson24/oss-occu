@@ -143,22 +143,8 @@
     #  dat1 <- csvToUMF("data/occupancy/oss_csvToUMF.csv", long = FALSE, type = "unmarkedFrameOccu")
     
     
-## name and scale covs for unmarked object ----------------------------------------------------------
 
-#data frames with site rows and subplots columns
-    # hum <- sitecovs$hum
-    # temp <- sitecovs$temp
-    # weather <- weather
-    # date <- site$date_mdy
-    # soilmoist <- soil_moist
-    # date <-  site$date_mdy
-    # 
-    # #scale det dovs
-    # scaled_hum <- as.data.frame(scale(hum))
-    # scaled_temp <- as.data.frame(scale(temp))
-    # #scaled_date <- as.data.frame(scale(date))
-    # scaled_soilmoist <- as.data.frame(scale(soilmoist))
-
+    
 
 
 
