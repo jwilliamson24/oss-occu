@@ -14,7 +14,8 @@
 # other ways to interpret and visualize results
 
 ## insights
-# 
+# trouble making sense of most of this
+# havent done any of the abundance stuff yet
 
 ## settings --------------------------------------------------------------------------------
 

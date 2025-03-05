@@ -7,14 +7,15 @@
 ## Jasmine Williamson
 ## Date Created: 07-09-2024
 ##
-## 
+
 ## goals
-## using the unmarked code that i started last august, rework to use new covariate matrix
+# using the unmarked code that i started last august, rework to use new covariate matrix
 
 ## insights
-## 2/27/25 tried formatting for use of csvToUMF but couldnt get function to work, gave up on it 
-# 
-# 
+# 2/27/25 tried formatting for use of csvToUMF but couldnt get function to work, gave up on it 
+# ran models with just dwd covs to figure out which one is best, getting negative relationships with dwd & occu
+# det covs (rain, temp, soil moist) all showing non significant - shouldnt be the case for rain
+
 
 ## settings -----------------------------------------------------------------------------------------------
 

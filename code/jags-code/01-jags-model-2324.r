@@ -13,7 +13,7 @@
 # define models that will be fit in following script
 
 ## insights
-
+# model runs
 
 # -----------------------------------------------------------------------------------------
 # 'hierarchical' model (i.e., random effects model)

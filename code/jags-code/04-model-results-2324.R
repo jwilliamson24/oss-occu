@@ -12,18 +12,18 @@
 # starting from scratch, using bits of Jay Jones' code
 
 ## insights
-# 
+# model runs with 2023-2024 data
+# made a parameter posteriors plot but i cant make sense of it
 
 ## settings --------------------------------------------------------------------------------
 
+    rm(list=ls())
     library(R2jags)
     library(grid)
     library(gridExtra)
     library(abind)
     library(tidyr)
     library(ggplot2)
-    
-    rm(list=ls())
 
 
 ## load data --------------------------------------------------------------------------------

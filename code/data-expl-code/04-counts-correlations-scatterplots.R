@@ -10,7 +10,7 @@
 ## 
 ## goals --------------------------------------------------------------------------------------------------
 
-# i want to calculate the correlation between detections and habitat/climate variables:
+# i want to calculate correlations between sal data and habitat variables:
 # subplot level: canopy, canopy, dwd,veg, fwd, soil moist
 # site level: elev, temp, hum
 
@@ -32,7 +32,8 @@
     library(dplyr)
     library(tidyr)
     library(tidyverse)
-
+    library(corrplot)
+    
 
 ## load data ----------------------------------------------------------------------------------------------
 
@@ -45,13 +46,10 @@
                                     pass="factor", spp="factor", cover_obj="factor", 
                                     substrate="factor", age_class="factor"))
     
-    scaled_sitecovs <- read.csv("scaled.sitecovs.csv")
-
-
-# all.long <- read.csv("all.occu.long.csv")
-# oss.long <- read.csv("oss.occu.long.csv")
-# enes.long <- read.csv("enes.occu.long.csv")
-
+    
+    covs <- read.csv("covariate matrices/env_subset_corr.csv")
+    covs <- rename(covs, site_id = X)
+    
 
 ## captures by site -----------------------------------------------------------------------------------
 
@@ -117,8 +115,8 @@
     oss.counts.sub$counts[is.na(oss.counts.sub$counts)] <- 0
     oss.counts.sub <- oss.counts.sub[,-3]
     
-    write.csv(oss.counts.sub, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/oss_counts_subplot.csv",
-              row.names = FALSE)
+    #write.csv(oss.counts.sub, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/oss_counts_subplot.csv",
+     #         row.names = FALSE)
     
     
     # all enes captures
@@ -128,27 +126,39 @@
     enes.counts.sub$counts[is.na(enes.counts.sub$counts)] <- 0
     enes.counts.sub <- enes.counts.sub[,-3]
     
-    write.csv(enes.counts.sub, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/enes_counts_subplot.csv",
-              row.names = FALSE)
+    #write.csv(enes.counts.sub, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/enes_counts_subplot.csv",
+     #         row.names = FALSE)
 
 ## correlations at site level ------------------------------------------------------------------
 # no correlations > 0.7
 
 # site level: elev, temp, hum
-
-
+    
+    # scale site covs, but keep site id col
+    scaled_sitecovs <- data.frame(
+      site_id = covs$site_id,
+      scale(covs[, sapply(covs, is.numeric)])
+    )
+    
     # all spp
-    correl <- merge(all.counts,scaled_sitecovs,all=TRUE)
-    cor(correl$counts,correl[,3:5])
-    #         elev        temp       hum
-    # [1,] 0.02860486 -0.08027663 0.1246443
+    correl1 <- merge(all.counts,scaled_sitecovs, by="site_id")
+    cor1 <- cor(correl1$counts,correl1[,3:16])
+    round(cor1,4)
+
     
     
     # oss
-    correl <- merge(oss.counts,scaled_sitecovs,all=TRUE)
-    cor(correl$counts,correl[,3:5])
-    #         elev       temp       hum
-    # [1,] 0.1128618 -0.1217911 0.1471938
+    correl2 <- merge(oss.counts,scaled_sitecovs,all=TRUE)
+    cor2 <- cor(correl2$counts,correl2[,3:16])
+    round(cor2,4)
+
+    barplot(cor2,
+            main = "Correlations with Counts",
+            xlab = "Environmental Variables",
+            ylab = "Correlation Coefficient",
+            col = "skyblue",
+            border = "black",
+            las = 2)
     
     
     # enes
@@ -162,7 +172,7 @@
 # no correlations > 0.7
 
 
-# subplot level: canopy, canopy, dwd,veg, fwd, soil moist
+# subplot level: canopy, canopy, dwd, veg, fwd, soil moist
 
     # all spp
     correl <- merge(all.counts.sub,subplot,all=TRUE)
@@ -230,10 +240,17 @@
 
 
 
+    
+    
+    
 
-
-
-
+    ggplot(correl2, aes(x = dwd_count, y = counts)) +
+      geom_point(position = position_jitter(height = 0.1)) +
+      geom_smooth(method = "lm", se = TRUE, color = "blue") +
+      labs(title = "Relationship between DWD Counts and Salamander Presence",
+           x = "DWD Count",
+           y = "Salamander Present") +
+      theme_classic()
 
 
 

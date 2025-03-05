@@ -13,6 +13,9 @@
 
 ## insights
 # model runs! 02/20/25
+# added detection intercept by treatment, it changes the results a lot
+# cant understand why its doing this, pretty sure im doing the code right for that
+
 
 ## settings --------------------------------------------------------------------------------
 
