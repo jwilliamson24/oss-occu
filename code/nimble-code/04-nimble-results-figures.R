@@ -37,7 +37,7 @@
     enes.occu.prob <- inv.logit(TreatmentIntercept)
     enes.det.prob <- inv.logit(DetectionIntercept)
     
-# detection data
+# detections data
     oss.dets <- read.csv("oss.occu.wide.csv")
     enes.dets <- read.csv("enes.occu.wide.csv")
     
@@ -276,3 +276,4 @@ ggsave(filename = "both_occu_prob.png", plot = p3, device = "png",
            width = 10, height = 6, units = "in", dpi = 300)
     
     
+plot(combined_data)

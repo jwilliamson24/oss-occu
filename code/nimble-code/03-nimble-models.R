@@ -52,12 +52,12 @@
     oss.dets <- read.csv("oss.occu.wide.csv")
     enes.dets <- read.csv("enes.occu.wide.csv")
     
-    all.long <- read.csv("all.occu.long.csv")
-    oss.long <- read.csv("oss.occu.long.csv")
-    enes.long <- read.csv("enes.occu.long.csv")
+    all.long <- read.csv("occupancy/all.occu.long.csv")
+    oss.long <- read.csv("occupancy/oss.occu.long.csv")
+    enes.long <- read.csv("occupancy/enes.occu.long.csv")
 
-    # add df with precip data
-    env_subset_corr <- read.csv("env_subset_corr.csv")
+    env_subset_corr <- read.csv("env_subset_corr.csv")    # df with precip data
+
 
 
 ## format data --------------------------------------------------------------------------------------------------
@@ -130,8 +130,10 @@
     
 
 
-## OSS MODEL ------------------------------------------------------------------------------------------------
-
+## MODEL 1 ------------------------------------------------------------------------------------------------
+# separate det intercepts per treatment
+    
+    
     oss.model <- nimbleCode ({
       
       # Priors 
@@ -143,9 +145,9 @@
       }#t
       
       #DetectionIntercept ~ dunif(-5,5) # single det int
-      betaTemp ~ dunif(-5, 5)
-      betaTemp2 ~ dunif(-5, 0)
-      betaRain ~ dnorm(-1, 1) 
+      betaTemp ~ dnorm(-0, 2) 
+      betaTemp2 ~ dnorm(-0, 2)
+      betaRain ~ dnorm(-0, 2) 
       
       # Likelihood
       
@@ -182,6 +184,9 @@
     nt <- 40
     nb <- 20000
     nc <- 3
+  
+    
+## For OSS Model 1 ---------------------------------------------------------------------------------
     
     # Data
     nimble.data = list(Y=data$oss.obs,
@@ -205,11 +210,43 @@
                                 summary=TRUE,
                                 samplesAsCodaMCMC = TRUE)
 
-attach.nimble(mcmc.output.3$samples)
-# save(mcmc.output.3, file="./oss_model.RData")
-# load("./oss_model.RData")
+    attach.nimble(mcmc.output.3$samples)
+    save(mcmc.output.3, file="./oss_model.RData")
+    # load("./oss_model.RData")
 
+    
+## For ENES Model 1 ---------------------------------------------------------------------------------
 
+    # Data
+    nimble.data = list(Y=data$enes.obs,
+                       temp=scaled_temp,
+                       days.since.rain=data$days.since.rain)
+    
+    nimble.constants = list(n.sites = length(unique(data$site)),
+                            n.treatments = length(unique(data2$treatment)),
+                            treatment=data2$treatment,
+                            site=as.numeric(as.factor(data$site)),
+                            n.obs = length(data$all.obs))
+    
+    mcmc.output.4 <- nimbleMCMC(code = oss.model,
+                                data = nimble.data,
+                                constants=nimble.constants,
+                                monitors = parameters,
+                                niter = ni,
+                                nburnin = nb,
+                                nchains = nc,
+                                thin=nt,
+                                summary=TRUE,
+                                samplesAsCodaMCMC = TRUE)
+    
+    #######     warning: logProb of data node Y[724]: logProb is -Inf. what does this mean??
+    
+    
+    attach.nimble(mcmc.output.4$samples)
+    save(mcmc.output.4, file="./enes_model.RData")
+    # load("./enes_model.RData")
+
+    
 ## assessing convergence------------------------------------------------------------------------------------------------------
 
 #mcmcplot(mcmc.output.1$samples)
@@ -234,69 +271,74 @@ attach.nimble(mcmc.output.3$samples)
     #unsure about trtint 1 & 3 trace plots
     
 
-## ENES MODEL ------------------------------------------------------------------------------------------------
-
+## MODEL 2 ------------------------------------------------------------------------------------------------
+# same det intercept for all treatments
+    
     enes.model <- nimbleCode ({
   
       # Priors 
       # uninformative, vague priors
       
       for(t in 1:n.treatments){
-        TreatmentIntercept[t] ~ dunif(-10,10)
-        DetectionIntercept[t] ~ dunif(-5,5) # separate det int per treatment
+        TreatmentIntercept[t,1] ~ dunif(-10,10) 
       }#t
       
-      #DetectionIntercept ~ dunif(-5,5) # single det intercept
-      betaTemp ~ dunif(-5, 5)
-      betaTemp2 ~ dunif(-5, 0)
-      #betaRain ~ dnorm(-1, 1)
+      DetectionIntercept ~ dunif(-5,5) # single det intercept
+      betaTemp ~ dnorm(-0, 2)
+      betaTemp2 ~ dnorm(-0, 2)
+      betaRain ~ dnorm(-0, 2)
       
       # Likelihood
       
       # Process/Biological model = Occupancy
       # need two pieces: one defining psi(occu prob coeff) and covariates, and one defining z dist
       for(i in 1:n.sites) {
-        logit(psi[i]) <- TreatmentIntercept[treatment[i]]  #psi=occupancy probability
-        z[i] ~ dbern(psi[i])  # z=1 if occupied, z=latent true occupancy
+        logit(psi[i,s]) <- TreatmentIntercept[treatment[i]]  #psi=occupancy probability
+        z[i,s] ~ dbern(psi[i,s])  # z=1 if occupied, z=latent true occupancy
       }#i
+      # wrap in sub forloops
       
       # Observation model = Detection
       # need two pieces: one for p(det prob coeff) and one defining Y distribution
-      for(j in 1:n.obs) {
-        logit(p[j]) <-  DetectionIntercept[treatment[j]] + 
-                        #DetectionIntercept +
+      for(j in 1:n.obs) { 
+        logit(p[j]) <-  DetectionIntercept +
                         betaTemp*temp[j] + 
-                        betaTemp2*temp[j]^2 #+
-                        #betaRain*days.since.rain[j]
+                        betaTemp2*temp[j]^2 +
+                        betaRain*days.since.rain[j]
         #using temp as covariate with a quadratic relationship
         #p=detection probability for site i and survey j
-        Y[j] ~ dbern(p[j] * z[site[j]]) #Y=my actual data observations
+        Y[j,s] ~ dbern(p[j] * z[site[j] ,s]) #Y=my actual data observations #wrap in subloop 
         #z=1 or 0, turns this on or off
       }#j
       
     })
+    #data input change - matrix with spp1,2
+    #shared det int and relship with temp
+    
+    #
     
     # Parameters monitored
-    parameters <- c("z","p","TreatmentIntercept","DetectionIntercept","betaTemp", "betaTemp2")#, "betaRain")
+    parameters <- c("z","p","TreatmentIntercept","DetectionIntercept","betaTemp", "betaTemp2", "betaRain")
     
     # MCMC Settings
     ni <- 80000
     nt <- 80
     nb <- 40000
     nc <- 3
+
     
     # Data
     nimble.data = list(Y=data$enes.obs,
-                       temp=scaled_temp)#,
-                       #days.since.rain=data$days.since.rain)
+                       temp=scaled_temp,
+                       days.since.rain=data$days.since.rain)
     
     nimble.constants = list(n.sites = length(unique(data$site)),
-                            n.treatments = length(unique(data$treatment)),
-                            treatment=data$treatment,
+                            n.treatments = length(unique(data2$treatment)),
+                            treatment=data2$treatment,
                             site=as.numeric(as.factor(data$site)),
                             n.obs = length(data$all.obs))
     
-    mcmc.output.4 <- nimbleMCMC(code = enes.model,
+    mcmc.output.4 <- nimbleMCMC(code = oss.model,
                                 data = nimble.data,
                                 constants=nimble.constants,
                                 monitors = parameters,
@@ -311,7 +353,7 @@ attach.nimble(mcmc.output.3$samples)
 
     
     attach.nimble(mcmc.output.4$samples)
-    # save(mcmc.output.4, file="./enes_model.RData")
+    save(mcmc.output.4, file="./enes_model.RData")
     # load("./enes_model.RData")
 
 
@@ -343,39 +385,13 @@ attach.nimble(mcmc.output.3$samples)
      #treatment 2 and 3 caterpillars dont look great
     
     
-
-
-## interpreting model outputs----------------------------------------------------------------------------------------------------
+## josh ran these things after model to see outputs
     
-    
-# Inverse logit the detection intercept to get detection probabilities
-    det.probs.inv <- inv.logit(DetectionIntercept)
-    hist(det.probs.inv)
-    
+    hist(betaRain)
+    mean(betaRain<0)
 
-# For use with single Det Intercept
-    mean(det.probs.inv) # = 0.2403386
-    mean(det.probs.inv>0)  # = 1
-    median(det.probs.inv)  # = 0.2394667
-    boxplot(det.probs.inv)
-    
-
-# Inv logit DetectionIntercept to get Detection Estimates
-    median(det.probs.inv[,1]) 
-    median(det.probs.inv[,2])
-    median(det.probs.inv[,3]) 
-    median(det.probs.inv[,4]) 
-    median(det.probs.inv[,5]) 
-
-
-# Inv logit TreatmentIntercept to get Occupancy Estimates
-    trt.int.inv <- inv.logit(TreatmentIntercept)
-    median(trt.int.inv[,1]) # 0.6271816    BS
-    median(trt.int.inv[,2]) # 0.5330411    BU
-    median(trt.int.inv[,3]) # 0.4669251    HB
-    median(trt.int.inv[,4]) # 0.5864338    HU
-    median(trt.int.inv[,5]) # 0.5549356    UU
-
-
-
+    plot(TreatmentIntercept[,5],DetectionIntercept[,5])
+    plot(TreatmentIntercept[,4],DetectionIntercept[,4])
+    plot(TreatmentIntercept[,1],DetectionIntercept[,1])
+    plot(TreatmentIntercept[,3],DetectionIntercept[,3])
 
