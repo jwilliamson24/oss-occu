@@ -5,7 +5,7 @@
 ## Task: Create model with both spp together, separate occu prob, with same det prob
 ##
 ## Jasmine Williamson
-## Date Created: 03/10/2025
+## Date Created: 03/07/2025
 ##
 ## 
 
@@ -20,23 +20,41 @@
     library(mcmcplots)
     library(MCMCvis)
     library(boot)
-    source('attach.nimble_v2.R')
+    #source('attach.nimble_v2.R')
+
+## load Data - Github version for Josh ----------------------------------------------------------------------------
+
+# model output
+    load("./all-model.RData")
+
+    source('https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/attach.nimble_v2.R')
+    attach.nimble(mcmc.output.1$samples)
+
+# input data
+    site <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/site.complete.csv")
+    subplot <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/subplot.complete.csv")
+    
+    oss.long <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/occupancy/oss.occu.long.csv")
+    enes.long <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/occupancy/enes.occu.long.csv")
+    
+    env_subset_corr <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/covariate%20matrices/env_subset_corr.csv")    # df with precip data
+    
 
 ## load Data--------------------------------------------------------------------------------------------------
 
-    site <- read.csv("site.complete.csv")
-    subplot <- read.csv("subplot.complete.csv")
-    sals <- read.csv("sals.complete.csv", 
-                     colClasses = c(landowner="factor", stand="character", trt="factor",
-                                    obs="factor", subplot="factor", recap="factor",
-                                    pass="factor", spp="factor", cover_obj="factor", 
-                                    substrate="factor", age_class="factor"))
-    
-    all.long <- read.csv("occupancy/all.occu.long.csv")
-    oss.long <- read.csv("occupancy/oss.occu.long.csv")
-    enes.long <- read.csv("occupancy/enes.occu.long.csv")
-    
-    env_subset_corr <- read.csv("covariate matrices/env_subset_corr.csv")    # df with precip data
+    # site <- read.csv("site.complete.csv")
+    # subplot <- read.csv("subplot.complete.csv")
+    # sals <- read.csv("sals.complete.csv", 
+    #                  colClasses = c(landowner="factor", stand="character", trt="factor",
+    #                                 obs="factor", subplot="factor", recap="factor",
+    #                                 pass="factor", spp="factor", cover_obj="factor", 
+    #                                 substrate="factor", age_class="factor"))
+    # 
+    # all.long <- read.csv("occupancy/all.occu.long.csv")
+    # oss.long <- read.csv("occupancy/oss.occu.long.csv")
+    # enes.long <- read.csv("occupancy/enes.occu.long.csv")
+    # 
+    # env_subset_corr <- read.csv("covariate matrices/env_subset_corr.csv")    # df with precip data
 
     
 ## format data --------------------------------------------------------------------------------------------------
@@ -60,11 +78,11 @@
     #subplot cells from same site id for both years bc its currently only listed for each site
     
     #rename sal columns and rbind
-    # colnames(oss.long)[3] <- "det"
-    # oss.long$spp <- "oss"
-    # colnames(enes.long)[3] <- "det"
-    # enes.long$spp <- "enes"
-    # all.spp.long <- rbind(oss.long, enes.long)
+    colnames(oss.long)[3] <- "det"
+    oss.long$spp <- "oss"
+    colnames(enes.long)[3] <- "det"
+    enes.long$spp <- "enes"
+    all.spp.long <- rbind(oss.long, enes.long)
     
     colnames(oss.long)[3] <- "oss"
     colnames(enes.long)[3] <- "enes"
@@ -76,9 +94,9 @@
     # 1 = oss
     # 2 = enes
     
-    #merge sal columns with env variables
-    # merge1 <- merge(dfmerge, all.spp.long, by=c("site_id","subplot"))
- 
+    # merge sal columns with env variables
+    merge1 <- merge(dfmerge, all.spp.long, by=c("site_id","subplot"))
+
     
     
     # site-level matrix: "site" and "treatment"
@@ -93,9 +111,10 @@
     #  4 = HU     
     #  5 = UU   
     
-    # merge2 <- merge(merge1, df5, by="site_id")
-    # colnames(merge2) <- c("site","subplot","date","soil.moist","temp", 
-    #                       "humidity","days.since.rain","det","spp","trt")
+    merge2 <- merge(merge1, df5, by="site_id")
+    colnames(merge2) <- c("site","subplot","date","soil.moist","temp",
+                          "humidity","days.since.rain","det","spp","trt")
+    
 ## name data for model --------------------------------------------------------------------------------------------------
     
     data <- merge2
@@ -190,11 +209,10 @@
                                 summary=TRUE,
                                 samplesAsCodaMCMC = TRUE)
     
-    #######     warning: logProb of data node Y[724]: logProb is -Inf. what does this mean??
-    
+
     
     attach.nimble(mcmc.output.1$samples)
-    #save(mcmc.output.4, file="./enes_model.RData")
+    save(mcmc.output.1, file="./all-model.RData")
     # load("./enes_model.RData")
     
     
@@ -257,16 +275,17 @@
     treatment_means <- apply(rbind(chain1_intercepts, chain2_intercepts, chain3_intercepts), 2, mean)
     treatment_sds <- apply(rbind(chain1_intercepts, chain2_intercepts, chain3_intercepts), 2, sd)
     
-    # Create a clear visualization
-    library(ggplot2)
+    
+    treatment_names <- c("BS", "BU", "HB", "HU", "UU")
     
     # Prepare data for plotting
     plot_data <- data.frame(
       Treatment = rep(1:5, 2),
-      Species = rep(c("Species 1", "Species 2"), each = 5),
+      Species = rep(c("Spp1 OSS", "Spp2 ENES"), each = 5),
       Mean = c(treatment_means[1:5], treatment_means[6:10]),
       SD = c(treatment_sds[1:5], treatment_sds[6:10])
     )
+    
     
     # Create the plot
     ggplot(plot_data, aes(x = factor(Treatment), y = Mean, color = Species)) +
@@ -281,7 +300,8 @@
             axis.text.y = element_text(size = 12),
             axis.title = element_text(size = 14),
             legend.text = element_text(size = 12),
-            legend.title = element_text(size = 14))
+            legend.title = element_text(size = 14))+
+      scale_x_discrete(labels = treatment_names)
  
     
     
@@ -290,22 +310,22 @@
 # Occupancy probabilities
     
     calculate_occupancy <- function(intercept) {
-      # Convert log-odds to probability
+      # Convert log-odds to probs
       exp(intercept) / (1 + exp(intercept))
     }
     
-    # Calculate mean occupancy probabilities for each treatment-species combination
+    # Calculate mean occupancy prob for each treatment-species combination
     occupancy_means <- apply(rbind(chain1_intercepts, chain2_intercepts, chain3_intercepts), 
                              2, function(x) mean(calculate_occupancy(x)))
     
-    # Create data frame for occupancy probabilities
+    # Create df for occupancy probs
     occupancy_data <- data.frame(
       Treatment = rep(1:5, 2),
-      Species = rep(c("Species 1", "Species 2"), each = 5),
+      Species = rep(c("Spp1 OSS", "Spp2 ENES"), each = 5),
       Occupancy = c(occupancy_means[1:5], occupancy_means[6:10])
     )
     
-    # Create occupancy probability plot
+    # Create occupancy prob plot
     ggplot(occupancy_data, aes(x = factor(Treatment), y = Occupancy, color = Species)) +
       geom_point(size = 3) +
       geom_errorbar(aes(ymin = Occupancy - 0.1, ymax = Occupancy + 0.1), width = 0.2) +
@@ -319,11 +339,19 @@
             axis.title = element_text(size = 14),
             legend.text = element_text(size = 12),
             legend.title = element_text(size = 14)) +
-      coord_cartesian(ylim = c(0, 1))   
+      coord_cartesian(ylim = c(0, 1))  +
+      scale_x_discrete(labels = treatment_names) 
     
+    # treatments
+    #  1 = BS     
+    #  2 = BU     
+    #  3 = HB     
+    #  4 = HU     
+    #  5 = UU  
     
-    
-    
+    # species
+    # 1 = oss
+    # 2 = enes
     
     
     
