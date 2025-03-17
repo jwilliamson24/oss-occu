@@ -31,8 +31,8 @@
 
 ## load data----------------------------------------------------------------------------------------------
 
-    df_oss_sc <- read.csv("data/occupancy/oss_forUMF_scaled.csv")
-    df_oss_unsc <- read.csv("data/occupancy/oss_forUMF_unscaled.csv")
+    df_oss <- read.csv("occupancy/oss_forUMF_scaled.csv")
+    df_oss_unsc <- read.csv("occupancy/oss_forUMF_unscaled.csv")
 
 
 ## Build OSS unmarkedFrameOccu Object -----------------------------------------------------------------------
@@ -62,12 +62,12 @@
 
     
     # original model object code:
-    UMF.oss.3 <- unmarkedFrameOccu(
-      y = oss.dets,
-      obsCovs = list(soilmoist = scaled_soilmoist),
-      siteCovs = scaled_sitecovs)
-    
-    
+    # UMF.oss.3 <- unmarkedFrameOccu(
+    #   y = oss.dets,
+    #   obsCovs = list(soilmoist = scaled_soilmoist),
+    #   siteCovs = scaled_sitecovs)
+    # 
+    # 
     
 ## OSS dwd cov exploration -------------------------------------------------------------------------------
     
@@ -75,18 +75,18 @@
     # formula: occu(~det covs ~occu covs, data=, se=TRUE)
 
     #1: psi(.) p(.)
-    m1 <- occu(~1 ~1, data=UMF.oss.3)
+    m1 <- occu(~1 ~1, data=UMF.oss.1)
     
     #2: psi(dwd_cov) p(.)
-    m2 <- occu( ~1 ~dwd_cov, data=UMF.oss.3)
+    m2 <- occu( ~dwd_cov~trt , data=UMF.oss.1)
    
     #3: psi(dwd_count) p(.)
     m3 <- occu(~1 ~dwd_count, data=UMF.oss.2)
     
     #4: psi(avg_volume) p(.)
-    m4 <- occu(~1 ~avg_volume, data=UMF.oss.3)
+    m4 <- occu(~avg_volume ~1, data=UMF.oss.1)
     
-    
+    #scale in the model with unmarked
     
     # dwd_count is the best option here, with the lowest AIC and p-value
     # all dwd variables are showing up as negatively correlated with occupancy, which is really troubling
