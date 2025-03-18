@@ -32,14 +32,14 @@
 ## load data----------------------------------------------------------------------------------------------
 
     df_oss <- read.csv("occupancy/oss_forUMF_scaled.csv")
-    df_oss_unsc <- read.csv("occupancy/oss_forUMF_unscaled.csv")
+    df_oss <- read.csv("occupancy/oss_forUMF_unscaled.csv")
 
 
 ## Build OSS unmarkedFrameOccu Object -----------------------------------------------------------------------
 
     # scaled
     UMF.oss.1 <- unmarkedFrameOccu(
-      y = df_oss_sc[, grep("^X", names(df_oss))],  # selects cols starting with X
+      y = df_oss[, grep("^X", names(df_oss))],  # selects cols starting with X
       siteCovs = df_oss[, c("veg_cov","dwd_cov","fwd_cov","dwd_count","decay_cl","avg_volume","trt")],
       obsCovs = list(
         temp = df_oss[, grep("temp.", names(df_oss))], # selects cols including temp-
@@ -78,13 +78,13 @@
     m1 <- occu(~1 ~1, data=UMF.oss.1)
     
     #2: psi(dwd_cov) p(.)
-    m2 <- occu( ~dwd_cov~trt , data=UMF.oss.1)
+    m2 <- occu( ~dwd_cov ~trt +dwd_cov , data=UMF.oss.1)
    
     #3: psi(dwd_count) p(.)
-    m3 <- occu(~1 ~dwd_count, data=UMF.oss.2)
+    m3 <- occu(~dwd_count ~trt+dwd_count, data=UMF.oss.1)
     
     #4: psi(avg_volume) p(.)
-    m4 <- occu(~avg_volume ~1, data=UMF.oss.1)
+    m4 <- occu(~avg_volume ~trt+avg_volume, data=UMF.oss.1)
     
     #scale in the model with unmarked
     

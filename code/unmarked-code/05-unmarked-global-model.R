@@ -12,7 +12,7 @@
 ## Build a global model which contains everything you think that will impact either occupancy or detection
 ## all variables you can articulate a hypothesis about the impacts of on either psi or p
 ## Does this converge?
-## (check for 1. Estimates or SE above or below -5, 2. Boundary estimates (all estimates close to 0), 
+## check for 1. Estimates or SE above or below -5, 2. Boundary estimates (all estimates close to 0), 
 ## and 3. The easiest - convergence error such as "Hessian is singular"
 
 ## insights
@@ -34,7 +34,7 @@
 
 ## load data----------------------------------------------------------------------------------------------
 
-    df_oss <- read.csv("data/occupancy/oss_forUMF_unscaled.csv")
+    df_oss <- read.csv("data/occupancy/oss-for-UMF-1.csv")
 
     
 ## hypotheses -----------------------------------------------------------------------
@@ -70,6 +70,9 @@
     # temps below freezing = no emergence; emerge when consitently above freezing; hot temps + dry = return underground
     # temp and humidity were highly correllated so i removed humidity
     
+    # soil moisture - med in random forest
+    # wetter environment = more likely to emerge and risk aboveground movement = higher detection
+    
     # days since rain - high in random forest
     # also important in literature for emergence timing
     # wetter environment = more likely to emerge and risk aboveground movement = higher detection
@@ -78,10 +81,26 @@
     # but literature and my experience says it can play a role
     # less dwd = easier to find an animal if it is present, more dwd = harder to find a present animal (needle in a haystack)
     
+    # treatment
+    # amount of downed wood, veg cover, fwd cover, and soil moisture can all vary with treatment
+    # anecdotally i think these things can cause different det probs in different treatments
     
     
     
+## Build OSS unmarkedFrameOccu Object -----------------------------------------------------------------------
     
+    
+    UMF.oss.1 <- unmarkedFrameOccu(
+      y = df_oss[, grep("^X", names(df_oss))],  # selects cols starting with X
+      siteCovs = df_oss[, c("trt","veg_cov","canopy_cov","soil_moist","fwd_cov","dwd_count")],
+      obsCovs = list(
+        temp = df_oss[, grep("temp.", names(df_oss))], # selects cols including temp-
+        soilmoist = df_oss[, grep("soilmoist.", names(df_oss))],
+        rain = df_oss[, grep("rain.", names(df_oss))],
+        dwd = df_oss[, grep("dwdcov.", names(df_oss))],
+        trt = df_oss[, grep("trt.", names(df_oss))]
+      )
+    )
     
     
     
