@@ -146,28 +146,54 @@
     
     # add volume to site matrix
      dwd_merge <- merge(dwd, dwd_volume, by = "site_id")
+    
+     
+     
+      
+# 03-18-2025     ---------------------------------------------------------------------------------
+     
+    # add average dwd count per subplot
+     dwd_extra_metrics$avg_count <- (dwd_extra_metrics$dwd_count)/7
+     
 
-write.csv(dwd_merge, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/dwd.extra.metrics.csv",
+write.csv(dwd_extra_metrics, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/dwd.extra.metrics.csv",
           row.names = FALSE)    
     
-#### reclassify log size categories as one continuous variable ---------------------------------    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-        
-    
 
 
+    # aggregate dwd count data to subplot level
+      
+      dat <- read.csv("data/dwd.complete.csv")
+      dat$date_mdy <- as.Date(dat$date, format = "%m/%d/%Y")
+      dat$jul_date <- as.numeric(format(dat$date_mdy,"%j"))
+      dat$char_cl <- as.integer(dat$char_cl)
+      str(dat)
+      
 
+      # Aggregate counts by subplot and survey period
+      subplot_counts <- aggregate(list(type_count = dat$dwd_type),
+                                  by = list(subplot = dat$subplot, 
+                                            site_id = dat$site_id),
+                                  FUN = length)
+      
+      # Reshape to matrix format
+      matrix_counts <- reshape(subplot_counts,
+                               direction = "wide",
+                               idvar = "site_id",
+                               timevar = "subplot",
+                               v.names = "type_count")
+      
+      # Replace NA values with zeros
+      matrix_counts[is.na(matrix_counts)] <- 0
+      summary(is.na(matrix_counts))
+      
+      # Clean up column names
+      colnames(matrix_counts) <- gsub("^type_count.", "", colnames(matrix_counts))
+
+
+write.csv(matrix_counts, 
+          "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/covariate matrices/avg-dwd-subplot-matrix.csv",
+                row.names = FALSE) 
 
 
 
