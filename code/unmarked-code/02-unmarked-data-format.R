@@ -21,8 +21,6 @@
     rm(list=ls())
     #setwd("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
     
-    library(unmarked)
-    library(ggplot2)
     library(stats)
     library(MASS)
     library(tidyverse)
@@ -108,7 +106,12 @@
     treatment <- cbind(df, rep(df, each = 6))
     names(treatment) <- c("trt-1","trt-2","trt-3","trt-4","trt-5","trt-6","trt-7")
     
-
+# year
+    
+    df <- trt[,"year", drop=FALSE]
+    year <- cbind(df, rep(df, each = 6))
+    names(year) <- c("yr-1","yr-2","yr-3","yr-4","yr-5","yr-6","yr-7")
+    
     
 ## Site/occu covs ----------------------------------------------------------------------------------
     
@@ -116,11 +119,12 @@
     site_subset$trt <- trt$trt
     site_subset$trt <- factor(trt$trt, 
                                   levels = c("UU", "BU", "HB", "HU", "BS"))
-
+    site_subset$year <- trt$year
     
     # for this method, scale in the formula, not in the input data
     
     
+
 ## merge and format --------------------------------------------------------------------------------------
  
     
@@ -133,9 +137,10 @@
     df2 <- cbind(df2, rain)
     df2 <- cbind(df2, dwd_cov)
     df2 <- cbind(df2, treatment)
+    df2 <- cbind(df2, year)
     
     #reorder
-    df_oss2 <- df2[,c(8:15, 1:7, 16:50)]
+    df_oss2 <- df2[,c(9:16, 1:8, 17:58)]
     
     write.csv(df_oss2, "data/occupancy/oss-for-UMF-1.csv", row.names = FALSE)
     

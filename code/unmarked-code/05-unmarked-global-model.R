@@ -16,7 +16,7 @@
 ## and 3. The easiest - convergence error such as "Hessian is singular"
 
 ## insights
-## 
+## tried adding year to p and psi and it gave me large estimates and NaNs
 
 
 ## settings -----------------------------------------------------------------------------------------------
@@ -24,10 +24,6 @@
     rm(list=ls())
     
     library(unmarked)
-    library(ggplot2)
-    library(stats)
-    library(MASS)
-    library(tidyverse)
     library(MuMIn)
     library(AICcmodavg)
 
@@ -36,6 +32,7 @@
 
     df_oss <- read.csv("data/occupancy/oss-for-UMF-1.csv")
 
+    #df_oss <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/occupancy/oss-for-UMF-1.csv")
     
 ## hypotheses -----------------------------------------------------------------------
     
@@ -87,33 +84,55 @@
     
     
     
-## Build OSS unmarkedFrameOccu Object -----------------------------------------------------------------------
+## Build OSS unmarkedFrameOccu Object-----------------------------------------------------------------------
     
     
     UMF.oss.1 <- unmarkedFrameOccu(
       y = df_oss[, grep("^X", names(df_oss))],  # selects cols starting with X
-      siteCovs = df_oss[, c("trt","veg_cov","canopy_cov","soil_moist","fwd_cov","dwd_count")],
+      siteCovs = df_oss[, c("trt","veg_cov","canopy_cov","soil_moist","fwd_cov","dwd_count","year")],
       obsCovs = list(
         temp = df_oss[, grep("temp.", names(df_oss))], # selects cols including temp-
         soilmoist = df_oss[, grep("soilmoist.", names(df_oss))],
         rain = df_oss[, grep("rain.", names(df_oss))],
         dwd = df_oss[, grep("dwdcov.", names(df_oss))],
-        trt = df_oss[, grep("trt.", names(df_oss))]
+        trt = df_oss[, grep("trt.", names(df_oss))],
+        year = df_oss[, grep("yr.", names(df_oss))]
       )
     )
     
     
     
+## Run global model ----------------------------------------------------------------------------------
+    
+    # formula: occu(~det covs ~occu covs, data=UMF, se=TRUE)
+    
+    m1 <- occu( ~ temp + soilmoist + rain + dwd + trt 
+                ~ trt + veg_cov + canopy_cov + soil_moist + fwd_cov + dwd_count,
+                data = UMF.oss.1, se = TRUE)
+    
+    
+## Convergence - maybe?
+    
+    # 1. Estimates above 5 or below -5?   No.
+    # 2. Boundary estimates (all estimates close to zero with high SE)?  Some estimates are small with larger SE
+    # 3. Error Hessian is singluar?   No.
     
     
     
+## Goodness of fit test   ---------------------------------------------------------------------------------
     
+    occ_gof1 <- mb.gof.test(m1, nsim = 1000, plot.hist = TRUE)
     
-    
-    
-    
-    
-    
+    # 
+    # Chi-square statistic = 152.1261 
+    # Number of bootstrap samples = 1000
+    # P-value = 0.07
+    # 
+    # Quantiles of bootstrapped statistics:
+    #   0%  25%  50%  75% 100% 
+    # 78  109  120  133  289 
+    # 
+    # Estimate of c-hat = 1.24 
     
     
     
