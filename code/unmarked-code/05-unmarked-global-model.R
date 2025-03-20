@@ -30,9 +30,9 @@
 
 ## load data----------------------------------------------------------------------------------------------
 
-    df_oss <- read.csv("data/occupancy/oss-for-UMF-1.csv")
+    #df_oss <- read.csv("data/occupancy/data-UMF-1.csv")
 
-    #df_oss <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/occupancy/oss-for-UMF-1.csv")
+    df_oss <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/occupancy/data-UMF-1.csv")
     
 ## hypotheses -----------------------------------------------------------------------
     
@@ -88,13 +88,13 @@
     
     
     UMF.oss.1 <- unmarkedFrameOccu(
-      y = df_oss[, grep("^X", names(df_oss))],  # selects cols starting with X
+      y = df_oss[, grep("^OD", names(df_oss))],  # selects cols starting with OD = oss detections
       siteCovs = df_oss[, c("trt","veg_cov","canopy_cov","soil_moist","fwd_cov","dwd_count","year")],
       obsCovs = list(
         temp = df_oss[, grep("temp.", names(df_oss))], # selects cols including temp-
         soilmoist = df_oss[, grep("soilmoist.", names(df_oss))],
         rain = df_oss[, grep("rain.", names(df_oss))],
-        dwd = df_oss[, grep("dwdcov.", names(df_oss))],
+        dwd_cov = df_oss[, grep("dwdcov.", names(df_oss))],
         trt = df_oss[, grep("trt.", names(df_oss))],
         year = df_oss[, grep("yr.", names(df_oss))]
       )
@@ -106,8 +106,8 @@
     
     # formula: occu(~det covs ~occu covs, data=UMF, se=TRUE)
     
-    m1 <- occu( ~ temp + soilmoist + rain + dwd + trt 
-                ~ trt + veg_cov + canopy_cov + soil_moist + fwd_cov + dwd_count,
+    m1 <- occu( ~ scale(temp) + scale(soilmoist) + scale(rain) + dwd_cov + trt 
+                ~ trt + veg_cov + canopy_cov + scale(soil_moist) + fwd_cov + scale(dwd_count),
                 data = UMF.oss.1, se = TRUE)
     
     
@@ -123,16 +123,10 @@
     
     occ_gof1 <- mb.gof.test(m1, nsim = 1000, plot.hist = TRUE)
     
-    # 
-    # Chi-square statistic = 152.1261 
-    # Number of bootstrap samples = 1000
-    # P-value = 0.07
-    # 
-    # Quantiles of bootstrapped statistics:
-    #   0%  25%  50%  75% 100% 
-    # 78  109  120  133  289 
-    # 
+    # gof test suggests overdispersion
+    # values close to 1 = overdispersion
     # Estimate of c-hat = 1.24 
+    # this means i need to use QAIC with chat adjustment for model selection
     
     
     

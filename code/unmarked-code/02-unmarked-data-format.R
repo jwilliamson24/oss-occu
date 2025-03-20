@@ -33,12 +33,11 @@
     trt <- read.csv("data/site.complete.csv", row.names = 1)
     subplot <- read.csv("data/subplot.complete.csv")
     
-    oss.dets <- read.csv("data/occupancy/oss.occu.wide.csv")
-    enes.dets <- read.csv("data/occupancy/enes.occu.wide.csv")
+    # oss.dets <- read.csv("data/occupancy/oss.occu.wide.csv")
+    # enes.dets <- read.csv("data/occupancy/enes.occu.wide.csv")
+    forcounts <- readRDS("data/covariate matrices/habitat.occu.complete.rds")
 
-    
-#load saved csv from data manipulatio steps below
-    df_oss <- read.csv("data/occupancy/oss_forUMF.csv")
+  
     
 
 ## Detection covs  ------------------------------------------------------------------------------------------
@@ -124,25 +123,45 @@
     # for this method, scale in the formula, not in the input data
     
     
-
+## Sal counts/detections ---------------------------------------------------------------------
+    
+    counts <- forcounts[,c("site_id","subplot","OSS","ENES")]
+    
+    oss_counts <- with(counts, tapply(OSS, list(site_id, subplot), sum, na.rm=TRUE))
+    colnames(oss_counts) <- c("OC1","OC2","OC3","OC4","OC5","OC6","OC7")    
+    enes_counts <- with(counts, tapply(ENES, list(site_id, subplot), sum, na.rm=TRUE))
+    colnames(enes_counts) <- c("EC1","EC2","EC3","EC4","EC5","EC6","EC7")    
+    
+    oss_dets <- ifelse(oss_counts > 0, 1, 0)
+    colnames(oss_dets) <- c("OD1","OD2","OD3","OD4","OD5","OD6","OD7")    
+    enes_dets <- ifelse(enes_counts > 0, 1, 0)
+    colnames(enes_dets) <- c("ED1","ED2","ED3","ED4","ED5","ED6","ED7")    
+    
+    
 ## merge and format --------------------------------------------------------------------------------------
  
     
-    site_subset$site_id <- 1:nrow(site_subset)
+    # merge sal data
+    df1 <- cbind(oss_counts, enes_counts)
+    df1 <- cbind(df1, oss_dets)
+    df1 <- cbind(df1, enes_dets)
     
-    # merge into one df
-    df2 <- cbind(site_subset, oss.dets)
-    df2 <- cbind(df2, soil_moist)
+    
+    # merge covariates
+    df2 <- cbind(site_subset, soil_moist)
     df2 <- cbind(df2, temp)
     df2 <- cbind(df2, rain)
     df2 <- cbind(df2, dwd_cov)
     df2 <- cbind(df2, treatment)
     df2 <- cbind(df2, year)
     
-    #reorder
-    df_oss2 <- df2[,c(9:16, 1:8, 17:58)]
     
-    write.csv(df_oss2, "data/occupancy/oss-for-UMF-1.csv", row.names = FALSE)
+    # merge sals with covariates
+    df3 <- cbind(df1, df2)
+    df3$site_id <- rownames(df3)
+    
+    
+    write.csv(df3, "data/occupancy/data-UMF-1.csv", row.names = FALSE)
     
 
     
