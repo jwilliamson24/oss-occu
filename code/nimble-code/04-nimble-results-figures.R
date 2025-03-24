@@ -16,6 +16,7 @@
     library(ggplot2)
     library(tidyr)
     library(dplyr)
+    library(boot)
     source('attach.nimble_v2.R')
 
 
@@ -38,8 +39,8 @@
     enes.det.prob <- inv.logit(DetectionIntercept)
     
 # detections data
-    oss.dets <- read.csv("oss.occu.wide.csv")
-    enes.dets <- read.csv("enes.occu.wide.csv")
+    oss.dets <- read.csv("occupancy/oss.occu.wide.csv")
+    enes.dets <- read.csv("occupancy/enes.occu.wide.csv")
     
 # site data
     site <- read.csv("site.complete.csv")
@@ -221,7 +222,7 @@
 ## ggplot with both species -----------------------------------------------------------------------------------------------
 
     # Rename treatments
-    new.names <- c("Salvage Logged", "Wildfire", "Harvest, Wildfire", "Harvest", "Control")
+    new.names <- c("Salvage", "Burn", "Harvest,Burn", "Harvest", "Control")
     
     # Convert OSS occupancy probabilities to a data frame and reshape
     colnames(oss.occu.prob) <- new.names
@@ -238,7 +239,7 @@
     
     # Ensure Treatment order is correct
     combined_data$Treatment <- factor(combined_data$Treatment, 
-                                      levels = c("Control", "Wildfire", "Harvest, Wildfire", "Harvest", "Salvage Logged"))
+                                      levels = c("Control", "Burn", "Harvest,Burn", "Harvest", "Salvage"))
     
     # Define colors
     box.colors <- c('lightgreen','steelblue', 'coral2', '#f9d62e', '#b967ff')
@@ -257,7 +258,7 @@
     
 
 ggsave(filename = "faceted_spp_occu_prob.png", plot = p3, device = "png", 
-           path = "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/figures/06-rework-nimble-models",
+           path = "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/figures/03-nimble-models",
            width = 12, height = 6, units = "in", dpi = 300)
     
     

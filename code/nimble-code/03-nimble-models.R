@@ -56,7 +56,7 @@
     oss.long <- read.csv("occupancy/oss.occu.long.csv")
     enes.long <- read.csv("occupancy/enes.occu.long.csv")
 
-    env_subset_corr <- read.csv("env_subset_corr.csv")    # df with precip data
+    env_subset_corr <- read.csv("covariate matrices/env_subset_corr.csv")    # df with precip data
 
 
 
@@ -338,7 +338,7 @@
                             site=as.numeric(as.factor(data$site)),
                             n.obs = length(data$all.obs))
     
-    mcmc.output.4 <- nimbleMCMC(code = oss.model,
+    mcmc.output.4 <- nimbleMCMC(code = enes.model,
                                 data = nimble.data,
                                 constants=nimble.constants,
                                 monitors = parameters,
