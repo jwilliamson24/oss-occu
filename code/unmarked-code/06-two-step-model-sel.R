@@ -41,6 +41,7 @@
     #df_oss <- read.csv("data/occupancy/oss-for-UMF-1.csv")
 
     df_oss <- read.csv("https://raw.githubusercontent.com/jwilliamson24/oss-occu/refs/heads/main/data/occupancy/data-UMF-1.csv")
+    #this data is unscaled
     
 
 ## create UMF object ------------------------------------------------------------------------------------
@@ -83,24 +84,19 @@
     
     ms1 <- dredge(m3, rank = "QAIC", chat = 1.24)
     
-    # Model selection table 
-    #     psi(Int)  p(Int) p(dwd) p(scl(ran)) p(scl(slm)) p(scl(tmp)) df  logLik  QAIC delta weight
-    # 2    0.8060 -1.4750 0.2933                                      3 -405.584 662.2  0.00  0.216
-    # 6    0.7764 -1.4560 0.2940                 -0.1251              4 -404.848 663.0  0.81  0.144
-    # 1    0.7667 -1.0020                                             2 -407.874 663.9  1.69  0.093
-    # 10   0.8288 -1.4980 0.2990                             0.05448  4 -405.468 664.0  1.81  0.087
-    # 4    0.8038 -1.4720 0.2927   -0.005882                          4 -405.582 664.2  2.00  0.080    
-    
-    # winner
-    # p(dwd)
- 
+
+    #  Model selection table 
+    #     psi(Int)  p(Int) p(dwd_cov) p(scl(ran)) p(scl(slm)) p(scl(tmp)) df   logLik  QAIC delta weight
+    # 3    0.8664 -1.0670                -0.2545                          3 -406.577 663.8  0.00  0.133
+    # 1    0.7667 -1.0020                                                 2 -407.874 663.9  0.09  0.127
+    # 9    0.7930 -1.0200                                       -0.16310  3 -406.761 664.1  0.30  0.115
        
     
 ## second model  ---------------------------------------------------------------------------------
    
     # p(dwd) psi(global)
     
-    m4 <- occu( ~ dwd_cov
+    m4 <- occu( ~ scale(rain)
                 ~ trt + veg_cov + canopy_cov + scale(soil_moist) + fwd_cov + scale(dwd_count),
                 data = UMF.oss.1, se = TRUE)
     
@@ -112,18 +108,13 @@
 ## second model selection  ---------------------------------------------------------------------------------
     
     
-    ms2 <- dredge(m4, rank = "AIC", fixed = "psi(trt)")
+    ms2 <- dredge(m4, rank = "AIC", fixed = c("psi(trt)", "p(scale(rain))"))
     
     # Model selection table 
-    #      psi(Int) psi(cnp_cov) psi(fwd_cov) psi(scl(dwd_cnt)) psi(scl(sol_mst)) psi(trt) psi(veg_cov) p(Int) p(dwd_cov) df   logLik   AIC delta
-    # 14 -0.43300       1.0340                        0.68920            0.3730        +              -1.0180             9 -398.540 815.1  0.00
-    # 16  0.73360       1.1560    -0.482100           0.81790            0.4297        +              -1.0210            10 -397.581 815.2  0.08
-    # 6  -0.45730       0.9718                        0.62310                          +              -1.0090             8 -399.688 815.4  0.30
-    # 8   0.53450       1.0510    -0.404400           0.69870                          +              -1.0080             9 -398.956 815.9  0.83
-    # 46 -0.45200       1.0490                        0.68730            0.3719        +              -0.8081    -0.1376 10 -398.047 816.1  1.01# 
-    
-    # winner
-    # psi(dwd_count, soil_moist, trt) p(.)
+    #     psi(Int) psi(cnp_cov) psi(fwd_cov) psi(scl(dwd_cnt)) psi(scl(sol_mst)) psi(trt) psi(veg_cov) p(Int) p(scl(ran)) df
+    # 6  -0.44570       1.1680                        0.70950                          +              -1.084     -0.2840  9
+    # 14 -0.47100       1.1880                        0.74800            0.3074        +              -1.074     -0.2360 10
+    # 8   0.49160       1.2010    -0.379200           0.74460                          +              -1.077     -0.2734 10
     
     
     
