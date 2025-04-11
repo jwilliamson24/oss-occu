@@ -162,6 +162,7 @@ for(chain in 1:n.chains){
   #set parameters to monitor
   parameters <- c("beta0.psi", "beta1.psi", "beta2.psi", "beta3.psi", "beta4.psi", "beta5.psi",
                   "beta0.theta", "sd.theta", "beta1.theta", "alpha0" , "alpha1", 'zsum')
+  # (zsum = number of subunits occupied at a site, given that the species is present at that site)
   
   # multi-scale occupancy model for estimating the occupancy state of site i, the use of plot j
   NimModel <- nimbleCode({
@@ -183,7 +184,7 @@ for(chain in 1:n.chains){
     for(i in 1:I){
       
       # estimate psi as function  of covs
-      logit(psi[i]) <- beta0.psi + beta1.psi * canopycover[i] + beta2.psi * burnt[i] + beta3.psi * logged[i]  + 
+      logit(psi[i]) <- beta0.psi + beta1.psi * canopycover[i] + beta2.psi * burnt[i] + beta3.psi * logged[i] + 
         beta4.psi * burntandlogged[i] + beta5.psi * loggedandburnt[i]
       z[i] ~ dbern(psi[i]) #is site occupied? z = 1 is yes, z = 0 is no
       
@@ -243,45 +244,85 @@ a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
 
 #### Output ----
 
-# check out traceplots
-plot(a)
-summary(a)
+  # check out traceplots
+  plot(a)
+  summary(a)
+  
+  # gelman rubin diags
+  gelman <- gelman.diag(a)
+  
+  # combine the chains
+  a=runjags::combine.mcmc(a)
+  
+  # extract point estimates and %95 CIs
+  
+  mean(a[,"beta0.psi"]) # mean occupancy (intercept)
+  #quantile(a[,"beta0.psi"], probs = c(2.5, 97.5)/100)
+  
+  mean(a[,"beta1.psi"]) # effect of canopy cover
+  #quantile(a[,"beta1.psi"], probs = c(2.5, 97.5)/100)
+  
+  mean(a[,"beta2.psi"]) # burnt
+  #quantile(a[,"beta2.psi"], probs = c(2.5, 97.5)/100)
+  
+  mean(a[,"beta3.psi"]) # logged
+  #quantile(a[,"beta3.psi"], probs = c(2.5, 97.5)/100)
+  
+  mean(a[,"beta4.psi"]) # burntandlogged
+  #quantile(a[,"beta4.psi"], probs = c(2.5, 97.5)/100)
+  
+  mean(a[,"beta5.psi"]) # loggedandburnt
+  #quantile(a[,"beta5.psi"], probs = c(2.5, 97.5)/100)
+  
+  mean(a[,"alpha0"]) # mean det prob
+  #quantile(a[,"alpha0"], probs = c(2.5, 97.5)/100)
+  
+  mean(a[,"alpha1"]) # slope term for jasmineeffect on detection prob
+  #quantile(a[,"alpha1"], probs = c(2.5, 97.5)/100)
+  
+  # bias is calcualted as estimate - truth / truth
+  (mean(a[,"alpha0"])-alpha0)
+  (mean(a[,"alpha1"])-alpha1)/alpha1
+  (mean(a[,"beta0.psi"])-beta0.psi)/beta0.psi
 
-# gelman rubin diags
-gelman <- gelman.diag(a)
 
-# combine the chains
-a=runjags::combine.mcmc(a)
-
-# extract point estimates and %95 CIs
-mean(a[,"alpha0"])
-quantile(a[,"alpha0"], probs = c(2.5, 97.5)/100)
-
-mean(a[,"alpha0"])
-quantile(a[,"alpha0"], probs = c(2.5, 97.5)/100)
-
-mean(a[,"beta0.psi"])
-quantile(a[,"beta0.psi"], probs = c(2.5, 97.5)/100)
-
-mean(a[,"beta2.psi"])
-quantile(a[,"beta2.psi"], probs = c(2.5, 97.5)/100)
-
-mean(a[,"beta3.psi"])
-quantile(a[,"beta3.psi"], probs = c(2.5, 97.5)/100)
-
-mean(a[,"beta4.psi"])
-quantile(a[,"beta4.psi"], probs = c(2.5, 97.5)/100)
-
-mean(a[,"beta5.psi"])
-quantile(a[,"beta5.psi"], probs = c(2.5, 97.5)/100)
-
-# bias is calcualted as estimate - truth / truth
-(mean(a[,"alpha0"])-alpha0)
-(mean(a[,"alpha1"])-alpha1)/alpha1
-(mean(a[,"beta0.psi"])-beta0.psi)/beta0.psi
+#save.image('salamander_test_run.RData')
 
 
-save.image('salamander_test_run.RData')
+# estimates with 1270 sites...
+  # >   mean(a[,"beta0.psi"]) # mean occupancy (intercept)
+  # [1] 0.8363193
+  
+  #   >   mean(a[,"beta1.psi"]) # effect of canopy cover
+  # [1] 0.8992097
 
+  #   >   mean(a[,"beta2.psi"]) # burnt
+  # [1] -0.6836093
+  
+  #   >   mean(a[,"beta3.psi"]) # logged
+  # [1] -1.372336
 
-
+  #   >   mean(a[,"beta4.psi"]) # burntandlogged
+  # [1] -1.35614
+  
+  #   >   mean(a[,"beta5.psi"]) # loggedandburnt
+  # [1] -1.403495
+ 
+  #   >   mean(a[,"alpha0"]) # mean det prob
+  # [1] 0.009684279
+  
+  #   >   mean(a[,"alpha1"]) # slope term for jasmineeffect on detection prob
+  # [1] 1.417615
+  
+# what they should be  
+  # beta0.psi <- 1 # mean occupancy (the intercept)
+  # beta1.psi <- 1 # this is the slope term for canopy cover on site occupancy (positive)
+  # beta2.psi <- -1 # this is the slope term for burnt on site occupancy (negative)
+  # beta3.psi <- -1.5 # this is the slope term for logging on site occupancy (stronger negative effect)
+  # beta4.psi <- -1.5 # this is the slope term for burnt and logged on site occupancy 
+  # beta5.psi <- -1.5 # this is the slope term for logged and then burnt on site occupancy 
+  # beta0.theta <- 0 # this is mean plot use (the intercept for plot usage)
+  # sd.theta <- runif(1, 0.5, 1.5) # this is the standard deviation for a random effect fit on plot use
+  # beta1.theta <- 1 # this is the slope term for downed wood on plot use
+  # alpha0 <- 0 # this is mean detection probability (the intercept for detection)
+  # alpha1 <- 1.5 # this is the slope term for jasmineeffect on detection probability 
