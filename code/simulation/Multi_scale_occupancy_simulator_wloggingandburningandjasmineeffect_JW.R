@@ -58,10 +58,10 @@ alpha1 <- 1 # this is the slope term for jasmineeffect on detection probability
 # calculate psi (occupancy probability) of each site using a logit-link
 psi <- matrix(ncol = I)  
 for (i in 1:I){  
-  psi[i] <- plogis(beta0.psi + beta1.psi * canopycover[i] + beta2.psi * burnt[i] + beta3.psi * logged[i] + 
-                     beta4.psi * burntandlogged[i] + beta5.psi * loggedandburnt[i])
+  psi[i] <- plogis(beta0.psi + beta2.psi * burnt[i] + beta3.psi * logged[i] + 
+                     beta4.psi * burntandlogged[i] + beta5.psi * loggedandburnt[i]) #+ beta1.psi * canopycover[i] 
 }
-
+            
 range(psi)
 
 # calculate true z states 

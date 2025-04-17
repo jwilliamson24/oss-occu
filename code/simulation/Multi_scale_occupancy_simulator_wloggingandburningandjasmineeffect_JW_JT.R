@@ -40,7 +40,7 @@ downedwood <-array(runif(n=I*J, -2, 2), dim =c(I,J)) # simulates dwd values at I
 # this is the non-hacky way of doing the treatment using a categorical distribution
 # install and load the package 'hesim' and 'mltools' for the required functions
 # create probabilities that the different treatments occur at
-p <- c(0.25, 0.25, 0.25, 0.25) #<- set these probabilities to be the proportions the treatments occur in your real dataset
+p <- c(0.2, 0.2, 0.2, 0.2, 0.2) #<- set these probabilities to be the proportions the treatments occur in your real dataset
 # create matrix for each site to use in the categorical distribution
 pmat <- matrix(rep(p, I), nrow = I, ncol = length(p), byrow=TRUE)
 
@@ -59,12 +59,14 @@ treatment$burntandlogged[treatment$treatment==3] <- 1
 treatment$burntandlogged[is.na(treatment$burntandlogged)] <- 0
 treatment$loggedandburnt[treatment$treatment==4] <- 1
 treatment$loggedandburnt[is.na(treatment$loggedandburnt)] <- 0
+treatment$control[treatment$treatment==5] <- 1
+treatment$control[is.na(treatment$control)] <- 0
 
-# turn to matrices to use as before
-burnt <- as.matrix(treatment$burnt)
-logged <- as.matrix(treatment$logged)
-burntandlogged <- as.matrix(treatment$burntandlogged)
-loggedandburnt <- as.matrix(treatment$loggedandburnt)
+# name for the model
+burnt <- treatment$burnt
+logged <- treatment$logged
+burntandlogged <- treatment$burntandlogged
+loggedandburnt <- treatment$loggedandburnt
 
 jasmineeffect <- rbinom(n=I*J*K, 1, 0.5)# simulates whether the observer was a pro salamander finder at site i plot j occasion k
 
@@ -77,25 +79,26 @@ jasmineeffect[,,3]
 
 
 # set coefficents for parameters (their impact on the world we are simulating)
-# (on logs-odd scale; use plogis(x) to see value on probability-scale, e.g. for beta0.psi/mean occupancy)
+# (on log-odds scale; use plogis(x) to see value on probability-scale, e.g. for beta0.psi/mean occupancy)
 beta0.psi <- 1 # mean occupancy (the intercept)
-beta1.psi <- 1 # this is the slope term for canopy cover on site occupancy (positive)
-beta2.psi <- -0.5 # this is the slope term for burnt on site occupancy (negative)
-beta3.psi <- -1 # this is the slope term for logging on site occupancy (stronger negative effect)
-beta4.psi <- -1 # this is the slope term for burnt and logged on site occupancy 
-beta5.psi <- -1 # this is the slope term for logged and then burnt on site occupancy 
-beta0.theta <- 0 # this is mean plot use (the intercept for plot usage)
-sd.theta <- runif(1, 0.5, 1.5) # this is the standard deviation for a random effect fit on plot use
-beta1.theta <- 1 # this is the slope term for downed wood on plot use
-alpha0 <- 0 # this is mean detection probability (the intercept for detection)
-alpha1 <- 1 # this is the slope term for jasmineeffect on detection probability
+beta1.psi <- 1 # slope term for canopy cover on site occupancy (positive)
+beta2.psi <- -1 # slope term for burnt on site occupancy (negative)
+beta3.psi <- -1.5 # slope term for logging on site occupancy (stronger negative effect)
+beta4.psi <- -1.5 # slope term for burnt and logged on site occupancy 
+beta5.psi <- -1.5 # slope term for logged and then burnt on site occupancy 
+beta0.theta <- 0 # mean plot use (the intercept for plot usage)
+sd.theta <- runif(1, 0.5, 1.5) # standard deviation for a random effect fit on plot use
+beta1.theta <- 1 # slope term for downed wood on plot use
+alpha0 <- 0 # mean detection probability (the intercept for detection)
+alpha1 <- 1.5 # the slope term for jasmineeffect on detection probability
 
 
 # calculate psi (occupancy probability) of each site using a logit-link
 psi <- matrix(ncol = I)  
 for (i in 1:I){  
-  psi[i] <- plogis(beta0.psi + beta1.psi * canopycover[i] + beta2.psi * burnt[i] + beta3.psi * logged[i] + 
+  psi[i] <- plogis(beta0.psi + beta2.psi * burnt[i] + beta3.psi * logged[i] + 
                      beta4.psi * burntandlogged[i] + beta5.psi * loggedandburnt[i])
+                  #+ beta1.psi * canopycover[i] 
 }
 
 range(psi)
@@ -107,7 +110,7 @@ for (i in 1:I){
   z[i] <- rbinom(1, 1, psi[i])
 }
 
-sum(z)  # 74 sites occupied, similar to my data (56 ENES and 77 OSS)
+sum(z)  # (my data = 56 ENES and 77 OSS)
 
 # mean centered random effect for plot use
 plot.theta <- matrix(ncol=I)
@@ -120,7 +123,7 @@ for (i in 1:I){
 theta <- matrix(ncol = J, nrow=I)
 for (i in 1:I){
   for (j in 1:J){
-    theta[i,j] <- plogis(plot.theta[i] + beta1.theta * downedwood[i,j]) 
+    theta[i,j] <- plogis(plot.theta[i]) #+ beta1.theta * downedwood[i,j]) 
   }
 }
 
@@ -140,7 +143,7 @@ p = array(0, dim = c(I, J, K))
 for (i in 1:I){
   for (j in 1:J){
     for (k in 1:K){
-      p[i,j,k] <- plogis(alpha0 + alpha1 * jasmineeffect[i,j,k]) 
+      p[i,j,k] <- plogis(alpha0)# + alpha1 * jasmineeffect[i,j,k]) 
     }
   }
 }
@@ -156,8 +159,8 @@ for (i in 1:I){
   }
 }
 
-y[,,1] # sum = 160
-y[,,2] # sum = 160
+sum(y[,,1]) # sum = 160
+sum(y[,,2]) # sum = 160
 y[,,3] # sum = 152
 
 # sum of oss plot dets = 163, sum of enes plot dets = 107
@@ -177,15 +180,15 @@ chains = vector("list", n.chains)
 for(chain in 1:n.chains){
   
   #fit model
-  constants <- list(I=I,J=J,K=K, logged = logged, burnt = burnt, dwd=downedwood,
-                    burntandlogged = burntandlogged, loggedandburnt = loggedandburnt, jasmineeffect=jasmineeffect) 
-                    #canopycover=canopycover)
+  constants <- list(I=I,J=J,K=K, logged = logged, burnt = burnt,
+                    burntandlogged = burntandlogged, loggedandburnt = loggedandburnt) 
+                    # dwd=downedwood, canopycover=canopycover, jasmineeffect=jasmineeffect)
   Nimdata <- list(y=y)
   
   # set initial values
   Niminits <- list(beta0.psi = 0, beta2.psi = 0, beta3.psi = 0, beta4.psi = 0, beta5.psi = 0, 
-                   sd.theta=0.5, beta0.theta = 0, alpha0=0, alpha1 = 0, beta1.theta=0)
-                  #beta1.psi = 0)
+                   sd.theta=0.5, beta0.theta = 0, alpha0=0)
+                  #beta1.psi = 0, alpha1 = 0, beta1.theta=0)
   
   # data summaries
   w.data <- 1*(apply(y,c(1,2),sum)>0)
@@ -198,8 +201,8 @@ for(chain in 1:n.chains){
   
   #set parameters to monitor
   parameters <- c("beta0.psi", "beta2.psi", "beta3.psi", "beta4.psi", "beta5.psi",
-                  "sd.theta", "beta0.theta", "alpha0" , "alpha1", 'zsum', "beta1.theta")
-                  #"beta1.psi")
+                  "sd.theta", "beta0.theta", "alpha0", 'zsum')
+                  #"beta1.psi", "alpha1", "beta1.theta")
   # (zsum = number of subunits occupied at a site, given that the species is present at that site)
   
   # multi-scale occupancy model for estimating the occupancy state of site i, the use of plot j
@@ -215,8 +218,8 @@ for(chain in 1:n.chains){
     beta3.psi ~ dnorm(0, sd = 5)
     beta4.psi ~ dnorm(0, sd = 5)
     beta5.psi ~ dnorm(0, sd = 5)
-    beta1.theta ~ dnorm(0, sd = 5)
-    alpha1 ~ dnorm(0, sd = 5)
+    #beta1.theta ~ dnorm(0, sd = 5)
+    #alpha1 ~ dnorm(0, sd = 5)
     
     # likelihood for state model
     for(i in 1:I){
@@ -231,12 +234,12 @@ for(chain in 1:n.chains){
       
       # estimate theta (plot usage) as function of covs
       for(j in 1:J){
-        logit(theta[i,j]) <- plot.theta[i] + beta1.theta * dwd[i,j]
+        logit(theta[i,j]) <- plot.theta[i] #+ beta1.theta * dwd[i,j]
         w[i,j] ~ dbern(theta[i,j]*z[i]) #is plot used given the site occupied?
         
         # likelihood for observation model
         for(k in 1:K){
-          logit(p[i,j,k]) <- alpha0 + alpha1 * jasmineeffect[i,j,k]
+          logit(p[i,j,k]) <- alpha0 #+ alpha1 * jasmineeffect[i,j,k]
           y[i,j,k] ~ dbern(p[i,j,k]*w[i,j]) # observations as a function of detection probability conditional on the plot is used (w = 1)
         }
       }
@@ -248,7 +251,7 @@ for(chain in 1:n.chains){
 # Build the model, configure the mcmc, and compileConfigure
   start.time <- Sys.time()
   Rmodel <- nimbleModel(code=NimModel, constants=constants, data=Nimdata,check=FALSE,inits=Niminits)
-  conf <- configureMCMC(Rmodel,monitors=parameters, thin=5, useConjugacy=FALSE)
+  conf <- configureMCMC(Rmodel,monitors=parameters, thin=5, useConjugacy=FALSE) # this sets thinning interval to every 5th value
   
   # Build and compile
   Rmcmc <- buildMCMC(conf)
@@ -257,7 +260,7 @@ for(chain in 1:n.chains){
   
   # Run the model
   start.time2 <- Sys.time()
-  Cmcmc$run(50000,reset=FALSE) #Can keep extending the run by rerunning this line
+  Cmcmc$run(100000,reset=FALSE) #Can keep extending the run by rerunning this line # this sets n.interations
   end.time <- Sys.time()
   end.time - start.time  # total time for compilation, replacing samplers, and fitting
   end.time - start.time2 # post-compilation run time
@@ -269,10 +272,9 @@ for(chain in 1:n.chains){
   chains[[chain]]=mvSamples
 }
 
-n.iter = 10000
-n.burn = 5000
 
-
+n.iter = 20000
+n.burn = 10000
 #combine the chains and burn
 a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
             mcmc(chains[[2]][n.burn:n.iter,]),
@@ -288,35 +290,37 @@ a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
   
   # gelman rubin diags
   gelman <- gelman.diag(a) 
+  gelman
   
   # combine the chains
   a=runjags::combine.mcmc(a)
   
   # extract point estimates and %95 CIs
+  # can also get these from the summary code above
   
   mean(a[,"beta0.psi"]) # mean occupancy (intercept)
-  #quantile(a[,"beta0.psi"], probs = c(2.5, 97.5)/100)
+  quantile(a[,"beta0.psi"], probs = c(2.5, 97.5)/100)
   
   mean(a[,"beta1.psi"]) # effect of canopy cover
-  #quantile(a[,"beta1.psi"], probs = c(2.5, 97.5)/100)
+  quantile(a[,"beta1.psi"], probs = c(2.5, 97.5)/100)
   
   mean(a[,"beta2.psi"]) # burnt
-  #quantile(a[,"beta2.psi"], probs = c(2.5, 97.5)/100)
+  quantile(a[,"beta2.psi"], probs = c(2.5, 97.5)/100)
   
   mean(a[,"beta3.psi"]) # logged
-  #quantile(a[,"beta3.psi"], probs = c(2.5, 97.5)/100)
+  quantile(a[,"beta3.psi"], probs = c(2.5, 97.5)/100)
   
   mean(a[,"beta4.psi"]) # burntandlogged
-  #quantile(a[,"beta4.psi"], probs = c(2.5, 97.5)/100)
+  quantile(a[,"beta4.psi"], probs = c(2.5, 97.5)/100)
   
   mean(a[,"beta5.psi"]) # loggedandburnt
-  #quantile(a[,"beta5.psi"], probs = c(2.5, 97.5)/100)
+  quantile(a[,"beta5.psi"], probs = c(2.5, 97.5)/100)
   
   mean(a[,"alpha0"]) # mean det prob
-  #quantile(a[,"alpha0"], probs = c(2.5, 97.5)/100)
+  quantile(a[,"alpha0"], probs = c(2.5, 97.5)/100)
   
   mean(a[,"alpha1"]) # slope term for jasmineeffect on detection prob
-  #quantile(a[,"alpha1"], probs = c(2.5, 97.5)/100)
+  quantile(a[,"alpha1"], probs = c(2.5, 97.5)/100)
   
   # bias is calcualted as estimate - truth / truth
   (mean(a[,"alpha0"])-alpha0)
@@ -327,89 +331,38 @@ a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
 #save.image('salamander_test_run.RData')
 
 
-# estimates with 1270 sites...
-  # >   mean(a[,"beta0.psi"]) # mean occupancy (intercept)
-  # [1] 0.8363193
-  #   >   mean(a[,"beta1.psi"]) # effect of canopy cover
-  # [1] 0.899209
-  #   >   mean(a[,"beta2.psi"]) # burnt
-  # [1] -0.6836093
-  #   >   mean(a[,"beta3.psi"]) # logged
-  # [1] -1.372336
-  #   >   mean(a[,"beta4.psi"]) # burntandlogged
-  # [1] -1.35614
-  #   >   mean(a[,"beta5.psi"]) # loggedandburnt
-  # [1] -1.403495
-  #   >   mean(a[,"alpha0"]) # mean det prob
-  # [1] 0.009684279
-  #   >   mean(a[,"alpha1"]) # slope term for jasmineeffect on detection prob
-  # [1] 1.417615
-
+  # >   summary(a)
+  # 
+  # Iterations = 1:10001
+  # Thinning interval = 1 
+  # Number of chains = 3 
+  # Sample size per chain = 10001 
+  # 
+  # 1. Empirical mean and standard deviation for each variable,
+  # plus standard error of the mean:
+  #   
+  #   Mean      SD  Naive SE Time-series SE
+  # alpha0      -0.15175  0.1148 0.0006629       0.001947
+  # beta0.psi    1.49659  0.8577 0.0049520       0.040998
+  # beta0.theta -0.36909  0.5502 0.0031762       0.036348
+  # beta2.psi   -1.96047  1.1716 0.0067638       0.042003
+  # beta3.psi    0.03712  2.1776 0.0125719       0.101009
+  # beta4.psi   -2.01749  0.9649 0.0055704       0.031870
+  # beta5.psi   -2.25376  0.9780 0.0056462       0.031893
+  # sd.theta     1.65385  0.6359 0.0036711       0.043851
+  # zsum        67.09822 11.4260 0.0659648       0.875092
+  # 
+  # 2. Quantiles for each variable:
+  #   
+  #   2.5%     25%     50%      75%    97.5%
+  # alpha0      -0.3777 -0.2292 -0.1505 -0.07355  0.07016
+  # beta0.psi    0.2518  0.9057  1.3437  1.92000  3.67262
+  # beta0.theta -1.6941 -0.6626 -0.2516  0.01998  0.42004
+  # beta2.psi   -4.0719 -2.5582 -1.9505 -1.40995 -0.16335
+  # beta3.psi   -2.3424 -1.0521 -0.4621  0.23417  7.00756
+  # beta4.psi   -4.0304 -2.5300 -1.9643 -1.45887 -0.48902
+  # beta5.psi   -4.3465 -2.7823 -2.1950 -1.66762 -0.62608
+  # sd.theta     0.6976  1.1820  1.5524  2.04370  3.14502
+  # zsum        54.0000 58.0000 64.0000 73.00000 96.00000
   
-# estimates with 127 sites  
-  # >   mean(a[,"beta0.psi"]) # mean occupancy (intercept)
-  # [1] 1.469344
-  # >   mean(a[,"beta1.psi"]) # effect of canopy cover
-  # [1] 1.190795
-  # >   mean(a[,"beta2.psi"]) # burnt
-  # [1] -0.4060675
-  # >   mean(a[,"beta3.psi"]) # logged
-  # [1] -1.25438
-  # >   mean(a[,"beta4.psi"]) # burntandlogged
-  # [1] -1.816969
-  # >   mean(a[,"beta5.psi"]) # loggedandburnt
-  # [1] -1.520048
-  # >   mean(a[,"alpha0"]) # mean det prob
-  # [1] -0.05409016
-  # >   mean(a[,"alpha1"]) # slope term for jasmineeffect on detection prob
-  # [1] 1.4754
-  
-  
-# what they should be  
-  # beta0.psi <- 1 # mean occupancy (the intercept)
-  # beta1.psi <- 1 # this is the slope term for canopy cover on site occupancy (positive)
-  # beta2.psi <- -1 # this is the slope term for burnt on site occupancy (negative)
-  # beta3.psi <- -1.5 # this is the slope term for logging on site occupancy (stronger negative effect)
-  # beta4.psi <- -1.5 # this is the slope term for burnt and logged on site occupancy 
-  # beta5.psi <- -1.5 # this is the slope term for logged and then burnt on site occupancy 
-  # beta0.theta <- 0 # this is mean plot use (the intercept for plot usage)
-  # sd.theta <- runif(1, 0.5, 1.5) # this is the standard deviation for a random effect fit on plot use
-  # beta1.theta <- 1 # this is the slope term for downed wood on plot use
-  # alpha0 <- 0 # this is mean detection probability (the intercept for detection)
-  # alpha1 <- 1.5 # this is the slope term for jasmineeffect on detection probability 
-  
-  
-# with 127 sites and changed effect sizes of betas as coded in the current model
-  # >   mean(a[,"beta0.psi"]) # mean occupancy (intercept)
-  # [1] 1.014734
-  # >   mean(a[,"beta1.psi"]) # effect of canopy cover
-  # [1] 1.376441
-  # >   mean(a[,"beta2.psi"]) # burnt
-  # [1] -0.9795046
-  # >   mean(a[,"beta3.psi"]) # logged
-  # [1] -1.333538
-  # >   mean(a[,"beta4.psi"]) # burntandlogged
-  # [1] -0.6592855
-  # >   mean(a[,"beta5.psi"]) # loggedandburnt
-  # [1] -0.798641
-  # >   mean(a[,"alpha0"]) # mean det prob
-  # [1] 0.1154041
-  # >   mean(a[,"alpha1"]) # slope term for jasmineeffect on detection prob
-  # [1] 1.150361
-   
-# taking out canopy cover so the model is smaller
-  # >   mean(a[,"beta0.psi"]) # mean occupancy (intercept)
-  # [1] 1.088093
-  # >   mean(a[,"beta2.psi"]) # burnt
-  # [1] -0.302911
-  # >   mean(a[,"beta3.psi"]) # logged
-  # [1] -0.6437466
-  # >   mean(a[,"beta4.psi"]) # burntandlogged
-  # [1] -0.8953914
-  # >   mean(a[,"beta5.psi"]) # loggedandburnt
-  # [1] -1.615628
-  # >   mean(a[,"alpha0"]) # mean det prob
-  # [1] 0.05032677
-  # >   mean(a[,"alpha1"]) # slope term for jasmineeffect on detection prob
-  # [1] 0.8938349
   
