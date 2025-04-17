@@ -9,6 +9,12 @@
 # Third section assesses convergence and extracts outputs
 # Goal: see if we can recreate the simulated parameter values by modelling the simulated data
 
+# Load packages
+  library(nimble)
+  library(coda)
+  library(hesim)
+  library(mltools)
+
 
 #### Simulate ----
 
@@ -24,11 +30,41 @@ K <- 3
 canopycover <- rnorm(I) # simulates canopy cover values at I sites from a normal distribution with mean=0 and sd =1 (scaled)
 downedwood <-array(runif(n=I*J, -2, 2), dim =c(I,J)) # simulates dwd values at I sites at J plots from a uniform distribution from -2 to 2
 
+# # # # skip this bit see next section
 # this is a hacky way of doing the dummy variables for the categorical, shouldn't impact anything in terms of how recoverable parameters are
-burnt <- rbinom(I, 1, 0.2)  # simulates whether site i was burned, probability set to 0.2
-logged <- rbinom(I, 1, 0.2) # simulates whether site i was logged, probability set to 0.2
-burntandlogged <- rbinom(I, 1, 0.2) # simulates whether site i was logged and then burned, probability set to 0.2
-loggedandburnt <- rbinom(I, 1, 0.2)# simulates whether site i was burned and then logged , probability set to 0.2
+# burnt <- rbinom(I, 1, 0.2)  # simulates whether site i was burned, probability set to 0.2
+# logged <- rbinom(I, 1, 0.2) # simulates whether site i was logged, probability set to 0.2
+# burntandlogged <- rbinom(I, 1, 0.2) # simulates whether site i was logged and then burned, probability set to 0.2
+# loggedandburnt <- rbinom(I, 1, 0.2)# simulates whether site i was burned and then logged , probability set to 0.2
+
+# this is the non-hacky way of doing the treatment using a categorical distribution
+# install and load the package 'hesim' and 'mltools' for the required functions
+# create probabilities that the different treatments occur at
+p <- c(0.25, 0.25, 0.25, 0.25) #<- set these probabilities to be the proportions the treatments occur in your real dataset
+# create matrix for each site to use in the categorical distribution
+pmat <- matrix(rep(p, I), nrow = I, ncol = length(p), byrow=TRUE)
+
+# use categorical distribution to assign treatments to each site
+treatment <- rcat(I, pmat)
+
+# make dataframe
+treatment <- data.frame(treatment)
+
+# create dummy variables for treatment categories
+treatment$burnt[treatment$treatment==1] <- 1
+treatment$burnt[is.na(treatment$burnt)] <- 0
+treatment$logged[treatment$treatment==2] <- 1
+treatment$logged[is.na(treatment$logged)] <- 0
+treatment$burntandlogged[treatment$treatment==3] <- 1
+treatment$burntandlogged[is.na(treatment$burntandlogged)] <- 0
+treatment$loggedandburnt[treatment$treatment==4] <- 1
+treatment$loggedandburnt[is.na(treatment$loggedandburnt)] <- 0
+
+# turn to matrices to use as before
+burnt <- as.matrix(treatment$burnt)
+logged <- as.matrix(treatment$logged)
+burntandlogged <- as.matrix(treatment$burntandlogged)
+loggedandburnt <- as.matrix(treatment$loggedandburnt)
 
 jasmineeffect <- rbinom(n=I*J*K, 1, 0.5)# simulates whether the observer was a pro salamander finder at site i plot j occasion k
 
@@ -133,10 +169,6 @@ str(y)
 
 
 #### Model ----
-
-# load nimble
-library(nimble)
-library(coda)
 
 
 # run the chains
