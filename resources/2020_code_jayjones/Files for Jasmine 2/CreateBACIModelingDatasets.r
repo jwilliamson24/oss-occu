@@ -13,7 +13,7 @@ rm(list=ls())
 # 1. read in the data
 # ----------------------
 
-  dname <- "" # directory pathway
+  dname <- "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/pre-fire data/" # directory pathway
 
 # OSS
 
@@ -57,7 +57,7 @@ rm(list=ls())
   trt.wide <- read.csv("Harvest state 2013-2019.csv", na.strings="*")
   trt.wide$TreeFarm <- as.factor(ifelse(as.character(trt.wide$TreeFarm)=="SP ", "SP", as.character(trt.wide$TreeFarm)))
   
-  # include only those sites that entered in 2016 or earlier
+  # include only those sites that entered only in 2016 (are NA for years before 2016)
   # (otherwise random effects means may be poorly estimated)
   trt.wide <- trt.wide[!(is.na(trt.wide$X2013) & is.na(trt.wide$X2014) & is.na(trt.wide$X2015) & is.na(trt.wide$X2016)),]
   
@@ -69,8 +69,9 @@ rm(list=ls())
 
   trt.grp <- trt %>% group_by(StandNo) %>% summarize(Group=min(as.numeric(Trt), na.rm=T)) # 1 = unit was cut; 2 = unit was never cut
   trt <- merge(trt, trt.grp)
-  trt$TrtGrp <- as.factor(ifelse(trt$Group==1 & trt$Trt=="Cut", "PostTrt", 
-                       ifelse(trt$Group==1 & trt$Trt=="Timbered", "PreTrt", "Control")))
+  trt$TrtGrp <- as.factor(ifelse(trt$Group==1 & trt$Trt=="Cut", "PostTrt", # if site is trt group=1 and trt=cut, then label it post-trt
+                       ifelse(trt$Group==1 & trt$Trt=="Timbered", "PreTrt", "Control"))) # if site is group=1 and trt=timbered, label it pre-trt
+                        # otherwise, it is control (group=2 which means it was never cut)
 
 
 # ------------------

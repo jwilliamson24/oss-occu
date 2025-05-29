@@ -1,8 +1,9 @@
 ## -------------------------------------------------------------------------------------------------------
 ##
-## 01-occupancy-matrices.R 
+## 01.1-occupancy-matrices.R 
 ##
-## Create occupancy matrix data frames for all spp, oss, enes
+## Creates occupancy matrices at site level,
+## they use subplot as replicate and collapse repeats 1-3 into single detection for each subplot
 ##
 ## Jasmine Williamson
 ## Date Created: 07-02-2024
@@ -12,7 +13,7 @@
 ## settings -----------------------------------------------------------------------------------------------
 
 rm(list=ls())
-setwd("C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data")
+setwd("/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
 
 library(unmarked)
 library(ggplot2)
