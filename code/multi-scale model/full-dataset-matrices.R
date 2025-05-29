@@ -1,11 +1,11 @@
 ## =================================================
 ##
-## Title: full-dataset-matrices
+## Title: pre-fire-matrices
 ## Author: Jasmine Williamson
 ## Date Created: 5/28/2025
 ##
-## Description: Create modeling datasets for multi scale model with full pre and post data;
-## used code from Jay Jones CreateBACIModelingDatasets.r to set up pre-fire data, then merged with my data.
+## Description: Create occu matrix for all years of pre-fire data for oss and enes;
+## used code from Jay Jones CreateBACIModelingDatasets.r 
 ##
 ## =================================================
 
@@ -79,7 +79,7 @@
                                  # otherwise, it is control (group=2 which means it was never cut)
   
 
-## merge data ----------------------------------------------------------------------------------------------
+## merge  ----------------------------------------------------------------------------------------------
   
   
   xo <- rbind(xo13, xo14, xo15, xo16, xo17, xo18, xo19)
@@ -99,6 +99,7 @@
   trt <- trt[trt$StandNo %in% unique(xo$StandNo),]
   trt$StandNo <- as.character(trt$StandNo)
   trt$Year <- gsub("^X", "", trt$Year)
+  
   xo <- merge(xo, trt[, c("StandNo", "HarvestState", "TrtGrp", "Year")])
   xe <- merge(xe, trt[, c("StandNo", "HarvestState", "TrtGrp", "Year")])
   
