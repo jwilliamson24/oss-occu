@@ -36,7 +36,7 @@
 ## df for merge ------------------------------------------------------------------------------------------
   
   #creating occupancy df with non-detections
-  df.new <- subplot[,c(1,3,5,9)] # siteID, stand, subplots, treatment
+  df.new <- subplot[,c(1,3,5,6,9)] # siteID, stand, subplots, year, treatment
   df.new$subplot <- as.factor(df.new$subplot)
   df.new <- df.new[order(df.new$site_id, df.new$subplot),] # reorder
   
@@ -64,12 +64,12 @@
   #add in sites with no detections by merging with df that has all site/subplot combos listed
   df.merge.o <- full_join(df.new,sals.oss,by=c("site_id","subplot","pass"))
   df.merge.o$detect <- ifelse(is.na(df.merge.o$detect), 0, df.merge.o$detect) #make NA's = 0
-  df.merge.o <- df.merge.o[-6]  
+  df.merge.o <- df.merge.o[-7]  
   df.merge.o <- as.data.frame(df.merge.o)
   
   # summarize count and detections per site/subplot/pass so the rows are unique (no repliate rows)
   df.sum.o <- df.merge.o %>%
-    group_by(site_id, stand, trt, subplot, pass) %>%
+    group_by(site_id, stand, trt, year, subplot, pass) %>%
     summarise(
       count = sum(detect, na.rm = TRUE),
       detect = as.integer(sum(detect, na.rm = TRUE) > 0),
@@ -87,7 +87,7 @@
   
   # reshape for only detections 
   dets.o <-  df.sum.o %>%
-    group_by(site_id,  stand, trt, subplot, pass) %>%
+    group_by(site_id,  stand, trt, year, subplot, pass) %>%
     summarise(detect = max(detect), .groups = "drop") %>%
     pivot_wider(
       names_from = pass,
@@ -110,12 +110,12 @@
   #add in sites with no detections by merging with df that has all site/subplot combos listed
   df.merge.e <- full_join(df.new,sals.enes,by=c("site_id","subplot","pass"))
   df.merge.e$detect <- ifelse(is.na(df.merge.e$detect), 0, df.merge.e$detect) #make NA's = 0
-  df.merge.e <- df.merge.e[-6]  
+  df.merge.e <- df.merge.e[-7]  
   df.merge.e <- as.data.frame(df.merge.e)
   
   # summarize count and detections per site/subplot/pass so the rows are unique (no repliate rows)
   df.sum.e <- df.merge.e %>%
-    group_by(site_id,  stand, trt, subplot, pass) %>%
+    group_by(site_id,  stand, trt, year, subplot, pass) %>%
     summarise(
       count = sum(detect, na.rm = TRUE),
       detect = as.integer(sum(detect, na.rm = TRUE) > 0),
@@ -124,7 +124,7 @@
   
   # reshape for only detections 
   dets.e <-  df.sum.e %>%
-    group_by(site_id,  stand, trt, subplot, pass) %>%
+    group_by(site_id,  stand, trt, year, subplot, pass) %>%
     summarise(detect = max(detect), .groups = "drop") %>%
     pivot_wider(
       names_from = pass,
