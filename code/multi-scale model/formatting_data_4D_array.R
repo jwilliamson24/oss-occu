@@ -100,39 +100,39 @@ y.4D[,,100,8] # detection data for site 100 in year 8
 # OSS detection data -------------------------------------------------------------
 
 # pull out the detection/non-detection data
-y <- oss[,(6:8)]
+y2 <- oss[,(6:8)]
 sum(y, na.rm=TRUE)
 
 #Structure like this if you aren't going to index over year in your model and just want to use a stacked data approach
 #3D matrix (plot, occ, site)
-y.3D =array(0,dim=c(maxW,K,n.sites)) #new data 
+y2.3D =array(0,dim=c(maxW,K,n.sites)) #new data 
 for(i in 1:nrow(oss)){ #loop through each row
   this.site=which(sites==oss$site_id[i]) #get site for this row
   this.plot=which(site.plots[[this.site]]==oss$subplot[i]) #get plot for this row
-  y.3D[this.plot,1:3,this.site]=as.numeric(oss[i,6:8]) #force numeric
+  y2.3D[this.plot,1:3,this.site]=as.numeric(oss[i,6:8]) #force numeric
 }
 
-str(y.3D)
-sum(y.3D, na.rm=TRUE)
+str(y2.3D)
+sum(y2.3D, na.rm=TRUE)
 
 #Structure like this if you are going to index over year in your model (this would be optimal)
 # 4D matrix (plot, occ, site, year)
-y.4D =array(0,dim=c(maxW,K,maxJ, n.years)) #new data 
+y2.4D =array(0,dim=c(maxW,K,maxJ, n.years)) #new data 
 for(i in 1:nrow(oss)){ #loop through each row
   this.year=which(years==oss$year[i]) #get year for this row
   this.site=which(year.sites[[this.year]]==oss$site_id[i]) #get site for this row
   this.plot=which(site.plots[[this.site]]==oss$subplot[i]) #get plot for this row
-  y.4D[this.plot,1:3,this.site,this.year]=as.numeric(oss[i,6:8]) #force numeric
+  y2.4D[this.plot,1:3,this.site,this.year]=as.numeric(oss[i,6:8]) #force numeric
 }
 
 
-sum(y.4D, na.rm=TRUE)
+sum(y2.4D, na.rm=TRUE)
 
 
 # understanding the arrays
-str(y.4D)
-y.4D[2,3,100,8] # detection value for plot 2, pass 3, site 100, year 8
-y.4D[,,100,8] # detection data for site 100 in year 8
+str(y2.4D)
+y2.4D[2,3,100,8] # detection value for plot 2, pass 3, site 100, year 8
+y2.4D[,,100,8] # detection data for site 100 in year 8
 
 
 
@@ -143,26 +143,6 @@ y.4D[,,100,8] # detection data for site 100 in year 8
 y2 <- enes[,c(4,9:11)]
 
 
-# treatment
-
-y2$trt.factor <- as.factor(y2$trt)
-
-
-#Structure like this if you are going to index over year in your model (this would be optimal)
-# 4D matrix (plot, occ, site, year)
-trt.4D =array(0,dim=c(maxW,K,maxJ, n.years)) #new data 
-for(i in 1:nrow(enes)){ #loop through each row
-  this.year=which(years==enes$year[i]) #get year for this row
-  this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-  this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-  trt.4D[this.plot,1:3,this.site,this.year]=as.numeric(y2[i,5]) #force numeric
-}
-
-str(trt.4D)
-sum(trt.4D, na.rm=TRUE) 
-trt.4D[,,c(1:10),9] # first ten sites in year 9
-trt.4D[,,c(1:10),3]
- 
 
 # jul date
 
@@ -217,5 +197,67 @@ DW.4D[,,c(1:10),3]
 
 
 
+# treatment --------------------------------------------------------------------
+
+y2$trt.factor <- as.factor(y2$trt)
+
+# 4D 
+
+#Structure like this if you are going to index over year in your model (this would be optimal)
+# 4D matrix (plot, occ, site, year)
+trt.4D =array(0,dim=c(maxW,K,maxJ, n.years)) #new data 
+for(i in 1:nrow(enes)){ #loop through each row
+  this.year=which(years==enes$year[i]) #get year for this row
+  this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+  this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+  trt.4D[this.plot,1:3,this.site,this.year]=as.numeric(y2[i,5]) #force numeric
+}
+
+str(trt.4D)
+sum(trt.4D, na.rm=TRUE) 
+trt.4D[,,c(1:10),9] # first ten sites in year 9
+trt.4D[,,c(1:10),3]
+
+
+
+# 3D array, creating one array for each treatment
+
+#Structure like this if you aren't going to index over year in your model and just want to use a stacked data approach
+#3D matrix (plot, occ, site)
+trt.3D =array(0,dim=c(maxW,K,n.sites)) #new data 
+for(i in 1:nrow(enes)){ #loop through each row
+  this.site=which(sites==enes$site_id[i]) #get site for this row
+  this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+  trt.3D[this.plot,1:3,this.site]=as.numeric(y2[i,5]) #force numeric
+}
+
+
+# check treatment categories
+unique(as.vector(trt.3D))  # some plots have trt "0"
+which(trt.3D == 0, arr.ind = TRUE)
+trt.3D[trt.3D == 0] <- NA  # changing those to NA
+which(is.na(trt.3D), arr.ind = TRUE)  # always the 7th plot, they skipped this in a few early sites
+
+
+# list to hold treatment arrays
+trt.binary.list <- list()
+
+# all unique treatment codes in the data
+trt.codes <- sort(unique(as.vector(trt.3D)))
+
+# loop over treatment codes
+for (code in trt.codes) {
+  # Create binary indicator: 1 if trt.3D == code, else 0
+  trt.binary.list[[as.character(code)]] <- ifelse(trt.3D == code, 1, 0)
+}
+
+str(trt.binary.list[["1"]])
+str(trt.binary.list[["5"]])
+
+BS <- trt.binary.list[["1"]]
+BU <- trt.binary.list[["2"]]
+HB <- trt.binary.list[["3"]]
+HU <- trt.binary.list[["4"]]
+UU <- trt.binary.list[["5"]]
 
 
