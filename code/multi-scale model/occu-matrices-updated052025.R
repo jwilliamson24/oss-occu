@@ -12,8 +12,8 @@
 
 ## settings -----------------------------------------------------------------------------------------------
 
-  rm(list=ls())
-  setwd("/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
+ # rm(list=ls())
+  #setwd("/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
   
   library(unmarked)
   library(ggplot2)
@@ -25,8 +25,8 @@
 
 ## load data ----------------------------------------------------------------------------------------------
   
-  subplot <- read.csv("subplot.complete.csv")
-  sals <- read.csv("sals.complete.csv", 
+  subplot <- read.csv("data/subplot.complete.csv")
+  sals <- read.csv("data/sals.complete.csv", 
                    colClasses = c(landowner="factor", stand="character", trt="factor",
                                   obs="factor", subplot="factor", recap="factor",
                                   pass="factor", spp="factor", cover_obj="factor", 

@@ -12,7 +12,7 @@
 
 ## settings -----------------------------------------------------------------------------------------------
 
-  rm(list=ls())
+#  rm(list=ls())
   library(tidyr)
   library(dplyr)
   library(ggplot2)
@@ -22,13 +22,13 @@
 
 # OSS
 
-  xo13 <- read.csv("OSS detections and covariates 2013 - stacked.csv")
-  xo14 <- read.csv("OSS detections and covariates 2014 - stacked.csv")
-  xo15 <- read.csv("OSS detections and covariates 2015 - stacked.csv")
-  xo16 <- read.csv("OSS detections and covariates 2016 - stacked.csv")
-  xo17 <- read.csv("OSS detections and covariates 2017 - stacked.csv")
-  xo18 <- read.csv("OSS detections and covariates 2018 - stacked.csv")
-  xo19 <- read.csv("OSS detections and covariates 2019 - stacked.csv")
+  xo13 <- read.csv("data/pre-fire data/OSS detections and covariates 2013 - stacked.csv")
+  xo14 <- read.csv("data/pre-fire data/OSS detections and covariates 2014 - stacked.csv")
+  xo15 <- read.csv("data/pre-fire data/OSS detections and covariates 2015 - stacked.csv")
+  xo16 <- read.csv("data/pre-fire data/OSS detections and covariates 2016 - stacked.csv")
+  xo17 <- read.csv("data/pre-fire data/OSS detections and covariates 2017 - stacked.csv")
+  xo18 <- read.csv("data/pre-fire data/OSS detections and covariates 2018 - stacked.csv")
+  xo19 <- read.csv("data/pre-fire data/OSS detections and covariates 2019 - stacked.csv")
   
   xo13$Year <- rep("2013", nrow(xo13))
   xo14$Year <- rep("2014", nrow(xo14))
@@ -40,13 +40,13 @@
 
 # ENES
 
-  xe13 <- read.csv("ENES detections and covariates 2013 - stacked.csv")
-  xe14 <- read.csv("ENES detections and covariates 2014 - stacked.csv")
-  xe15 <- read.csv("ENES detections and covariates 2015 - stacked.csv")
-  xe16 <- read.csv("ENES detections and covariates 2016 - stacked.csv")
-  xe17 <- read.csv("ENES detections and covariates 2017 - stacked.csv")
-  xe18 <- read.csv("ENES detections and covariates 2018 - stacked.csv")
-  xe19 <- read.csv("ENES detections and covariates 2019 - stacked.csv")
+  xe13 <- read.csv("data/pre-fire data/ENES detections and covariates 2013 - stacked.csv")
+  xe14 <- read.csv("data/pre-fire data/ENES detections and covariates 2014 - stacked.csv")
+  xe15 <- read.csv("data/pre-fire data/ENES detections and covariates 2015 - stacked.csv")
+  xe16 <- read.csv("data/pre-fire data/ENES detections and covariates 2016 - stacked.csv")
+  xe17 <- read.csv("data/pre-fire data/ENES detections and covariates 2017 - stacked.csv")
+  xe18 <- read.csv("data/pre-fire data/ENES detections and covariates 2018 - stacked.csv")
+  xe19 <- read.csv("data/pre-fire data/ENES detections and covariates 2019 - stacked.csv")
   
   xe13$Year <- rep("2013", nrow(xe13))
   xe14$Year <- rep("2014", nrow(xe14))
@@ -59,7 +59,7 @@
 
 # Trt
   
-  trt.wide <- read.csv("Harvest state 2013-2019.csv", na.strings="*")
+  trt.wide <- read.csv("data/pre-fire data/Harvest state 2013-2019.csv", na.strings="*")
   trt.wide$TreeFarm <- as.factor(ifelse(as.character(trt.wide$TreeFarm)=="SP ", "SP", as.character(trt.wide$TreeFarm)))
   
   # remove rows that are NA for years 2013-2016 (because that's what Jay did...?)
