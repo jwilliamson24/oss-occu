@@ -12,16 +12,14 @@ chains = vector("list", n.chains)
 for(chain in 1:n.chains){
   
   #fit model
-  constants <- list(I=I,J=J,K=K, HU = HU, BU = BU, 
-                    BS = BS, HB = HB) 
-  # dwd=downedwood, canopycover=canopycover, jasmineeffect=jasmineeffect, canopycover=canopycover)
+  constants <- list(I = I, J = J, K = K, HU = HU, BU = BU, BS = BS, HB = HB) 
+  
   Nimdata <- list(y=y2.3D)
   
   # set initial values
   Niminits <- list(beta0.psi = 0, beta2.psi = 0, beta3.psi = 0, beta4.psi = 0, beta5.psi = 0, 
                    beta0.theta = 0, alpha0=0)
-  #beta1.psi = 0, alpha1 = 0, beta1.theta=0, sd.theta = 0.5, beta1.psi = 0)
-  
+
   # data summaries
   w.data <- 1*(apply(y,c(1,2),sum)>0)
   z.data <- 1*(rowSums(w.data)>0)
