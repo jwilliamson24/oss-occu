@@ -82,14 +82,21 @@ for(i in 1:nrow(enes)){ #loop through each row
   y.4D[this.plot,1:3,this.site,this.year]=as.numeric(enes[i,6:8]) #force numeric
 }
 
-
+str(y.4D)
 sum(y.4D, na.rm=TRUE)
 
+enes.4D <- aperm(y.4D, c(3, 1, 2, 4))  # reorder to [sites, subplots, surveys, years] to match model
+str(enes.4D)
 
 # understanding the arrays
 str(y.4D)
 y.4D[2,3,100,8] # detection value for plot 2, pass 3, site 100, year 8
 y.4D[,,100,8] # detection data for site 100 in year 8
+
+
+saveRDS(enes.4D, "data/occupancy/enes.4D.rds")
+
+
 
 
 # next need to format your covariate data e.g., treatment ready to fed to model!
@@ -199,69 +206,6 @@ DW.4D[,,c(1:10),3]
 
 # treatment --------------------------------------------------------------------
 
-# y2$trt.factor <- as.factor(y2$trt)
-# 
-# # 4D 
-# 
-# #Structure like this if you are going to index over year in your model (this would be optimal)
-# # 4D matrix (plot, occ, site, year)
-# trt.4D =array(0,dim=c(maxW,K,maxJ, n.years)) #new data 
-# for(i in 1:nrow(enes)){ #loop through each row
-#   this.year=which(years==enes$year[i]) #get year for this row
-#   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-#   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-#   trt.4D[this.plot,1:3,this.site,this.year]=as.numeric(y2[i,5]) #force numeric
-# }
-# 
-# str(trt.4D)
-# sum(trt.4D, na.rm=TRUE) 
-# trt.4D[,,c(1:10),9] # first ten sites in year 9
-# trt.4D[,,c(1:10),3]
-# 
-# 
-# 
-# # 3D array, creating one array for each treatment
-# 
-# #Structure like this if you aren't going to index over year in your model and just want to use a stacked data approach
-# #3D matrix (plot, occ, site)
-# trt.3D =array(0,dim=c(maxW,K,n.sites)) #new data 
-# for(i in 1:nrow(enes)){ #loop through each row
-#   this.site=which(sites==enes$site_id[i]) #get site for this row
-#   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-#   trt.3D[this.plot,1:3,this.site]=as.numeric(y2[i,5]) #force numeric
-# }
-# 
-# 
-# # check treatment categories
-# unique(as.vector(trt.3D))  # some plots have trt "0"
-# which(trt.3D == 0, arr.ind = TRUE)
-# trt.3D[trt.3D == 0] <- NA  # changing those to NA
-# which(is.na(trt.3D), arr.ind = TRUE)  # always the 7th plot, they skipped this in a few early sites
-# 
-# 
-# # list to hold treatment arrays
-# trt.binary.list <- list()
-# 
-# # all unique treatment codes in the data
-# trt.codes <- sort(unique(as.vector(trt.3D)))
-# 
-# # loop over treatment codes
-# for (code in trt.codes) {
-#   # Create binary indicator: 1 if trt.3D == code, else 0
-#   trt.binary.list[[as.character(code)]] <- ifelse(trt.3D == code, 1, 0)
-# }
-# 
-# str(trt.binary.list[["1"]])
-# str(trt.binary.list[["5"]])
-# 
-# BS <- trt.binary.list[["1"]]
-# BU <- trt.binary.list[["2"]]
-# HB <- trt.binary.list[["3"]]
-# HU <- trt.binary.list[["4"]]
-# UU <- trt.binary.list[["5"]]
-
-
-
 # Make each treatment a dummy covariate
 table(enes$trt)
 
@@ -332,3 +276,14 @@ for(i in 1:nrow(enes)){ #loop through each row
   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
   UU.new[this.site,this.year]=as.numeric(enes[i,16]) #force numeric
 }
+
+
+write.csv(BU.new, "data/occupancy/BU.new.csv")
+write.csv(BS.new, "data/occupancy/BS.new.csv")
+write.csv(HU.new, "data/occupancy/HU.new.csv")
+write.csv(HB.new, "data/occupancy/HB.new.csv")
+
+zip("data/occupancy/trts.new", c("data/occupancy/BU.new.csv", "data/occupancy/BS.new.csv", 
+                  "data/occupancy/HU.new.csv", "data/occupancy/HB.new.csv"))
+
+

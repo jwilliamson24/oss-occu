@@ -3,85 +3,110 @@
 library(nimble)
 library(coda)
 
+# data 
+ 
+enes.4D <- readRDS("data/occupancy/enes.4D.rds")
+str(enes.4D)
+BU.new <- read.csv("data/occupancy/BU.new.csv")
+BS.new <- read.csv("data/occupancy/BS.new.csv")
+HU.new <- read.csv("data/occupancy/HU.new.csv")
+HB.new <- read.csv("data/occupancy/HB.new.csv")
+
+
 #### Model ----
 
+# added in indexing by year (T) and renamed parameters to be more intuitive 
+
+# set y to current dataset
+y = enes.4D
 
 # run the chains
 n.chains = 3
 chains = vector("list", n.chains)
 for(chain in 1:n.chains){
   
-  #fit model
-  constants <- list(I = I, J = J, K = K, HU = HU, BU = BU, BS = BS, HB = HB) 
+  # define constants
+  constants <- list(
+    I = dim(y)[1], # sites
+    J = dim(y)[2], # subplots
+    K = dim(y)[3], # surveys
+    T = dim(y)[4], # years
+    HU = HU.new, BU = BU.new, BS = BS.new, HB = HB.new) # treatments
   
-  Nimdata <- list(y=y2.3D)
-  
-  # set initial values
-  Niminits <- list(beta0.psi = 0, beta2.psi = 0, beta3.psi = 0, beta4.psi = 0, beta5.psi = 0, 
-                   beta0.theta = 0, alpha0=0)
+  # set initial values, all zero
+  Niminits <- list(Intercept = 0, Plot.int = 0, Det.int = 0, 
+                   BU.psi = 0, HB.psi = 0, HU.psi = 0, BS.psi = 0, 
+                   z = ifelse(is.na(z.data), 1, z.data),
+                   w = ifelse(is.na(w.data), 1, w.data))
 
-  # data summaries
-  w.data <- 1*(apply(y,c(1,2),sum)>0)
-  z.data <- 1*(rowSums(w.data)>0)
+  # data summaries used in model 
+  w.data <- 1*(apply(y, c(1,2,4), sum) >0) # w[i,j,t] = 1 if any dets across k surveys 
+  z.data <- 1*(apply(w.data, c(1,3), sum) >0) # z[i,t] = 1 if plots used at site i in yr t 
   w.data[w.data==0] <- NA
   z.data[z.data==0] <- NA
   
-  # provide data for model
-  Nimdata <- list(y=y2.3D,z=z.data,w=w.data)
+  # provide data
+  Nimdata <- list(y=y, z=z.data, w=w.data) # y=obs, z=site level latent state, w=plot level latent state
   
-  #set parameters to monitor
-  parameters <- c("beta0.psi", "beta2.psi", "beta3.psi", "beta4.psi", "beta5.psi",
-                  "beta0.theta", "alpha0", 'zsum')
-  #"beta1.psi", "alpha1", "beta1.theta", "beta1.psi")
+  # parameters to monitor
+  parameters <- c("Intercept", "Plot.int", "Det.int", "BU.psi", "HB.psi", "HU.psi", "BS.psi",
+                  'zsum')
   # (zsum = number of subunits occupied at a site, given that the species is present at that site)
   
-  # multi-scale occupancy model for estimating the occupancy state of site i, the use of plot j
+  
+# Model 
+# multi-scale occupancy model for estimating the occupancy state of site i, the use of plot j
   NimModel <- nimbleCode({
     
     # priors
-    beta0.psi ~ dlogis(0,1)
-    beta0.theta ~ dlogis(0,1)
-    alpha0 ~ dlogis(0,1)
-    #beta1.psi ~ dnorm(0, sd = 5)
-    beta2.psi ~ dnorm(0, sd = 5)
-    beta3.psi ~ dnorm(0, sd = 5)
-    beta4.psi ~ dnorm(0, sd = 5)
-    beta5.psi ~ dnorm(0, sd = 5)
+    Intercept ~ dlogis(0,1)  # intercept for occupancy, mean occu
+    Plot.int ~ dlogis(0,1)  # intercept for plot use, mean plot use
+    Det.int ~ dlogis(0,1)  # intercept for detection, mean det prob
+    BU.psi ~ dnorm(0, sd = 5)  # slope term for burn effect on site occu
+    HB.psi ~ dnorm(0, sd = 5)  # harvest burn
+    HU.psi ~ dnorm(0, sd = 5)  # harvest
+    BS.psi ~ dnorm(0, sd = 5)  # burn salvage
+    # DW ~ dnorm(0, sd = 5)  # downed wood effect
     # sd.theta ~ dunif(0,5)
     # beta1.theta ~ dnorm(0, sd = 5)
     # alpha1 ~ dnorm(0, sd = 5)
     
     # likelihood for state model
-    for(i in 1:I){
+    for(i in 1:I) {
+      for(t in 1:T) {
       
       # estimate psi as function  of covs
-      logit(psi[i]) <- beta0.psi + beta2.psi * BU[i] + beta3.psi * HU[i] + 
-        beta4.psi * BS[i] + beta5.psi * HB[i] #+ beta1.psi * canopycover[i] + beta1.psi * canopycover[i]
-      z[i] ~ dbern(psi[i]) #is site occupied? z = 1 is yes, z = 0 is no
+      logit(psi[i,t]) <- Intercept + BU.psi * BU[i,t] + HU.psi * HU[i,t] + BS.psi * BS[i,t] + 
+                         HB.psi * HB[i,t]
+      z[i,t] ~ dbern(psi[i,t]) # is site occupied? z=1 yes, z=0 no
       
       #centered Random Effect
       # plot.theta[i] ~ dnorm(beta0.theta,sd=sd.theta)
       
       # estimate theta (plot usage) as function of covs
       for(j in 1:J){
-        logit(theta[i,j]) <- beta0.theta #+ beta1.theta * dwd[i,j]
-        w[i,j] ~ dbern(theta[i,j]*z[i]) #is plot used given the site occupied?
+        logit(theta[i,j,t]) <- Plot.int 
+        w[i,j,t] ~ dbern(theta[i,j,t]*z[i,t]) #is plot used given the site occupied?
         
         # likelihood for observation model
         for(k in 1:K){
-          logit(p[i,j,k]) <- alpha0 #+ alpha1 * jasmineeffect[i,j,k]
-          y[i,j,k] ~ dbern(p[i,j,k]*w[i,j]) # observations as a function of detection probability conditional on the plot is used (w = 1)
+          logit(p[i,j,k,t]) <- Det.int
+          y[i,j,k,t] ~ dbern(p[i,j,k,t] * w[i,j,t]) # observations as function of det prob conditional on the plot is used (w = 1)
+          
+          }
         }
       }
     }
-    zsum <- sum(z[1:I])
-  })# end model
+    
+    zsum <- sum(z[1:I, 1:T])
+    
+  }) # end model
   
   
   # Build the model, configure the mcmc, and compileConfigure
   start.time <- Sys.time()
-  Rmodel <- nimbleModel(code=NimModel, constants=constants, data=Nimdata,check=FALSE,inits=Niminits)
-  conf <- configureMCMC(Rmodel,monitors=parameters, thin=5, useConjugacy=FALSE) # this sets thinning interval to every 5th value
+  Rmodel <- nimbleModel(code=NimModel, constants=constants, data=Nimdata, check=FALSE, inits=Niminits)
+  conf <- configureMCMC(Rmodel, monitors=parameters, thin=5, useConjugacy=FALSE) # this sets thinning interval to every 5th value
   
   # Build and compile
   Rmcmc <- buildMCMC(conf)
