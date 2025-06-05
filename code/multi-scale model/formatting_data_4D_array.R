@@ -283,7 +283,9 @@ write.csv(BS.new, "data/occupancy/BS.new.csv")
 write.csv(HU.new, "data/occupancy/HU.new.csv")
 write.csv(HB.new, "data/occupancy/HB.new.csv")
 
-zip("data/occupancy/trts.new", c("data/occupancy/BU.new.csv", "data/occupancy/BS.new.csv", 
-                  "data/occupancy/HU.new.csv", "data/occupancy/HB.new.csv"))
+setwd("data/occupancy")
+zip("trts.new.zip", c("BU.new.csv", "BS.new.csv", "HU.new.csv", "HB.new.csv"))
+setwd("../..") 
+
 
 
