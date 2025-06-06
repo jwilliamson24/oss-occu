@@ -5,12 +5,13 @@ library(coda)
 
 # data 
  
-enes.4D <- readRDS("data/occupancy/enes.4D.rds")
-str(enes.4D)
-BU.new <- read.csv("data/occupancy/BU.new.csv")
-BS.new <- read.csv("data/occupancy/BS.new.csv")
-HU.new <- read.csv("data/occupancy/HU.new.csv")
-HB.new <- read.csv("data/occupancy/HB.new.csv")
+  enes.4D <- readRDS("data/occupancy/enes.4D.rds")
+  str(enes.4D)
+  BU.new <- read.csv("data/occupancy/BU.new.csv")
+  BS.new <- read.csv("data/occupancy/BS.new.csv")
+  HU.new <- read.csv("data/occupancy/HU.new.csv")
+  HB.new <- read.csv("data/occupancy/HB.new.csv")
+  UU.new <- read.csv("data/occupancy/UU.new.csv")
 
 
 #### Model ----
@@ -32,21 +33,21 @@ for(chain in 1:n.chains){
     K = dim(y)[3], # surveys
     T = dim(y)[4], # years
     HU = HU.new, BU = BU.new, BS = BS.new, HB = HB.new) # treatments
+
+  # data summaries used in model 
+  w.data <- 1*(apply(y, c(1,2,4), sum) >0) # w[i,j,t] = 1 if any dets across k surveys 
+  z.data <- 1*(apply(w.data, c(1,3), sum) >0) # z[i,t] = 1 if plots used at site i in yr t 
+  w.data[w.data==0] <- NA
+  z.data[z.data==0] <- NA #z=site level latent state, w=plot level latent state
+  
+  # provide data
+  Nimdata <- list(y=y) # y=obs
   
   # set initial values, all zero
   Niminits <- list(Intercept = 0, Plot.int = 0, Det.int = 0, 
                    BU.psi = 0, HB.psi = 0, HU.psi = 0, BS.psi = 0, 
                    z = ifelse(is.na(z.data), 1, z.data),
                    w = ifelse(is.na(w.data), 1, w.data))
-
-  # data summaries used in model 
-  w.data <- 1*(apply(y, c(1,2,4), sum) >0) # w[i,j,t] = 1 if any dets across k surveys 
-  z.data <- 1*(apply(w.data, c(1,3), sum) >0) # z[i,t] = 1 if plots used at site i in yr t 
-  w.data[w.data==0] <- NA
-  z.data[z.data==0] <- NA
-  
-  # provide data
-  Nimdata <- list(y=y, z=z.data, w=w.data) # y=obs, z=site level latent state, w=plot level latent state
   
   # parameters to monitor
   parameters <- c("Intercept", "Plot.int", "Det.int", "BU.psi", "HB.psi", "HU.psi", "BS.psi",

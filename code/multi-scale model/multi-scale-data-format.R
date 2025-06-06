@@ -23,7 +23,7 @@
   library(dplyr)
 
 
-## load data ----------------------------------------------------------------------------------------------
+## load data ------------------------------------------------------------------------
 
 # 2023-2024 data
   site <- read.csv("data/site.complete.csv")
@@ -41,6 +41,9 @@
   head(dets.o) # post-fire oss
   head(dets.e) # post-fire enes
 
+  
+## format data -----------------------------------------------------------------------
+  
 # dwd long format
   dwd.long <- dwd.count %>%
     pivot_longer(cols = starts_with("X"),
@@ -49,12 +52,24 @@
                  values_to = "DW") %>%
     mutate(subplot = as.integer(subplot))
   
+  
 # temp from F to C
   enes$temp_C <- (enes$temp - 32) * 5/9
   subplot.lvl$temp_C <- round((subplot.lvl$temp - 32) * 5/9, 1)
   
+  
+# sal counts to detections
+  xo$V1 <- ifelse(xo$V1 > 0, 1, 0)
+  xo$V2 <- ifelse(xo$V2 > 0, 1, 0)
+  xo$V3 <- ifelse(xo$V3 > 0, 1, 0)
+  
+  xe$V1 <- ifelse(xe$V1 > 0, 1, 0)
+  xe$V2 <- ifelse(xe$V2 > 0, 1, 0)
+  xe$V3 <- ifelse(xe$V3 > 0, 1, 0)
+  
+  
 
-## post fire matrix -------------------------------------------------------------------------------------------
+## post fire matrix ---------------------------------------------------------------
   
 # add covariates: DW, JulianDate, AirTemp to post-fire matrix to match pre-fire matrix
 
@@ -75,7 +90,7 @@
   dets.e <- merge(dets.e, dwd.long[, c("site_id", "subplot", "DW")], by = c("site_id", "subplot"), all.x = TRUE) # dwd
 
 
-## pre fire matrix -------------------------------------------------------------------------------------------
+## pre fire matrix ------------------------------------------------------------------
   
 # subset
   
@@ -105,7 +120,7 @@
   xe2$site_id <- paste(xe2$stand, 1, xe2$year, sep = " _ ")
 
   
-# merge -------------------------------------------------------------------------------------------------------
+# merge -----------------------------------------------------------------------------
   
 # oss
   
