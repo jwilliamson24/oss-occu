@@ -17,6 +17,8 @@
   sals <- read.csv("data/sals.complete.csv")
   sals$sample_id[sals$sample_id == ""] <- NA
   
+  plots <- read.csv("data/subplot.complete.csv")
+  
   
   # sample_id was only recorded for animals with a sample (OSS)
   # sample_id = observer initials, # animal in that site
@@ -62,6 +64,16 @@
   # Use the 14 stands that have only one sample
   # Run 2 samples on the 30 stands that have >=2 samples
   
+  
+  
+# get lat/long for each sample  
+  
+  plot.loc <- plots[,c(1,9:11)]
+  
+  merge1 <- merge(df_samples, plot.loc, by = c("site_id", "subplot"), all.x = TRUE)
+  
+  write.csv(merge1, "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/occupancy/oss-samples-location.csv", 
+            row.names = FALSE)
   
   
   
