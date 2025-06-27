@@ -62,7 +62,7 @@
   trt.wide <- read.csv("data/pre-fire data/Harvest state 2013-2019.csv", na.strings="*")
   trt.wide$TreeFarm <- as.factor(ifelse(as.character(trt.wide$TreeFarm)=="SP ", "SP", as.character(trt.wide$TreeFarm)))
   
-  # remove rows that are NA for years 2013-2016 (because that's what Jay did...?)
+  # remove rows that are NA for years 2013-2016
   trt.wide <- trt.wide[!(is.na(trt.wide$X2013) & is.na(trt.wide$X2014) & is.na(trt.wide$X2015) & is.na(trt.wide$X2016)),]
   
   # stack

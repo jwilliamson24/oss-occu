@@ -1,6 +1,16 @@
+## =================================================
+##
+## Multi-scale occupancy data formatting
+## Author: Josh Twining + JW
+##
+## formatting data into a 4D array for the multi scale model
+## most of this code has been added to the model script, so this script is not actively used anymore
+##
+## =================================================
 
-# Multi-scale occupancy data formatting
+
 #setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
+
 
 
 ## load data -------------------------------------------------------------------
@@ -98,12 +108,6 @@ saveRDS(enes.4D, "data/occupancy/enes.4D.rds")
 
 
 
-
-# next need to format your covariate data e.g., treatment ready to fed to model!
-# Can you do this using above code as example?
-
-
-
 # OSS detection data -------------------------------------------------------------
 
 # pull out the detection/non-detection data
@@ -147,7 +151,7 @@ saveRDS(enes.4D, "data/occupancy/enes.4D.rds")
 # covariate data -----------------------------------------------------------------
 
 # pull out covariate data
-  y2 <- enes[,c(4,9:11)]
+  y2 <- enes[,c(4,9:11,13)]
 
 
 # jul date

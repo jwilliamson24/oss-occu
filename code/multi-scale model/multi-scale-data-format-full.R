@@ -37,7 +37,7 @@
   head(xo) # pre-fire oss
   head(xe) # pre-fire enes
   
-# run code occu-matrices-updated052025.R
+# run code occu-matrices-postfire.R
   head(dets.o) # post-fire oss
   head(dets.e) # post-fire enes
 
@@ -54,7 +54,7 @@
   
   
 # temp from F to C
-  enes$temp_C <- (enes$temp - 32) * 5/9
+  #enes$temp_C <- (enes$temp - 32) * 5/9
   subplot.lvl$temp_C <- round((subplot.lvl$temp - 32) * 5/9, 1)
   
   
@@ -68,10 +68,9 @@
   xe$V3 <- ifelse(xe$V3 > 0, 1, 0)
   
   
-
 ## post fire matrix ---------------------------------------------------------------
   
-# add covariates: DW, JulianDate, AirTemp to post-fire matrix to match pre-fire matrix
+# add covariates: DW, JulianDate, AirTemp, Owner to post-fire matrix to match pre-fire matrix
 
 # oss  
   
@@ -81,6 +80,17 @@
 
   dets.o <- merge(dets.o, dwd.long[, c("site_id", "subplot", "DW")], by = c("site_id", "subplot"), all.x = TRUE) # dwd
   
+  dets.o <- merge(dets.o, site.lvl[, c("site_id", "landowner")], by = c("site_id"), all.x = TRUE) # owner
+  
+  # dets.o <- merge(dets.o, subplot.lvl[, c("site_id", "subplot", "lat")], by = c("site_id", "subplot"), all.x = TRUE) # lat
+  # 
+  # dets.o <- merge(dets.o, subplot.lvl[, c("site_id", "subplot", "long")], by = c("site_id", "subplot"), all.x = TRUE) # long
+  # 
+  # dets.o <- merge(dets.o, subplot.lvl[, c("site_id", "subplot", "elev")], by = c("site_id", "subplot"), all.x = TRUE) # elev
+  
+########## when i get lat/long/elev for pre fire data, i can just run the commented code here to add these to the post fire matrix 
+  
+    
 # enes
   
   dets.e <- merge(dets.e, site.lvl[, c("site_id", "jul_date")], by = "site_id", all.x = TRUE) # jul date
@@ -89,16 +99,45 @@
   
   dets.e <- merge(dets.e, dwd.long[, c("site_id", "subplot", "DW")], by = c("site_id", "subplot"), all.x = TRUE) # dwd
 
+  dets.e <- merge(dets.e, site.lvl[, c("site_id", "landowner")], by = c("site_id"), all.x = TRUE) # owner
+  
+  # dets.e <- merge(dets.e, subplot.lvl[, c("site_id", "subplot", "lat")], by = c("site_id", "subplot"), all.x = TRUE) # lat
+  # 
+  # dets.e <- merge(dets.e, subplot.lvl[, c("site_id", "subplot", "long")], by = c("site_id", "subplot"), all.x = TRUE) # long
+  # 
+  # dets.e <- merge(dets.e, subplot.lvl[, c("site_id", "subplot", "elev")], by = c("site_id", "subplot"), all.x = TRUE) # elev  
 
+  
+ # landowner to management type column
+  
+  dets.e <- dets.e %>%
+    mutate(mgmt_type = case_when(
+      landowner == "PB" ~ "0", # private
+      landowner == "WY" ~ "0",  # private
+      landowner == "BLM" ~ "1",  # public
+      landowner == "ODF" ~ "1",  # public
+      TRUE ~ "default_value"  
+    ))
+  
+  dets.o <- dets.o %>%
+    mutate(mgmt_type = case_when(
+      landowner == "PB" ~ "0", # private
+      landowner == "WY" ~ "0",  # private
+      landowner == "BLM" ~ "1",  # public
+      landowner == "ODF" ~ "1",  # public
+      TRUE ~ "default_value"  
+    ))
+  
+  
 ## pre fire matrix ------------------------------------------------------------------
   
 # subset
   
-  xo2 <- xo[,c(1,2,5:8,10:12,16)]
-  colnames(xo2) <- c("stand","year","subplot","V1","V2","V3","DW","jul_date","temp","trt")
+  xo2 <- xo[,c(1:3,5:8,10:12,16)]
+  colnames(xo2) <- c("stand","year","owner","subplot","V1","V2","V3","DW","jul_date","temp","trt")
 
-  xe2 <- xe[,c(1,2,5:8,10:12,16)]
-  colnames(xe2) <- c("stand","year","subplot","V1","V2","V3","DW","jul_date","temp","trt")
+  xe2 <- xe[,c(1:3,5:8,10:12,16)]
+  colnames(xe2) <- c("stand","year","owner","subplot","V1","V2","V3","DW","jul_date","temp","trt")
   
 # change treatment designation names
   
@@ -118,6 +157,28 @@
   
   xo2$site_id <- paste(xo2$stand, 1, xo2$year, sep = " _ ")
   xe2$site_id <- paste(xe2$stand, 1, xe2$year, sep = " _ ")
+  
+  
+# landowner to management type column
+  
+  xe2 <- xe2 %>%
+    mutate(mgmt_type = case_when(
+      owner == "PBTF" ~ "0", # private
+      owner == "WY" ~ "0",  # private
+      owner == "BLM" ~ "1",  # public
+      owner == "ODF" ~ "1",  # public
+      TRUE ~ "default_value"  
+    ))
+  
+  xo2 <- xo2 %>%
+    mutate(mgmt_type = case_when(
+      owner == "PBTF" ~ "0", # private
+      owner == "WY" ~ "0",  # private
+      owner == "BLM" ~ "1",  # public
+      owner == "ODF" ~ "1",  # public
+      TRUE ~ "default_value"  
+    ))
+  
 
   
 # merge -----------------------------------------------------------------------------
@@ -125,8 +186,10 @@
 # oss
   
   colnames(dets.o)[10] <- "temp"
+  colnames(dets.o)[12] <- "owner"
   colnames(dets.o)
-  xo2 <- xo2[, c("site_id","subplot","stand","trt","year","V1","V2","V3","jul_date","temp","DW")]
+  colnames(xo2)
+  xo2 <- xo2[, c("site_id","subplot","stand","trt","year","V1","V2","V3","jul_date","temp","DW","owner","mgmt_type")]
   
   oss.full <- rbind(dets.o, xo2)
   
@@ -136,8 +199,9 @@
 # enes
   
   colnames(dets.e)[10] <- "temp"
+  colnames(dets.e)[12] <- "owner"
   colnames(dets.e)
-  xe2 <- xe2[, c("site_id","subplot","stand","trt","year","V1","V2","V3","jul_date","temp","DW")]
+  xe2 <- xe2[, c("site_id","subplot","stand","trt","year","V1","V2","V3","jul_date","temp","DW","owner","mgmt_type")]
   
   enes.full <- rbind(dets.e, xe2)
    
