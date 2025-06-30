@@ -5,7 +5,7 @@ library(coda)
 
 setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
 
-# data indexing part
+# data
   enes <- read.csv("enes.prepost.multiscale.occu.csv") 
   oss <- read.csv("oss.prepost.multiscale.occu.csv")
 
@@ -13,8 +13,9 @@ setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
   enes <- read.csv("data/occupancy/enes.prepost.multiscale.occu.csv") 
   oss <- read.csv("data/occupancy/oss.prepost.multiscale.occu.csv")
 
-# Data Formatting ------------------------------------------------------
-#we formatting the data in script to see if it helps spot issue 
+# Data Formatting to 3D and 4D ------------------------------------------------------
+
+  # formatting the data in script to see if it helps spot issue 
   unique(enes$site_id)
   unique(enes$year)
   plotnames=sort(unique(enes$subplot))

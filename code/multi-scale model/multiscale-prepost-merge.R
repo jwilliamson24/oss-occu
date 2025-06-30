@@ -1,6 +1,6 @@
 ## =================================================
 ##
-## Title: multi-scale-data-format
+## Title: multiscale-prepost-merge
 ## Author: Jasmine Williamson
 ## Date Created: 5/29/2025
 ##
@@ -25,7 +25,7 @@
 
 ## load data ------------------------------------------------------------------------
 
-# 2023-2024 data
+# 2023-2024 covariate data
   site <- read.csv("data/site.complete.csv")
   subplot <- read.csv("data/subplot.complete.csv")
   
@@ -33,13 +33,13 @@
   subplot.lvl <- read.csv("data/covariate matrices/habitat.occu.complete.csv") # temp
   dwd.count <- read.csv("data/covariate matrices/avg-dwd-subplot-matrix.csv") # dwd count
   
-# run code pre-fire-matrices.R
-  head(xo) # pre-fire oss
-  head(xe) # pre-fire enes
+# from pre-fire-matrices.R
+  xo <- read.csv("data/occupancy/dets.o.pre.csv") # pre-fire oss
+  xe <- read.csv("data/occupancy/dets.e.pre.csv") # pre-fire enes
   
-# run code occu-matrices-postfire.R
-  head(dets.o) # post-fire oss
-  head(dets.e) # post-fire enes
+# from occu-matrices-postfire.R
+  dets.o <- read.csv("data/occupancy/dets.o.post.csv") # post-fire oss
+  dets.e <- read.csv("data/occupancy/dets.e.post.csv") # post-fire enes
 
   
 ## format data -----------------------------------------------------------------------

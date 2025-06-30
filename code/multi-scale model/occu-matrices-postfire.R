@@ -96,6 +96,8 @@
     )
   
   dets.o <- as.data.frame(dets.o)
+  
+  write.csv(dets.o, "data/occupancy/dets.o.post.csv", row.names = FALSE)
 
 # enes matrix ---------------------------------------------------------------------------------------
   
@@ -134,6 +136,6 @@
   
   dets.e <- as.data.frame(dets.e)
   
-  
+  write.csv(dets.e, "data/occupancy/dets.e.post.csv", row.names = FALSE)
   
   

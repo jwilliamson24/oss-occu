@@ -103,8 +103,8 @@
   xo <- merge(xo, trt[, c("StandNo", "HarvestState", "TrtGrp", "Year")])
   xe <- merge(xe, trt[, c("StandNo", "HarvestState", "TrtGrp", "Year")])
   
-  
-  
+  write.csv(xo, "data/occupancy/dets.o.pre.csv", row.names = FALSE)
+  write.csv(xe, "data/occupancy/dets.e.pre.csv", row.names = FALSE)
   
   
   
