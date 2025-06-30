@@ -125,7 +125,7 @@
                     "beta5.psi.HB", "alpha0", 'zsum')
   
   
-    NimModel <- nimbleCode({
+NimModel <- nimbleCode({
       
       # priors
       beta0.psi ~ dlogis(0,1) # mean occupancy (intercept)
@@ -150,7 +150,6 @@
             y[i,k] ~ dbern(p[i,k]*z[i]) 
           }
         }
-      }
       
       zsum <- sum(z[1:I])
       
