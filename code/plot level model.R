@@ -16,55 +16,23 @@
 
 ## load data -------------------------------------------------------------------
   
-  # 2023-2024 covariate data
-  site.lvl <- read.csv("data/covariate matrices/site_level_matrix.csv") # jul date
-  subplot.lvl <- read.csv("data/covariate matrices/habitat.occu.complete.csv") # temp
-  dwd.count <- read.csv("data/covariate matrices/avg-dwd-subplot-matrix.csv") # dwd count
-  
   # from occu-matrices-postfire.R
   dets.o <- read.csv("data/occupancy/dets.o.post.csv") # post-fire oss
   dets.e <- read.csv("data/occupancy/dets.e.post.csv") # post-fire enes
   
-  
-## format cov data -------------------------------------------------------------
-  
-  # site.lvl - site_id, jul_date, landowner
-  site.info <- site.lvl %>%
-    select(site_id, jul_date, landowner)
-
-  # subplot.lvl - plot_id, site_id, subplot, temp_C, lat, long, elev, canopy_cov
-  subplot.info <- subplot.lvl %>%
-    select(plot_id, site_id, subplot, temp_C, lat, long, elev, canopy_cov)
-  
-  # dwd.count - change to long format
-  dwd.long <- dwd.count %>%
-    pivot_longer(cols = starts_with("X"),
-                 names_to = "subplot",
-                 names_prefix = "X",
-                 values_to = "DW") %>%
-    mutate(subplot = as.integer(subplot))
+  # 2023-2024 covariate data
+  df1 <- read.csv("data/covariate matrices/env_subset_corr2.csv", row.names = 1) # relevant env
+  df2 <- read.csv("data/covariate matrices/site_aspect_precip_all_vars.csv", row.names = 1) # includes trt, landowner
   
   
-## add covariates to occupancy matrices ----------------------------------------
+## format  --------------------------------------------------------------------
   
-  # oss  
-  
-  dets.o <- dets.o %>%
-    left_join(site.info, by = "site_id") %>%
-    left_join(subplot.info, by = c("site_id", "subplot")) %>%
-    left_join(dwd.long %>% select(site_id, subplot, DW), by = c("site_id", "subplot"))
-
-  # enes
-  
-  dets.e <- dets.e %>%
-    left_join(site.info, by = "site_id") %>%
-    left_join(subplot.info, by = c("site_id", "subplot")) %>%
-    left_join(dwd.long %>% select(site_id, subplot, DW), by = c("site_id", "subplot"))
-  
+  # merge and subset
+  covs <- merge(df1, df2[, c("site_id","trt", "landowner")], by = "site_id", all.x = TRUE)
+  covs <- subset(covs, select = -c(jul_date, dwd_cov, size_cl, char_cl, aspect, avg_volume))
   
   # landowner to management type column
-  
-  dets.o <- dets.o %>%
+  covs <- covs %>%
     mutate(mgmt_type = case_when(
       landowner == "PB" ~ "0", # private
       landowner == "WY" ~ "0",  # private
@@ -73,30 +41,38 @@
       TRUE ~ "default_value"  
     ))
   
-  dets.e <- dets.e %>%
-    mutate(mgmt_type = case_when(
-      landowner == "PB" ~ "0", # private
-      landowner == "WY" ~ "0",  # private
-      landowner == "BLM" ~ "1",  # public
-      landowner == "ODF" ~ "1",  # public
-      TRUE ~ "default_value"  
-    ))
-
-
+  
   # add treatment columns
-  
-  treatments <- unique(dets.o$trt)
-  
-  for (trt in treatments) {
-    dets.o[[trt]] <- as.numeric(dets.o$trt == trt)
-  }
+  treatments <- unique(covs$trt)
   
   for (trt in treatments) {
-    dets.e[[trt]] <- as.numeric(dets.e$trt == trt)
+    covs[[trt]] <- as.numeric(covs$trt == trt)
   }
+  
+  
+  # add covariates to occupancy matrices 
+  
+  # oss  
+  occu.o <- dets.o %>%
+    left_join(covs, by = "site_id")
+
+  # enes
+  occu.e <- dets.e %>%
+    left_join(covs, by = "site_id")
+  
   
 
-#### Model (Global) ------------------------------------------------------------
+## Global Model written -------------------------------------------------------
+  
+  # psi(occupancy covariates) p(detection covariates)
+  
+  # psi(trt + canopy_cov + dwd_count + lat + long + elev + veg_cov + fwd_cov 
+  #    + soil_moist + decay_cl)
+  # p(temp + precip_mm + days_since_rain)
+  
+  
+  
+#### Model --------------------------------------------------------------------
 
   ## Define 
   I <- 889 # I = sites (subplots as sites)
