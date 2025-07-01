@@ -1,15 +1,22 @@
-
+## =================================================
+##
+## Title: plot-level-model
+## Author: Jasmine Williamson
+## Date Created: 06/30/2025
+##
+## Description: Occupancy model for 2023-2024 data 
+## Took the hierarchical simulation model from JT and reduced it to
+## model at the plot level instead of the site level to increase power
+##
+## =================================================
 
 ## load packages
   library(nimble)
   library(coda)
 
-  
 ## load data -------------------------------------------------------------------
   
   # 2023-2024 covariate data
-  #site <- read.csv("data/site.complete.csv")
-  #subplot <- read.csv("data/subplot.complete.csv")
   site.lvl <- read.csv("data/covariate matrices/site_level_matrix.csv") # jul date
   subplot.lvl <- read.csv("data/covariate matrices/habitat.occu.complete.csv") # temp
   dwd.count <- read.csv("data/covariate matrices/avg-dwd-subplot-matrix.csv") # dwd count
@@ -89,7 +96,7 @@
   }
   
 
-#### Model --------------------------------------------------------------------
+#### Model (Global) ------------------------------------------------------------
 
   ## Define 
   I <- 889 # I = sites (subplots as sites)
@@ -105,7 +112,8 @@
     constants <- list(I = I, K = K, 
                       HU = y$HU, HB = y$HB, BU = y$BU, BS = y$BS,
                       canopycover = y$canopy_cov,
-                      temp = y$temp_C)
+                      temp = y$temp_C,
+                      )
     
     Nimdata <- list(y=y)
     

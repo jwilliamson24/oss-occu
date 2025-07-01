@@ -25,13 +25,15 @@
     library(gridExtra)
     source("~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/multivariate-analysis/biostats.R")
 
+    #par(mfrow = c(1, 1))
+    
     
 #### load and subset data ---------------------------------------------------------------------------------------
 
     #site-level data
     #dat <- readRDS("site_level_matrix.rds") used this df originally
     
-    dat <- read.csv("site_aspect_precip_all_vars.csv") #switched to this df on 02/04 when i added aspect and precipitation vars
+    dat <- read.csv("covariate matrices/site_aspect_precip_all_vars.csv") #switched to this df on 02/04 when i added aspect and precip
     dat <- subset(dat, select = -X)
     row.names(dat) <- dat[,1]
     
@@ -42,7 +44,7 @@
     dwd <- read.csv("dwd.extra.metrics.csv")
     
     #env cont
-    drop <- c("lat","long","stand","tree_farm","landowner","year","weather","trt","jul_date","elev","site_id","date_mdy")
+    drop <- c("stand","tree_farm","landowner","year","weather","trt","site_id","date_mdy")
     env_sub <- env[,!(colnames(env) %in% drop)]
     
     #add dwd dens and avg volume from dwd to env df
@@ -83,7 +85,6 @@
 
     cor.test(env_merge$temp,env_merge$hum,method="pearson") #statistically significant correllation
     cor.test(env_merge$length_cl,env_merge$stumps,method="pearson") #statistically significant correllation
-
 
     pairs(env_merge[,c(9,14)])
 
@@ -177,13 +178,13 @@
     
     # Function to generate scatter plots for each covariate
     generate_plot <- function(covariate) {
-      ggplot(merged, aes_string(x = covariate, y = "oss")) +
+      ggplot(merged, aes(x = .data[[covariate]], y = oss)) +
         geom_point(color = "blue", size = 2) +  # Scatterplot points
         geom_smooth(method = "lm", color = "red", se = TRUE) +  # Linear regression line
         labs(
-          title = paste("Salamander Count vs.", covariate),
+          title = paste("OSS Count vs.", covariate),
           x = covariate,
-          y = "Salamander Count"
+          y = "OSS Count"
         ) +
         theme_minimal()
     }
@@ -215,12 +216,8 @@
     
     # Set a threshold
     threshold <- 0.5
-    
-    # Get pairs with correlation above the threshold
-    cor_pairs <- which(abs(corr3) > threshold, arr.ind = TRUE)
-    
-    # Filter to keep only unique pairs (avoid duplicates and self-correlations)
-    cor_pairs <- cor_pairs[cor_pairs[, 1] < cor_pairs[, 2], ]
+    cor_pairs <- which(abs(corr3) > threshold, arr.ind = TRUE) # Get pairs with correlation above the threshold
+    cor_pairs <- cor_pairs[cor_pairs[, 1] < cor_pairs[, 2], ] # Filter to keep only unique pairs 
     
     # Display the variable pairs and their correlation values
     result <- data.frame(
@@ -230,17 +227,23 @@
     )
     result
     
-    # Var1      Var2 Correlation
-    # 1 canopy_cov  decay_cl   0.5273213
-    # 2    fwd_cov   char_cl  -0.5417591
-    # 3       temp precip_mm  -0.5345670
+    #        Var1            Var2     Correlation
+    # 1        lat            long   0.6337947
+    # 2 canopy_cov        decay_cl   0.5273213
+    # 3    fwd_cov         char_cl  -0.5417591
+    # 4       temp       precip_mm  -0.5345670.     ## can use both in model
+    # 5   jul_date days_since_rain   0.5154970.     ## dont use jul date in model
     
 ## these are somewhat correlated but the value is below 0.55 so I wont remove them right now.
     
     write.csv(env_subset_corr, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/env_subset_corr.csv",
               row.names = TRUE)       
   
-      
+    
+    write.csv(env_subset_corr, 
+              "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/covariate matrices/env_subset_corr2.csv")    
+    
+    
 #### run corr with sal variables in dataset --------------------------------------------
     
     
@@ -270,6 +273,15 @@
     )
     result
     
+    # >     result
+    #         Var1            Var2  Correlation
+    # 1        lat            long   0.6337947
+    # 2 canopy_cov        decay_cl   0.5273213
+    # 3    fwd_cov         char_cl  -0.5417591
+    # 4 canopy_cov       length_cl   0.6621768
+    # 5       temp       precip_mm  -0.5345670
+    # 6   jul_date days_since_rain   0.5154970
+    # 7  length_cl      avg_volume   0.6592068
     
     # what does it mean if none of the variables correlate highly with oss count?
     
