@@ -161,7 +161,7 @@
   colnames(xo2)
   xo2 <- xo2[, c("site_id","subplot","stand","trt","year","V1","V2","V3","jul_date","temp","DW","owner","mgmt_type")]
   
-  oss.full <- rbind(dets.o, xo2)
+  oss.full <- rbind(occu.o, xo2)
   
   write.csv(oss.full, "data/occupancy/oss.prepost.multiscale.occu.csv", row.names = FALSE)
     
