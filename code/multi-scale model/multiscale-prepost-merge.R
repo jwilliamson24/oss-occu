@@ -37,6 +37,9 @@
   df1 <- read.csv("data/covariate matrices/env_subset_corr2.csv", row.names = 1) # relevant env
   df2 <- read.csv("data/covariate matrices/site_aspect_precip_all_vars.csv", row.names = 1) # includes trt, landowner  
 
+# pre-fire lat/long/elev data
+  geo.data.pre <- read.csv("data/prefire-shp-attributes/geo-data-all-plots-prefire.csv")
+  
 # from pre-fire-matrices.R
   xo <- read.csv("data/occupancy/dets.o.pre.csv") # pre-fire oss
   xe <- read.csv("data/occupancy/dets.e.pre.csv") # pre-fire enes
@@ -145,7 +148,7 @@
   } 
   
 # add lat, long, elev
-  
+  xe3 <- merge(xe2, geo.data.pre, by = c("stand", "subplot"))
   
   
 # merge -----------------------------------------------------------------------------
