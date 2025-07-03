@@ -38,7 +38,7 @@
   df2 <- read.csv("data/covariate matrices/site_aspect_precip_all_vars.csv", row.names = 1) # includes trt, landowner  
 
 # pre-fire lat/long/elev data
-  geo.data.pre <- read.csv("data/prefire-shp-attributes/geo-data-all-plots-prefire.csv")
+  geo.data.pre <- read.csv("data/prefire-shp-attributes/geo-data-all-plots-prefire.csv", row.names = 1)
   
 # from pre-fire-matrices.R
   xo <- read.csv("data/occupancy/dets.o.pre.csv") # pre-fire oss
@@ -148,38 +148,47 @@
   } 
   
 # add lat, long, elev
-  xe3 <- merge(xe2, geo.data.pre, by = c("stand", "subplot"))
+  xe3 <- merge(xe2, geo.data.pre, by = c("stand", "subplot", "year"))
+  xo3 <- merge(xo2, geo.data.pre, by = c("stand", "subplot", "year"))
+  
   
   
 # merge -----------------------------------------------------------------------------
   
 # oss
   # subset
-  occu.o <- occu.o[,c(1:3,4,5:13,18,23,24)]
+  occu.o <- occu.o[,c(1:13,18,23:29)]
   colnames(occu.o)
   colnames(occu.o) <- c("site_id","stand","trt","year","subplot","V1","V2","V3",
-                        "jul_date","lat","long","elev","temp","DW","owner","mgmt_type")
+                        "jul_date","lat","long","elev","temp","DW","owner",
+                        "mgmt_type", "BS", "HB", "UU", "HU", "BU")
 
-  # gotta add to xo2 and xe2 lat long elev and then merge
-  colnames(xo2)
-  xo2 <- xo2[, c("site_id","subplot","stand","trt","year","V1","V2","V3","jul_date","temp","DW","owner","mgmt_type")]
-  
-  oss.full <- rbind(occu.o, xo2)
+  colnames(xo3)
+  xo3$BS <- 0
+  xo3$HB <- 0
+  xo3$BU <- 0
+
+  oss.full <- rbind(occu.o, xo3)
+  summary(oss.full)
   
   write.csv(oss.full, "data/occupancy/oss.prepost.multiscale.occu.csv", row.names = FALSE)
     
   
 # enes
-  occu.e <- occu.e[,c(1:3,4,5:13,18,23,24)]
+  occu.e <- occu.e[,c(1:13,18,23:29)]
   colnames(occu.e)
   colnames(occu.e) <- c("site_id","stand","trt","year","subplot","V1","V2","V3",
-                        "jul_date","lat","long","elev","temp","DW","owner","mgmt_type")
+                        "jul_date","lat","long","elev","temp","DW","owner",
+                        "mgmt_type", "BS", "HB", "UU", "HU", "BU")
   
-  colnames(xo2)
-  xe2 <- xe2[, c("site_id","subplot","stand","trt","year","V1","V2","V3","jul_date","temp","DW","owner","mgmt_type")]
+  colnames(xe3)
+  xe3$BS <- 0
+  xe3$HB <- 0
+  xe3$BU <- 0
   
-  enes.full <- rbind(dets.e, xe2)
-   
+  enes.full <- rbind(occu.e, xe3)
+  summary(enes.full)
+  
   write.csv(enes.full, "data/occupancy/enes.prepost.multiscale.occu.csv", row.names = FALSE)
   
   

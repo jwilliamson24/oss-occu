@@ -32,6 +32,7 @@
   # 2015-2016: use random start point lat/long/elev
   # 2017-2019: use random start point lat/long, unit centroid elev
   
+  
 # subset pts.all for colname consistency
   pts.all.sub <- subset(pts.all, select = c("Lat", "Long", "ELEVATION_", "OFCLWCO__1"))
   colnames(pts.all.sub) <- c("lat", "long", "elev", "stand")
@@ -47,7 +48,6 @@
   pts13$year <- 2013
 
   
-  
 # 2014 - completely done
   # finding sites surveyed in 2014 (listed as none in pts.all)
   units14 <- xo[xo$Year == 2014, ]
@@ -60,7 +60,6 @@
   pts14$year = 2014
   
   
-  
 # 2015 - missing some elevation, remove extra site rows
   pts15 <- subset(pts15, select = c("Lat", "Long", "ELEVATION_", "OFCLWCO__1"))
   colnames(pts15) <- c("lat", "long", "elev", "stand")
@@ -71,12 +70,10 @@
   pts15$year <- 2015
   
   
-  
 # 2016 - missing some lat/long and elev, remove extra site rows
   pts16 <- subset(pts16, select = c("Lat", "Long", "ELEVATION_", "OFCLWCO__1"))
   colnames(pts16) <- c("lat", "long", "elev", "stand")
   pts16$year <- 2016
-  
   
   
 # 2017 - done, remove extra site rows
@@ -88,7 +85,6 @@
   pts17 <- merge(pts17, pts[, c("stand", "elev")], by = "stand", all.x = TRUE)
   
   
-  
 # 2018 - done, remove extra site rows
   pts18 <- subset(pts18, select = c("Lat", "Long", "OFCLWCO__1"))
   colnames(pts18) <- c("lat", "long", "stand")
@@ -96,7 +92,6 @@
   
   # add centroid elev
   pts18 <- merge(pts18, pts[, c("stand", "elev")], by = "stand", all.x = TRUE)
-  
   
   
 # 2019 - completely done
@@ -107,7 +102,8 @@
   # add centroid elev
   pts19 <- merge(pts19, pts[, c("stand", "elev")], by = "stand", all.x = TRUE)
   
-
+  
+# the rest of the to-do's listed will be done in the merge code below:
   
   
 ## merge, align all years -------------------------------------------------
@@ -171,8 +167,17 @@
   )
   
   
-
-  write.csv(pts_aligned, "data/prefire-shp-attributes/geo-data-all-plots-prefire.csv")
+# add subplots from xo
+  
+  # extract unique stand, year, plot combos from xo
+  xo_subplots <- unique(xo[, c("StandNo", "Year", "SubPlot")])
+  colnames(xo_subplots) <- c("stand", "year", "subplot")  # match pts_aligned
+  
+  # merge those into pts_aligned to get subplot level df
+  pts_full <- merge(xo_subplots, pts_aligned, by = c("stand", "year"), all.x = TRUE)
+  
+  
+  write.csv(pts_full, "data/prefire-shp-attributes/geo-data-all-plots-prefire.csv")
   
   
 
