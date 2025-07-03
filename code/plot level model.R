@@ -14,6 +14,13 @@
   library(nimble)
   library(coda)
 
+
+
+## redo covariates - some of these i have data at the plot level, so i dont
+## need to be duplicating the data at the unit level
+
+
+
 ## load data -------------------------------------------------------------------
   
   # from occu-matrices-postfire.R
