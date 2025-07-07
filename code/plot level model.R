@@ -5,20 +5,14 @@
 ## Date Created: 06/30/2025
 ##
 ## Description: Occupancy model for 2023-2024 data 
-## Took the hierarchical simulation model from JT and reduced it to
-## model at the plot level instead of the site level to increase power
+## Took the hierarchical simulation model from JT and reduced it,
+## to model 2023-24 data at plot level instead of site level (to increase power)
 ##
 ## =================================================
 
 ## load packages
   library(nimble)
   library(coda)
-
-
-
-## redo covariates - some of these i have data at the plot level, so i dont
-## need to be duplicating the data at the unit level
-
 
 
 ## load data -------------------------------------------------------------------
@@ -28,44 +22,71 @@
   dets.e <- read.csv("data/occupancy/dets.e.post.csv") # post-fire enes
   
   # 2023-2024 covariate data
-  df1 <- read.csv("data/covariate matrices/env_subset_corr2.csv", row.names = 1) # relevant env
-  df2 <- read.csv("data/covariate matrices/site_aspect_precip_all_vars.csv", row.names = 1) # includes trt, landowner
+  site.lvl <- read.csv("data/covariate matrices/site_aspect_precip_all_vars.csv") # all site level covariates
+  subplot.lvl <- read.csv("data/covariate matrices/habitat.occu.complete.csv") # covariates at subplot lvl 
+  dwd <- read.csv("data/dwd.complete.csv") # all dwd data
   
   
 ## format  --------------------------------------------------------------------
   
-  # merge and subset
-  covs <- merge(df1, df2[, c("site_id","trt", "landowner")], by = "site_id", all.x = TRUE)
-  covs <- subset(covs, select = -c(jul_date, dwd_cov, size_cl, char_cl, aspect, avg_volume))
+# site covariates 
   
   # landowner to management type column
-  covs <- covs %>%
+  site.lvl <- site.lvl %>%
     mutate(mgmt_type = case_when(
       landowner == "PB" ~ "0", # private
       landowner == "WY" ~ "0",  # private
       landowner == "BLM" ~ "1",  # public
       landowner == "ODF" ~ "1",  # public
       TRUE ~ "default_value"  
-    ))
-  
+    ))  
   
   # add treatment columns
-  treatments <- unique(covs$trt)
-  
+  treatments <- unique(site.lvl$trt)
   for (trt in treatments) {
-    covs[[trt]] <- as.numeric(covs$trt == trt)
-  }
+    site.lvl[[trt]] <- as.numeric(site.lvl$trt == trt)
+  }  
+  
+  # subset site, date, owner, mgmt, treatments
+  site.info <- site.lvl %>%
+    select(site_id, jul_date, landowner, mgmt_type, HB,BU,BS,HU,UU, precip_mm, days_since_rain)
+
+  
+# subplot covariates
+  
+  # temp F to C
+  subplot.lvl$tempC <- (subplot.lvl$temp - 32) * 5/9
+  
+  # site, subplot, temp, lat, long, elev
+  subplot.info <- subplot.lvl %>%
+    select(site_id, subplot, tempC, lat, long, elev, veg_cov, fwd_cov, soil_moist_avg)
+  
+  # dwd
+  # aggregate by subplot and survey period
+  subplot_counts <- aggregate(list(DW = dat$dwd_type), ########## this is the total count of stumps AND logs in the subplot ###########
+                              by = list(subplot = dat$subplot, 
+                                        site_id = dat$site_id),
+                              FUN = length)
+  subplot_decay <- aggregate(list(decay_cl = dat$decay_cl),
+                              by = list(subplot = dat$subplot, 
+                                        site_id = dat$site_id),
+                              FUN = mean)
+  subplot_dwd <- merge(subplot_counts, subplot_decay, by = c("site_id", "subplot"))
   
   
-  # add covariates to occupancy matrices 
+ # add to detection matrices
   
   # oss  
   occu.o <- dets.o %>%
-    left_join(covs, by = "site_id")
-
+    left_join(site.info, by = "site_id") %>%
+    left_join(subplot.info, by = c("site_id", "subplot")) %>%
+    left_join(subplot_dwd %>% select(site_id, subplot, DW, decay_cl), by = c("site_id", "subplot"))
+  
   # enes
   occu.e <- dets.e %>%
-    left_join(covs, by = "site_id")
+    left_join(site.info, by = "site_id") %>%
+    left_join(subplot.info, by = c("site_id", "subplot")) %>%
+    left_join(subplot_dwd %>% select(site_id, subplot, DW, decay_cl), by = c("site_id", "subplot"))
   
   
 
@@ -84,7 +105,7 @@
   ## Define 
   I <- 889 # I = sites (subplots as sites)
   K <- 3 # K = occasions
-  y = dets.e
+  y = occu.e
   
 # run the chains
   n.chains = 3
@@ -95,7 +116,17 @@
     constants <- list(I = I, K = K, 
                       HU = y$HU, HB = y$HB, BU = y$BU, BS = y$BS,
                       canopycover = y$canopy_cov,
-                      temp = y$temp_C,
+                      DW = y$DW,
+                      lat = y$lat,
+                      long = y$long,
+                      elev = y$elev,
+                      vegcov = y$veg_cov,
+                      fwdcov = y$fwd_cov,
+                      soilmoist = y$soil_moist_avg,
+                      decaycl = y$decay_cl,
+                      precip = y$precip_mm,
+                      days_since_rain = y$days_since_rain,
+                      temp = y$tempC,
                       )
     
     Nimdata <- list(y=y)

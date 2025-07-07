@@ -1,9 +1,9 @@
 
 # Load packages
-library(nimble)
-library(coda)
-
-setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
+  library(nimble)
+  library(coda)
+  
+  setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
 
 # data
   enes <- read.csv("enes.prepost.multiscale.occu.csv") 
@@ -84,6 +84,7 @@ setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
   # scale covariates
   enes$DWscaled <- scale(enes$DW)
   enes$tempscaled <- scale(enes$temp)
+  enes$elevscaled <- scale(enes$elev)
 
   
 # temperature - 4D matrix (plot, occ, site, year)
@@ -134,6 +135,8 @@ setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
     this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
     BU.new[this.site,this.year]=as.numeric(enes$BU[i]) #force numeric
   }
+  
+  str(BU.new)
   
   #BS
   enes$BS <- NA
@@ -194,7 +197,7 @@ setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
   table(y.4D)
   table(is.na(y.4D))
   
-  # create operations matrix which we apply to observations in model to deal with large number of NAs in observation array
+  # create operations matrix which we apply to observations in model to deal with large number of NAs in obs array
   K2D <- 1*(!is.na(y.4D))
   
   # turn NAs in detection/non-detection data to 0 (see trick below)
@@ -216,6 +219,79 @@ setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
   str(mgmt.3D)
   sum(mgmt.3D, na.rm=TRUE)
   sum(mgmt.3D == 0, na.rm=TRUE)
+  
+  mgmt.2D =array(0,dim=c(maxI,n.years)) #new data 
+  for(i in 1:nrow(enes)){ #loop through each row
+    this.year=which(years==enes$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+    mgmt.2D[this.site,this.year]=as.numeric(enes$mgmt[i]) #force numeric
+  }
+  
+# lat
+  
+  lat.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
+  for(i in 1:nrow(enes)){ #loop through each row
+    this.year=which(years==enes$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+    lat.3D[this.plot,this.site,this.year]=as.numeric(enes$lat[i]) #force numeric
+  }  
+  
+  str(lat.3D)
+  sum(lat.3D, na.rm=TRUE)
+  sum(lat.3D == 0, na.rm=TRUE)  
+  lat.3D[1,,]
+  
+  lat.2D =array(0,dim=c(maxI,n.years)) #new data 
+  for(i in 1:nrow(enes)){ #loop through each row
+    this.year=which(years==enes$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+    lat.2D[this.site,this.year]=as.numeric(enes$lat[i]) #force numeric
+  }
+  
+# long
+  
+  lon.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
+  for(i in 1:nrow(enes)){ #loop through each row
+    this.year=which(years==enes$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+    lon.3D[this.plot,this.site,this.year]=as.numeric(enes$lon[i]) #force numeric
+  }  
+  
+  str(lon.3D)
+  sum(lon.3D, na.rm=TRUE)
+  sum(lon.3D == 0, na.rm=TRUE) 
+  lon.3D[1,,]
+  
+  lon.2D =array(0,dim=c(maxI,n.years)) #new data 
+  for(i in 1:nrow(enes)){ #loop through each row
+    this.year=which(years==enes$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+    lon.2D[this.site,this.year]=as.numeric(enes$long[i]) #force numeric
+  }
+  
+# elev
+  
+  elev.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
+  for(i in 1:nrow(enes)){ #loop through each row
+    this.year=which(years==enes$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+    elev.3D[this.plot,this.site,this.year]=as.numeric(enes$elevscaled[i]) #force numeric
+  }  
+  
+  str(elev.3D)
+  sum(elev.3D, na.rm=TRUE)
+  sum(elev.3D == 0, na.rm=TRUE) 
+  elev.3D[1,,]
+  
+  elev.2D =array(0,dim=c(maxI,n.years)) #new data 
+  for(i in 1:nrow(enes)){ #loop through each row
+    this.year=which(years==enes$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+    elev.2D[this.site,this.year]=as.numeric(enes$elev[i]) #force numeric
+  }
   
   
 # End formatting code ------------------------------------------------------------  
@@ -239,8 +315,11 @@ for(chain in 1:n.chains){
     K2D = K2D,  #operation matrix
     HU = HU.new, BU = BU.new, BS = BS.new, HB = HB.new, # treatments
     temp = temp.3D, 
-    downedwood = downedwood.3D, 
-    mgmt = mgmt.3D) 
+    downedwood = downedwood.3D, # count of dwd pieces
+    mgmt = mgmt.2D, # management type 0=private, 1=public
+    lat = lat.2D,
+    lon = lon.2D,
+    elev = elev.2D) 
 
     # provide data
   Nimdata <- list(y=y) # y=obs
@@ -286,40 +365,44 @@ for(chain in 1:n.chains){
   
   # set initial values
   Niminits <- list(beta0.psi = 0, beta0.theta = 0, alpha0 = 0,
-                  beta1.psi.BU = 0, beta2.psi.HB = 0, beta3.psi.HU = 0, beta4.psi.BS = 0, beta7.psi.mgmt = 0,
-                  beta1.theta.DW = 0, alpha1 = 0, alpha2 = 0,
-                  # beta5.psi.lat = 0, beta6.psi.long = 0,
+                  beta1.psi.BU = 0, beta2.psi.HB = 0, beta3.psi.HU = 0, beta4.psi.BS = 0, 
+                  beta5.psi.lat = 0, beta6.psi.lon = 0, beta7.psi.mgmt = 0, beta8.psi.elev = 0,
+                  beta1.theta.DW = 0, alpha1 = 0, alpha2 = 0, 
                   beta0.psi.year = rnorm(nyears), beta0.theta.year = rnorm(nyears), alpha0.year = rnorm(nyears), 
                   sd.psi.year = runif(1, 0.1, 1), sd.theta.year = runif(1, 0.1, 1), 
                   sd.p.year = runif(1, 0.1, 1), z = z_init, w = w_init)
   
   # parameters to monitor
-  parameters <- c("beta0.psi.year", "beta0.theta.year", "alpha0.year", "beta0.psi", "beta0.theta", 
-                  "alpha0", "beta1.psi.BU", "beta2.psi.HB", "beta3.psi.HU", "beta4.psi.BS", "beta7.psi.mgmt", 
+  parameters <- c("beta0.psi.year", "beta0.theta.year", "alpha0.year", 
+                  "beta0.psi", "beta0.theta", "alpha0", 
+                  "beta1.psi.BU", "beta2.psi.HB", "beta3.psi.HU", "beta4.psi.BS", 
+                  "beta5.psi.lat", "beta6.psi.lon", "beta7.psi.mgmt", "beta8.psi.elev",
                   'beta1.theta.DW', 'alpha1', 'alpha2')
  
   str(K2D)
   str(y.4D)
 
-  # Multi-scale occupancy model for estimating the use of use of plot j, given the occupancy status of site i from k surveys across t years
+  # Multi-scale occupancy model for estimating the use of use of plot j, 
+  # given the occupancy status of site i from k surveys across t years
   NimModel <- nimbleCode({
     # priors
     beta0.psi ~ dlogis(0,1)  # prior for psi intercept
+    beta0.theta ~ dlogis(0,1)  # prior for theta intercept, mean plot use
+    alpha0 ~ dlogis(0,1)  # prior for detection intercept, mean det prob
     sd.psi.year ~ dunif(0,5) # prior for sd for yearly psi random effect 
     sd.theta.year ~ dunif(0,5) # prior for sd for yearly theta random effect 
     sd.p.year ~ dunif(0,5)  # prior for sd for yearly p random effect 
-    beta0.theta ~ dlogis(0,1)  # prior for theta intercept, mean plot use
-    alpha0 ~ dlogis(0,1)  # prior for detection intercept, mean det prob
     beta1.psi.BU ~ dnorm(0, sd = 5)  # slope term for burn effect on site occu
     beta2.psi.HB ~ dnorm(0, sd = 5)  # harvest burn
     beta3.psi.HU ~ dnorm(0, sd = 5)  # harvest
     beta4.psi.BS ~ dnorm(0, sd = 5)  # burn salvage
-    # beta5.psi.lat ~ dnorm(0, sd = 5) # latitude
-    # beta6.psi.long ~ dnorm(0, sd = 5) # longitude
+    beta5.psi.lat ~ dnorm(0, sd = 5) # latitude
+    beta6.psi.lon ~ dnorm(0, sd = 5) # longitude
     beta7.psi.mgmt ~ dnorm(0, sd = 5) # management type
-    beta1.theta.DW ~ dnorm(0, sd = 5) # downed wood
-    alpha1 ~ dnorm(0, sd =5) # linear temp
-    alpha2 ~ dnorm(0, sd = 5)# quadratic temp
+    beta8.psi.elev ~ dnorm(0, sd = 5) # elevation
+    beta1.theta.DW ~ dnorm(0, sd = 5) # downed wood effect on plot use
+    alpha1 ~ dnorm(0, sd =5) # linear temp effect on detection
+    alpha2 ~ dnorm(0, sd = 5) # quadratic temp
     
     # likelihood for state model
     # First submodel for whether site i is occupied
@@ -329,9 +412,10 @@ for(chain in 1:n.chains){
                                   
         for (i in 1:I[t]){
       # estimate psi as function  of site by year covariates
-      logit(psi[i,t]) <- beta0.psi.year[t] + beta1.psi.BU * BU[i,t] + beta2.psi.HB * HB[i,t] + beta3.psi.HU * HU[i,t] + 
-                        beta4.psi.BS * BS[i,t] + beta7.psi.mgmt * mgmt[i,t]
-                    # + beta5.psi.lat * lat[i,t] + beta6.psi.long * long[i,t]
+      logit(psi[i,t]) <- beta0.psi.year[t] + 
+                         beta1.psi.BU * BU[i,t] + beta2.psi.HB * HB[i,t] + beta3.psi.HU * HU[i,t] + 
+                         beta4.psi.BS * BS[i,t] + beta5.psi.lat * lat[i,t] + beta6.psi.lon * lon[i,t] + 
+                         beta7.psi.mgmt * mgmt[i,t] + beta8.psi.elev * elev[i,t]
       z[i,t] ~ dbern(psi[i,t]) # is site occupied? z=1 yes, z=0 no
         }
       }
@@ -348,7 +432,7 @@ for(chain in 1:n.chains){
         }
       }
     }
-        # likelihood for observation submodel - did we observe a critter at plot j, on survey k, at site i, in year t?
+        # likelihood for obs submodel - did we observe a critter at plot j, on survey k, at site i, in year t?
           #centered yearly random effect on mean detection
       for(t in 1:nyears) {
           alpha0.year[t] ~ dnorm(alpha0,sd=sd.p.year)
@@ -358,8 +442,8 @@ for(chain in 1:n.chains){
               # estimate detection probability as function of covs (no covs currently)
           logit(p[j,k,i,t]) <- alpha0.year[t] + alpha1 * temp[j,i,t] + alpha2 * temp[j,i,t]^2 
           # observations as function of det prob conditional on the plot is used (w = 1)
-          y[j,k,i,t] ~ dbern((p[j,k,i,t] * K2D[j,k,i,t]) * w[j,i,t])  # we use K2D here, so that when sites were not surveyed, then probability of detecting an animal = 0
-          }
+          y[j,k,i,t] ~ dbern((p[j,k,i,t] * K2D[j,k,i,t]) * w[j,i,t])  
+          } # use K2D here, so when sites were not surveyed, prob of detecting an animal = 0
         }
       }
     }
@@ -369,7 +453,7 @@ for(chain in 1:n.chains){
   # Build the model, configure the mcmc, and compileConfigure
   start.time <- Sys.time()
   Rmodel <- nimbleModel(code=NimModel, constants=constants, data=Nimdata, check=FALSE, inits=Niminits)
-  conf <- configureMCMC(Rmodel, monitors=parameters, thin=4, useConjugacy=FALSE, calculateEfficiency = TRUE) # this sets thinning interval to every 2nd value
+  conf <- configureMCMC(Rmodel, monitors=parameters, thin=4, useConjugacy=FALSE, calculateEfficiency = TRUE) # thin interval
   
   # custom RW updates - block parameteres which display high posterior correlation
 
@@ -391,7 +475,7 @@ for(chain in 1:n.chains){
   
   # Run the model
   start.time2 <- Sys.time()
-  Cmcmc$run(100000,reset=FALSE) #Can keep extending the run by rerunning this line  #this sets n.iterations
+  Cmcmc$run(250000,reset=FALSE) #Can keep extending the run by rerunning this line  # sets n.iterations
   end.time <- Sys.time()
   end.time - start.time  # total time for compilation, replacing samplers, and fitting
   end.time - start.time2 # post-compilation run time
@@ -408,11 +492,20 @@ n.burn = 20000
 # plot(mcmc(mvSamples[-c(1:n.burn),]))
 
 
+## Diagnostics
+
 #combine the chains and burn
 a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
             mcmc(chains[[2]][n.burn:n.iter,]),
             mcmc(chains[[3]][n.burn:n.iter,]))
 
+
+# R-hat values are alright! some concerning ones 1.04-1.06   
+gelman.diag(a)
+
+
+# visual inspection of chains:
+# some of them look good, some of them look real messy
 plot(a)
 summary(a)
 a=runjags::combine.mcmc(a)
@@ -420,14 +513,34 @@ a=runjags::combine.mcmc(a)
 runjags::combine.jags()
 colnames(mvSamples)
 
-cor <- cor(a[, c("alpha0", "beta0.psi","beta0.theta", "beta1.psi.BU", "beta2.psi.HB",  "beta3.psi.HU", "beta0.theta.year[1]",
-          "beta4.psi.BS", "beta7.psi.mgmt" )])
-
-
-library('coda')
-
-ESS(a)
-
-
 save.image
+
+
+# correlation matrix
+  cor <- cor(a[, c("alpha0", "beta0.psi",
+                 "beta0.theta", "beta1.psi.BU", "beta2.psi.HB",  "beta3.psi.HU", "beta4.psi.BS", 
+                 "beta0.theta.year[1]", "beta7.psi.mgmt" )])
+
+  # some high correlations above 0.6 here: 
+  # not sure what to do with that though. parameter redundancy?
+  threshold <- 0.6
+  high_corr <- abs(cor) > threshold
+  diag(high_corr) <- FALSE
+  high_corr_pairs <- which(high_corr, arr.ind = TRUE)
+  data.frame(
+    Var1 = rownames(cor)[high_corr_pairs[, 1]],
+    Var2 = colnames(cor)[high_corr_pairs[, 2]],
+    Correlation = cor[high_corr]
+  )
+
+ 
+# ESS: most of these are low (<200?) 
+  library('coda')
+  effectiveSize(a)
+  ESS(a)
+  
+
+
+
+
 

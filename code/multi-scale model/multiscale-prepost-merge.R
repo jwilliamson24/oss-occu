@@ -14,21 +14,12 @@
 
   rm(list=ls())
   #setwd("/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
-  # 
-  # library(unmarked)
-  # library(ggplot2)
-  # library(stats)
-  # library(MASS)
-  # library(tidyverse)
-  # library(dplyr)
 
 
 ## load data ------------------------------------------------------------------------
 
 # 2023-2024 covariate data
   site.lvl <- read.csv("data/covariate matrices/site_level_matrix.csv") # site level covs
-  df1 <- read.csv("data/covariate matrices/env_subset_corr2.csv", row.names = 1) # relevant env
-  df2 <- read.csv("data/covariate matrices/site_aspect_precip_all_vars.csv", row.names = 1) # includes trt, landowner  
   dwd.count <- read.csv("data/covariate matrices/avg-dwd-subplot-matrix.csv") # dwd count by plot
   subplot.lvl <- read.csv("data/covariate matrices/habitat.occu.complete.csv") # covariates at subplot lvl
   
@@ -213,4 +204,3 @@
   write.csv(enes.full, "data/occupancy/enes.prepost.multiscale.occu.csv", row.names = FALSE)
   
   
-  # check these dfs before using, made a lot of changes last time
