@@ -512,8 +512,7 @@ a=runjags::combine.mcmc(a)
 
 runjags::combine.jags()
 colnames(mvSamples)
-
-save.image
+save.image("Multi_scale_occupancy_enes_salamanders_4D_version_but_this_time_its_better.RData")
 
 
 # correlation matrix
