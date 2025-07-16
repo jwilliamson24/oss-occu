@@ -13,15 +13,17 @@
 ## settings -----------------------------------------------------------------------------------------------
 
   rm(list=ls())
-  #setwd("/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data")
+  setwd("/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu")
 
 
 ## load data ------------------------------------------------------------------------
 
 # 2023-2024 covariate data
   site.lvl <- read.csv("data/covariate matrices/site_level_matrix.csv") # site level covs
-  dwd.count <- read.csv("data/covariate matrices/avg-dwd-subplot-matrix.csv") # dwd count by plot
-  subplot.lvl <- read.csv("data/covariate matrices/habitat.occu.complete.csv") # covariates at subplot lvl
+  #dwd.count <- read.csv("data/covariate matrices/avg-dwd-subplot-matrix.csv") # dwd count by plot
+  #subplot.lvl <- read.csv("data/covariate matrices/habitat.occu.complete.csv") # covariates at subplot lvl
+  
+  subplot.lvl <- read.csv("data/subplot.complete.new.csv")
   
 # pre-fire lat/long/elev data
   geo.data.pre <- read.csv("data/prefire-shp-attributes/geo-data-all-plots-prefire.csv", row.names = 1)
@@ -62,20 +64,16 @@
   
 # subplot covariates
   
-  # dwd
-  dwd.long <- dwd.count %>%
-    pivot_longer(cols = starts_with("X"),
-                 names_to = "subplot",
-                 names_prefix = "X",
-                 values_to = "DW") %>%
-    mutate(subplot = as.integer(subplot))
+  # dwd 
+  # any subplot that had no logs is NA, change to 0
+  subplot.lvl$logs[is.na(subplot.lvl$logs)] <- 0
   
   # temp F to C
   subplot.lvl$tempC <- (subplot.lvl$temp - 32) * 5/9
   
   # site, subplot, temp, lat, long, elev
   subplot.info <- subplot.lvl %>%
-    select(site_id, subplot, tempC, lat, long, elev)
+    select(site_id, subplot, tempC, lat, long, elev, logs)
   
   
 # add to detection matrices
@@ -83,15 +81,13 @@
   # oss  
   dets.o <- dets.o %>%
     left_join(site.info, by = "site_id") %>%
-    left_join(subplot.info, by = c("site_id", "subplot")) %>%
-    left_join(dwd.long %>% select(site_id, subplot, DW), by = c("site_id", "subplot"))
+    left_join(subplot.info, by = c("site_id", "subplot")) 
   
   # enes
   dets.e <- dets.e %>%
     left_join(site.info, by = "site_id") %>%
-    left_join(subplot.info, by = c("site_id", "subplot")) %>%
-    left_join(dwd.long %>% select(site_id, subplot, DW), by = c("site_id", "subplot"))
-  
+    left_join(subplot.info, by = c("site_id", "subplot")) 
+
 
   
 # change long to have minus sign (to match prefire data)

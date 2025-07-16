@@ -3,16 +3,18 @@
   library(nimble)
   library(coda)
   
+  
+# JT data path
   setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
-
-# data
   enes <- read.csv("enes.prepost.multiscale.occu.csv") 
   oss <- read.csv("oss.prepost.multiscale.occu.csv")
 
-# jw data path  
+  
+# JW data path  
   enes <- read.csv("data/occupancy/enes.prepost.multiscale.occu.csv") 
   oss <- read.csv("data/occupancy/oss.prepost.multiscale.occu.csv")
 
+  
 # Data Formatting to 3D and 4D ------------------------------------------------------
 
   # formatting the data in script to see if it helps spot issue 
@@ -85,10 +87,13 @@
   enes$DWscaled <- scale(enes$DW)
   enes$tempscaled <- scale(enes$temp)
   enes$elevscaled <- scale(enes$elev)
+  enes$latscaled <- scale(enes$lat)
+  enes$longscaled <- scale(enes$long)
+  
 
   
 # temperature - 4D matrix (plot, occ, site, year)
-  temperature <- enes$temp
+  temperature <- enes$tempscaled
   
   temp.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
   for(i in 1:nrow(enes)){ #loop through each row
@@ -229,68 +234,68 @@
   
 # lat
   
-  lat.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-    lat.3D[this.plot,this.site,this.year]=as.numeric(enes$lat[i]) #force numeric
-  }  
-  
-  str(lat.3D)
-  sum(lat.3D, na.rm=TRUE)
-  sum(lat.3D == 0, na.rm=TRUE)  
-  lat.3D[1,,]
+  # lat.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
+  # for(i in 1:nrow(enes)){ #loop through each row
+  #   this.year=which(years==enes$year[i]) #get year for this row
+  #   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+  #   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+  #   lat.3D[this.plot,this.site,this.year]=as.numeric(enes$lat[i]) #force numeric
+  # }  
+  # 
+  # str(lat.3D)
+  # sum(lat.3D, na.rm=TRUE)
+  # sum(lat.3D == 0, na.rm=TRUE)  
+  # lat.3D[1,,]
   
   lat.2D =array(0,dim=c(maxI,n.years)) #new data 
   for(i in 1:nrow(enes)){ #loop through each row
     this.year=which(years==enes$year[i]) #get year for this row
     this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    lat.2D[this.site,this.year]=as.numeric(enes$lat[i]) #force numeric
+    lat.2D[this.site,this.year]=as.numeric(enes$latscaled[i]) #force numeric
   }
   
 # long
   
-  lon.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-    lon.3D[this.plot,this.site,this.year]=as.numeric(enes$lon[i]) #force numeric
-  }  
-  
-  str(lon.3D)
-  sum(lon.3D, na.rm=TRUE)
-  sum(lon.3D == 0, na.rm=TRUE) 
-  lon.3D[1,,]
+  # lon.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
+  # for(i in 1:nrow(enes)){ #loop through each row
+  #   this.year=which(years==enes$year[i]) #get year for this row
+  #   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+  #   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+  #   lon.3D[this.plot,this.site,this.year]=as.numeric(enes$lon[i]) #force numeric
+  # }  
+  # 
+  # str(lon.3D)
+  # sum(lon.3D, na.rm=TRUE)
+  # sum(lon.3D == 0, na.rm=TRUE) 
+  # lon.3D[1,,]
   
   lon.2D =array(0,dim=c(maxI,n.years)) #new data 
   for(i in 1:nrow(enes)){ #loop through each row
     this.year=which(years==enes$year[i]) #get year for this row
     this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    lon.2D[this.site,this.year]=as.numeric(enes$long[i]) #force numeric
+    lon.2D[this.site,this.year]=as.numeric(enes$longscaled[i]) #force numeric
   }
   
 # elev
   
-  elev.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-    elev.3D[this.plot,this.site,this.year]=as.numeric(enes$elevscaled[i]) #force numeric
-  }  
-  
-  str(elev.3D)
-  sum(elev.3D, na.rm=TRUE)
-  sum(elev.3D == 0, na.rm=TRUE) 
-  elev.3D[1,,]
+  # elev.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
+  # for(i in 1:nrow(enes)){ #loop through each row
+  #   this.year=which(years==enes$year[i]) #get year for this row
+  #   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+  #   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+  #   elev.3D[this.plot,this.site,this.year]=as.numeric(enes$elevscaled[i]) #force numeric
+  # }  
+  # 
+  # str(elev.3D)
+  # sum(elev.3D, na.rm=TRUE)
+  # sum(elev.3D == 0, na.rm=TRUE) 
+  # elev.3D[1,,]
   
   elev.2D =array(0,dim=c(maxI,n.years)) #new data 
   for(i in 1:nrow(enes)){ #loop through each row
     this.year=which(years==enes$year[i]) #get year for this row
     this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    elev.2D[this.site,this.year]=as.numeric(enes$elev[i]) #force numeric
+    elev.2D[this.site,this.year]=as.numeric(enes$elevscaled[i]) #force numeric
   }
   
   
@@ -316,7 +321,7 @@ for(chain in 1:n.chains){
     HU = HU.new, BU = BU.new, BS = BS.new, HB = HB.new, # treatments
     temp = temp.3D, 
     downedwood = downedwood.3D, # count of dwd pieces
-    mgmt = mgmt.2D, # management type 0=private, 1=public
+    #mgmt = mgmt.2D, # management type 0=private, 1=public
     lat = lat.2D,
     lon = lon.2D,
     elev = elev.2D) 
@@ -366,7 +371,8 @@ for(chain in 1:n.chains){
   # set initial values
   Niminits <- list(beta0.psi = 0, beta0.theta = 0, alpha0 = 0,
                   beta1.psi.BU = 0, beta2.psi.HB = 0, beta3.psi.HU = 0, beta4.psi.BS = 0, 
-                  beta5.psi.lat = 0, beta6.psi.lon = 0, beta7.psi.mgmt = 0, beta8.psi.elev = 0,
+                  beta5.psi.lat = 0, beta6.psi.lon = 0, beta8.psi.elev = 0,
+                  # beta7.psi.mgmt = 0, 
                   beta1.theta.DW = 0, alpha1 = 0, alpha2 = 0, 
                   beta0.psi.year = rnorm(nyears), beta0.theta.year = rnorm(nyears), alpha0.year = rnorm(nyears), 
                   sd.psi.year = runif(1, 0.1, 1), sd.theta.year = runif(1, 0.1, 1), 
@@ -376,7 +382,8 @@ for(chain in 1:n.chains){
   parameters <- c("beta0.psi.year", "beta0.theta.year", "alpha0.year", 
                   "beta0.psi", "beta0.theta", "alpha0", 
                   "beta1.psi.BU", "beta2.psi.HB", "beta3.psi.HU", "beta4.psi.BS", 
-                  "beta5.psi.lat", "beta6.psi.lon", "beta7.psi.mgmt", "beta8.psi.elev",
+                  "beta5.psi.lat", "beta6.psi.lon", "beta8.psi.elev",
+                  # "beta7.psi.mgmt", 
                   'beta1.theta.DW', 'alpha1', 'alpha2')
  
   str(K2D)
@@ -398,7 +405,7 @@ for(chain in 1:n.chains){
     beta4.psi.BS ~ dnorm(0, sd = 5)  # burn salvage
     beta5.psi.lat ~ dnorm(0, sd = 5) # latitude
     beta6.psi.lon ~ dnorm(0, sd = 5) # longitude
-    beta7.psi.mgmt ~ dnorm(0, sd = 5) # management type
+    #beta7.psi.mgmt ~ dnorm(0, sd = 5) # management type
     beta8.psi.elev ~ dnorm(0, sd = 5) # elevation
     beta1.theta.DW ~ dnorm(0, sd = 5) # downed wood effect on plot use
     alpha1 ~ dnorm(0, sd =5) # linear temp effect on detection

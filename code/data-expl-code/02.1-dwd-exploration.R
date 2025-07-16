@@ -26,12 +26,13 @@
 #                                 substrate="factor", age_class="factor"))
     
     dat <- readRDS("site_level_matrix.RDS")  
-    #row.names(dat) <- dat[,1]
+    dwd_all <- read.csv("dwd.complete.csv")
+    subplot.complete <- read.csv("data/subplot.complete.csv")
+    subplot.more <- read.csv("data/covariate matrices/habitat.occu.complete.csv")
+    
     dwd <- dat[,c(1,5,19:25)]
     
-    dwd_all <- read.csv("dwd.complete.csv")
     
-
 #### Add density per m^2 to site matrix --------------------------------------------------------------
 
 ## add log/stump dens
@@ -150,18 +151,10 @@
      
      
       
-# 03-18-2025     ---------------------------------------------------------------------------------
-     
-    # add average dwd count per subplot
-     dwd_extra_metrics$avg_count <- (dwd_extra_metrics$dwd_count)/7
-     
-
-write.csv(dwd_extra_metrics, "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/dwd.extra.metrics.csv",
-          row.names = FALSE)    
-    
+# 07-16-2025     ---------------------------------------------------------------------------------
 
 
-    # aggregate dwd count data to subplot level
+# aggregate dwd count data to subplot level
       
       dat <- read.csv("data/dwd.complete.csv")
       dat$date_mdy <- as.Date(dat$date, format = "%m/%d/%Y")
@@ -169,32 +162,34 @@ write.csv(dwd_extra_metrics, "~/Library/CloudStorage/OneDrive-Personal/Documents
       dat$char_cl <- as.integer(dat$char_cl)
       str(dat)
       
+      # aggregate
+      subplot_dwd <- dat %>%
+        group_by(site_id, subplot) %>%  # Group by site and subplot
+        summarize(
+          landowner = first(landowner),
+          stand = first(stand),
+          trt = first(trt),
+          year = first(year),
+          jul_date = first(jul_date),
+          dwd_count = n(),
+          stumps = sum(dwd_type == "S"),
+          logs = sum(dwd_type == "L"),
+          size_cl = round(mean(size_cl), 1),
+          decay_cl = round(mean(decay_cl), 1),
+          char_cl = round(mean(char_cl), 1),
+          length_cl = round(mean(length_cl), 1),
+          .groups = "drop"  
+        )
 
-      # Aggregate counts by subplot and survey period
-      subplot_counts <- aggregate(list(type_count = dat$dwd_type),
-                                  by = list(subplot = dat$subplot, 
-                                            site_id = dat$site_id),
-                                  FUN = length)
+      # not all subplots are here bc some had no downed wood
+
       
-      # Reshape to matrix format
-      matrix_counts <- reshape(subplot_counts,
-                               direction = "wide",
-                               idvar = "site_id",
-                               timevar = "subplot",
-                               v.names = "type_count")
+      # Merge with full subplot list and fill missing with 0
+      merge <- left_join(subplot.complete, subplot_dwd)
       
-      # Replace NA values with zeros
-      matrix_counts[is.na(matrix_counts)] <- 0
-      summary(is.na(matrix_counts))
-      
-      # Clean up column names
-      colnames(matrix_counts) <- gsub("^type_count.", "", colnames(matrix_counts))
+      merge2 <- left_join(merge, subplot.more)
 
-
-write.csv(matrix_counts, 
-          "~/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/covariate matrices/avg-dwd-subplot-matrix.csv",
-                row.names = FALSE) 
-
-
-
+write.csv(merge2, 
+          "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/subplot.complete.new.csv", 
+          row.names = FALSE)
 
