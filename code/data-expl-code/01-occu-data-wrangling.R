@@ -281,7 +281,8 @@ site.complete <- site.complete[,new_order]
 summary(site.complete)
 
 # save as csv
-write.csv(site.complete, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site.complete.csv", 
+write.csv(site.complete, 
+          "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/site.complete.csv", 
           row.names = FALSE)
 
 
@@ -479,14 +480,15 @@ write.csv(subplot_23_24, "/Users/jasminewilliamson/Library/CloudStorage/OneDrive
     print(na_count)
     
     
-    saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/habitat.occu.complete.rds")
+    saveRDS(df_merged, 
+            "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/covariate matrices/habitat.occu.complete.rds")
     
     
 #### Site-level matrix with count data  -----------------------------------------------------------------
     
 ### reduce matrix to site level because i want less rows and less zeros
 ### aggregate subplot level data to the site level, averaging most of the variables
-    
+    dat <- df_merged
     dat <- readRDS("habitat.occu.complete.rds")
     #str(habitat.occu.complete)
 
@@ -593,13 +595,18 @@ write.csv(subplot_23_24, "/Users/jasminewilliamson/Library/CloudStorage/OneDrive
                    "stumps","logs","size_cl","decay_cl","char_cl","length_cl","oss","enes")
     df_merged <- df_merged[,new_order]
 
+    
+    # add minus sign on long values
+    df_merged$long <- paste0("-", df_merged$long)
 
 ### save
 
-    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.csv",
+    write.csv(df_merged, 
+              "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.csv",
               row.names = FALSE)
 
-    saveRDS(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.rds")
+    saveRDS(df_merged, 
+            "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/site_level_matrix.rds")
     
 #### editing without reloading everything 01/23/25    -----------------------------
 
