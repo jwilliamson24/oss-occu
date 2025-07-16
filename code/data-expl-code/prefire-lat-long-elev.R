@@ -40,7 +40,7 @@
   
 # 2013 - missing some sites, also some elev data
   pts13 <- subset(pts13, select = c("X", "Y", "ELEVATION_", "OFCLWCO__1"))
-  colnames(pts13) <- c("lat", "long", "elev", "stand")
+  colnames(pts13) <- c("long", "lat", "elev", "stand")
   
   # delete rows that are completely zeros/blank
   pts13 <- pts13[!is.na(pts13$stand), ]
@@ -52,11 +52,12 @@
   # finding sites surveyed in 2014 (listed as none in pts.all)
   units14 <- xo[xo$Year == 2014, ]
   names(units14)[names(units14) == "StandNo"] <- "stand"
-  names(units14)[names(units14) == "SubPlot"] <- "subplot"
-  units14 <- subset(units14, select = c("stand", "subplot"))
+  # names(units14)[names(units14) == "SubPlot"] <- "subplot"
+  # units14 <- subset(units14, select = c("stand", "subplot"))
+  units14 <- unique(units14["stand"])
   
   # subset all pts to just the ones that match stand no from 2014 data
-  pts2014 <- merge(pts.all.sub, units14, by = "stand") 
+  pts14 <- merge(pts.all.sub, units14, by = "stand") 
   pts14$year = 2014
   
   
@@ -82,7 +83,7 @@
   pts17$year <- 2017
   
   # add centroid elev
-  pts17 <- merge(pts17, pts[, c("stand", "elev")], by = "stand", all.x = TRUE)
+  pts17 <- merge(pts17, pts.all.sub[, c("stand", "elev")], by = "stand", all.x = TRUE)
   
   
 # 2018 - done, remove extra site rows
@@ -91,16 +92,16 @@
   pts18$year <- 2018
   
   # add centroid elev
-  pts18 <- merge(pts18, pts[, c("stand", "elev")], by = "stand", all.x = TRUE)
+  pts18 <- merge(pts18, pts.all.sub[, c("stand", "elev")], by = "stand", all.x = TRUE)
   
   
 # 2019 - completely done
   pts19 <- subset(pts19, select = c("X", "Y", "OFCLWCO__1_min"))
-  colnames(pts19) <- c("lat", "long", "stand")
+  colnames(pts19) <- c("long", "lat", "stand")
   pts19$year <- 2019
 
   # add centroid elev
-  pts19 <- merge(pts19, pts[, c("stand", "elev")], by = "stand", all.x = TRUE)
+  pts19 <- merge(pts19, pts.all.sub[, c("stand", "elev")], by = "stand", all.x = TRUE)
   
   
 # the rest of the to-do's listed will be done in the merge code below:

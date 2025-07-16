@@ -327,7 +327,7 @@ subplot_23_24 <- subplot_23_24[,new_order]
 
 
 # save as csv
-write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/subplot.complete.csv", 
+write.csv(subplot_23_24, "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/subplot.complete.csv", 
           row.names = FALSE)
 
 
@@ -456,7 +456,8 @@ write.csv(subplot_23_24, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss
        
 ### save as csv
     
-    write.csv(df_merged, "C:/Users/jasmi/OneDrive/Documents/Academic/OSU/Git/oss-occu/data/habitat.occu.complete.csv", 
+    write.csv(df_merged, 
+              "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/covariate matrices/habitat.occu.complete.csv", 
               row.names = FALSE)
     
   

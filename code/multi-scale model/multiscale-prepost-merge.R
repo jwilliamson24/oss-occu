@@ -92,7 +92,12 @@
     left_join(subplot.info, by = c("site_id", "subplot")) %>%
     left_join(dwd.long %>% select(site_id, subplot, DW), by = c("site_id", "subplot"))
   
+
   
+# change long to have minus sign (to match prefire data)
+  # If longitude is > 0, multiply by -1
+  dets.o$long <- ifelse(dets.o$long > 0, -dets.o$long, dets.o$long)  
+  dets.e$long <- ifelse(dets.e$long > 0, -dets.e$long, dets.e$long)  
   
 
 ## pre fire matrices ------------------------------------------------------------------
@@ -164,7 +169,6 @@
 # add lat, long, elev
   xe3 <- merge(xe2, geo.data.pre, by = c("stand", "subplot", "year"))
   xo3 <- merge(xo2, geo.data.pre, by = c("stand", "subplot", "year"))
-  
   
   
 # merge -----------------------------------------------------------------------------
