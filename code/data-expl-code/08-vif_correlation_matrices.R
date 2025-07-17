@@ -36,6 +36,7 @@
   # did this the long way in earlier correlations script,
   # just running these two to confirm my choices for covariate removal 
 
+  #par(mfrow = c(1, 1))  
   
   # all vars
   num_vars <- env_merge[, sapply(env_merge, is.numeric)] # numeric only

@@ -27,7 +27,7 @@
     
     dat <- readRDS("site_level_matrix.RDS")  
     dwd_all <- read.csv("dwd.complete.csv")
-    subplot.complete <- read.csv("data/subplot.complete.csv")
+    subplot.complete <- read.csv("data/covariate matrices/subplot.complete.csv")
     subplot.more <- read.csv("data/covariate matrices/habitat.occu.complete.csv")
     
     dwd <- dat[,c(1,5,19:25)]
@@ -156,7 +156,7 @@
 
 # aggregate dwd count data to subplot level
       
-      dat <- read.csv("data/dwd.complete.csv")
+      dat <- read.csv("data/covariate matrices/dwd.complete.csv")
       dat$date_mdy <- as.Date(dat$date, format = "%m/%d/%Y")
       dat$jul_date <- as.numeric(format(dat$date_mdy,"%j"))
       dat$char_cl <- as.integer(dat$char_cl)
@@ -188,8 +188,16 @@
       merge <- left_join(subplot.complete, subplot_dwd)
       
       merge2 <- left_join(merge, subplot.more)
-
+      
+      # change dwd_count, logs, stumps =NA to zeros - those are plots with no wood
+      # but leaving the other wood variables as NA to remind me that data does not exist
+      # (decay class cant exist with no wood - but thats not the same as decay = 0)
+      merge2$logs[is.na(merge2$logs)] <- 0
+      merge2$stumps[is.na(merge2$stumps)] <- 0
+      merge2$dwd_count[is.na(merge2$dwd_count)] <- 0
+      
+      
 write.csv(merge2, 
-          "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/subplot.complete.new.csv", 
+          "/Users/jasminewilliamson/Library/CloudStorage/OneDrive-Personal/Documents/Academic/OSU/Git/oss-occu/data/covariate matrices/subplot.complete.new.csv", 
           row.names = FALSE)
 

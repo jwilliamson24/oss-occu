@@ -20,10 +20,7 @@
 
 # 2023-2024 covariate data
   site.lvl <- read.csv("data/covariate matrices/site_level_matrix.csv") # site level covs
-  #dwd.count <- read.csv("data/covariate matrices/avg-dwd-subplot-matrix.csv") # dwd count by plot
-  #subplot.lvl <- read.csv("data/covariate matrices/habitat.occu.complete.csv") # covariates at subplot lvl
-  
-  subplot.lvl <- read.csv("data/subplot.complete.new.csv")
+  subplot.lvl <- read.csv("data/subplot.complete.new.csv") # subplot level covs
   
 # pre-fire lat/long/elev data
   geo.data.pre <- read.csv("data/prefire-shp-attributes/geo-data-all-plots-prefire.csv", row.names = 1)

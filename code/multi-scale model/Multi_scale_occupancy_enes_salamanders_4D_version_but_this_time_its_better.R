@@ -2,7 +2,7 @@
 # Load packages
   library(nimble)
   library(coda)
-  
+  library('coda')
   
 # JT data path
   setwd('C:/Users/twininjo/Documents/R/Salamanders_multiscale_occ')
@@ -197,7 +197,6 @@
 
     
 # fix NA's
-  
   # There is loads of bloody NAs in here!! how did I miss this?
   table(y.4D)
   table(is.na(y.4D))
@@ -207,23 +206,22 @@
   
   # turn NAs in detection/non-detection data to 0 (see trick below)
   y.4D[is.na(y.4D)]<- 0
-
   str(K2D)
   
   
 # management type
   
-  mgmt.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-    mgmt.3D[this.plot,this.site,this.year]=as.numeric(enes$mgmt_type[i]) #force numeric
-  }  
-   
-  str(mgmt.3D)
-  sum(mgmt.3D, na.rm=TRUE)
-  sum(mgmt.3D == 0, na.rm=TRUE)
+  # mgmt.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
+  # for(i in 1:nrow(enes)){ #loop through each row
+  #   this.year=which(years==enes$year[i]) #get year for this row
+  #   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
+  #   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
+  #   mgmt.3D[this.plot,this.site,this.year]=as.numeric(enes$mgmt_type[i]) #force numeric
+  # }  
+  #  
+  # str(mgmt.3D)
+  # sum(mgmt.3D, na.rm=TRUE)
+  # sum(mgmt.3D == 0, na.rm=TRUE)
   
   mgmt.2D =array(0,dim=c(maxI,n.years)) #new data 
   for(i in 1:nrow(enes)){ #loop through each row
@@ -234,19 +232,6 @@
   
 # lat
   
-  # lat.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
-  # for(i in 1:nrow(enes)){ #loop through each row
-  #   this.year=which(years==enes$year[i]) #get year for this row
-  #   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-  #   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-  #   lat.3D[this.plot,this.site,this.year]=as.numeric(enes$lat[i]) #force numeric
-  # }  
-  # 
-  # str(lat.3D)
-  # sum(lat.3D, na.rm=TRUE)
-  # sum(lat.3D == 0, na.rm=TRUE)  
-  # lat.3D[1,,]
-  
   lat.2D =array(0,dim=c(maxI,n.years)) #new data 
   for(i in 1:nrow(enes)){ #loop through each row
     this.year=which(years==enes$year[i]) #get year for this row
@@ -256,19 +241,6 @@
   
 # long
   
-  # lon.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
-  # for(i in 1:nrow(enes)){ #loop through each row
-  #   this.year=which(years==enes$year[i]) #get year for this row
-  #   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-  #   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-  #   lon.3D[this.plot,this.site,this.year]=as.numeric(enes$lon[i]) #force numeric
-  # }  
-  # 
-  # str(lon.3D)
-  # sum(lon.3D, na.rm=TRUE)
-  # sum(lon.3D == 0, na.rm=TRUE) 
-  # lon.3D[1,,]
-  
   lon.2D =array(0,dim=c(maxI,n.years)) #new data 
   for(i in 1:nrow(enes)){ #loop through each row
     this.year=which(years==enes$year[i]) #get year for this row
@@ -277,20 +249,7 @@
   }
   
 # elev
-  
-  # elev.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
-  # for(i in 1:nrow(enes)){ #loop through each row
-  #   this.year=which(years==enes$year[i]) #get year for this row
-  #   this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-  #   this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-  #   elev.3D[this.plot,this.site,this.year]=as.numeric(enes$elevscaled[i]) #force numeric
-  # }  
-  # 
-  # str(elev.3D)
-  # sum(elev.3D, na.rm=TRUE)
-  # sum(elev.3D == 0, na.rm=TRUE) 
-  # elev.3D[1,,]
-  
+
   elev.2D =array(0,dim=c(maxI,n.years)) #new data 
   for(i in 1:nrow(enes)){ #loop through each row
     this.year=which(years==enes$year[i]) #get year for this row
@@ -422,7 +381,8 @@ for(chain in 1:n.chains){
       logit(psi[i,t]) <- beta0.psi.year[t] + 
                          beta1.psi.BU * BU[i,t] + beta2.psi.HB * HB[i,t] + beta3.psi.HU * HU[i,t] + 
                          beta4.psi.BS * BS[i,t] + beta5.psi.lat * lat[i,t] + beta6.psi.lon * lon[i,t] + 
-                         beta7.psi.mgmt * mgmt[i,t] + beta8.psi.elev * elev[i,t]
+                         # beta7.psi.mgmt * mgmt[i,t] + 
+                         beta8.psi.elev * elev[i,t]
       z[i,t] ~ dbern(psi[i,t]) # is site occupied? z=1 yes, z=0 no
         }
       }
@@ -507,17 +467,22 @@ a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
             mcmc(chains[[3]][n.burn:n.iter,]))
 
 
-# R-hat values are alright! some concerning ones 1.04-1.06   
+# R-hat values 
+# some upper CI above 1.1, not converged
 gelman.diag(a)
 
 
 # visual inspection of chains:
 # some of them look good, some of them look real messy
 plot(a)
+
+# zero boundary estimates seem to be gone!
 summary(a)
+
+
+
 a=runjags::combine.mcmc(a)
 
-runjags::combine.jags()
 colnames(mvSamples)
 save.image("Multi_scale_occupancy_enes_salamanders_4D_version_but_this_time_its_better.RData")
 
@@ -525,7 +490,7 @@ save.image("Multi_scale_occupancy_enes_salamanders_4D_version_but_this_time_its_
 # correlation matrix
   cor <- cor(a[, c("alpha0", "beta0.psi",
                  "beta0.theta", "beta1.psi.BU", "beta2.psi.HB",  "beta3.psi.HU", "beta4.psi.BS", 
-                 "beta0.theta.year[1]", "beta7.psi.mgmt" )])
+                 "beta0.theta.year[1]" )])
 
   # some high correlations above 0.6 here: 
   # not sure what to do with that though. parameter redundancy?
@@ -541,7 +506,6 @@ save.image("Multi_scale_occupancy_enes_salamanders_4D_version_but_this_time_its_
 
  
 # ESS: most of these are low (<200?) 
-  library('coda')
   effectiveSize(a)
   ESS(a)
   
