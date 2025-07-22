@@ -451,39 +451,37 @@ for(chain in 1:n.chains){
   
 }
 
-
-n.iter = 50000
-n.burn = 5000
-
-n.iter2 = 500
-n.burn2 = 50
+# large sample subset: 45,000
+  n.iter = 50000
+  n.burn = 5000
+# small sample subset: 450
+  n.iter2 = 500
+  n.burn2 = 50
 
 #combine the chains and burn
-  a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
+  a = mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]), #large
               mcmc(chains[[2]][n.burn:n.iter,]),
               mcmc(chains[[3]][n.burn:n.iter,]))
-  
-  a2=mcmc.list(mcmc(chains2[[1]][n.burn2:n.iter2,]),
+  a2 = mcmc.list(mcmc(chains2[[1]][n.burn2:n.iter2,]), #small
                mcmc(chains2[[2]][n.burn2:n.iter2,]),
                mcmc(chains2[[3]][n.burn2:n.iter2,]))
 
 # save
-  #save.image("Multi_scale_occu_enes_V2_results.RData")
-  save(a2, file = "multiscale_output_071825_full5.RData")
-  save(a2, constants, Nimdata, NimModel, Niminits, file = "multiscale_output_and_data_071825_full5.RData")
+  save(a2, file = "multiscale_output_072125_small.RData")
+  save(a2, constants, Nimdata, NimModel, Niminits, file = "multiscale_output_and_data_072125_small.RData")
 
-  load("multiscale_output_071825_full3.RData")
+  load("multiscale_output_and_data_072125_small.RData")
   
   
 ## Diagnostics ------------------------------------------------------------
   
 # R-hat values 
   gelman.diag(a2)
-  # some upper CI above 1.1, not converged
+  # looks great, everything below 1.04
   
 # Trace plots
   plot(a2)
-  # some of them look good, some of them look real messy
+  # look pretty good, trace plots overlapping
   
 # Estimates
   summary(a2)
@@ -494,12 +492,9 @@ n.burn2 = 50
   colnames(mvSamples)
 
 # Correlation matrix
-    cor <- cor(a[, c("alpha0", "beta0.psi",
-                   "beta0.theta", "beta1.psi.BU", "beta2.psi.HB",  "beta3.psi.HU", "beta4.psi.BS", 
+    cor <- cor(a[, c("alpha0", "beta0.psi", "beta0.theta", 
+                   "beta1.psi.BU", "beta2.psi.HB",  "beta3.psi.HU", "beta4.psi.BS", 
                    "beta0.theta.year[1]" )])
-  
-    # some high correlations above 0.6 here: 
-    # not sure what to do with that though. parameter redundancy?
     
     threshold <- 0.6
     high_corr <- abs(cor) > threshold
@@ -508,13 +503,14 @@ n.burn2 = 50
     data.frame(
       Var1 = rownames(cor)[high_corr_pairs[, 1]],
       Var2 = colnames(cor)[high_corr_pairs[, 2]],
-      Correlation = cor[high_corr]
-    )
+      Correlation = cor[high_corr])
+    
+    # some high correlations above 0.6 here: 
+    # not sure what to do with that though. parameter redundancy? ################ ??
    
 # Effective sample size: 
     effectiveSize(a)
-    ESS(a)
-    # most of these are low (want ~1000) 
+    # all above 1000 ! even for the small sample subset 
 
 
 
