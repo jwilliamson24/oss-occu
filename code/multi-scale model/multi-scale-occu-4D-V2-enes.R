@@ -481,7 +481,8 @@ for(chain in 1:n.chains){
   
 # Trace plots
   plot(a2)
-  # look pretty good, trace plots overlapping
+  traceplot(a2[, c("beta0.psi", "beta1.psi.BU", "beta1.theta.DW", "alpha0")])
+  # look pretty good, trace plots mostly overlapping with some variation
   
 # Estimates
   summary(a2)
