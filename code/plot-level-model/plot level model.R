@@ -9,14 +9,14 @@
 ## to model 2023-24 data at plot level instead of site level (to increase power)
 ##
 ## =================================================
+# rm(list=ls())
 
 ## load packages
   library(nimble)
   library(coda)
   library(dplyr)
 
-## load data -------------------------------------------------------------------
-  
+## load data 
   # from occu-matrices-postfire.R
   dets.o <- read.csv("data/occupancy/dets.o.post.csv") # post-fire oss
   dets.e <- read.csv("data/occupancy/dets.e.post.csv") # post-fire enes
@@ -233,5 +233,51 @@ NimModel <- nimbleCode({
   a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
               mcmc(chains[[2]][n.burn:n.iter,]),
               mcmc(chains[[3]][n.burn:n.iter,]))
-
-
+  
+  # save
+  save(a, file = "plot_level_output_071825.RData")
+  save(a, constants, Nimdata, NimModel, Niminits, file = "plot_level_output_and_data_071825.RData")
+  
+  
+  
+  ## Diagnostics ------------------------------------------------------------
+  
+  # R-hat values 
+  gelman.diag(a)
+  # some upper CI above 1.1, not converged
+  
+  # Trace plots
+  plot(a)
+  # some of them look good, some of them look real messy
+  
+  # Estimates
+  summary(a)
+  # zero boundary estimates seem to be gone!
+  
+  # Combine chains
+  a=runjags::combine.mcmc(a)
+  colnames(mvSamples)
+  
+  # Correlation matrix
+  cor <- cor(a[, c("alpha0", "beta0.psi",
+                   "beta0.theta", "beta1.psi.BU", "beta2.psi.HB",  "beta3.psi.HU", "beta4.psi.BS", 
+                   "beta0.theta.year[1]" )])
+  
+  # some high correlations above 0.6 here: 
+  # not sure what to do with that though. parameter redundancy?
+  
+  threshold <- 0.6
+  high_corr <- abs(cor) > threshold
+  diag(high_corr) <- FALSE
+  high_corr_pairs <- which(high_corr, arr.ind = TRUE)
+  data.frame(
+    Var1 = rownames(cor)[high_corr_pairs[, 1]],
+    Var2 = colnames(cor)[high_corr_pairs[, 2]],
+    Correlation = cor[high_corr]
+  )
+  
+  # Effective sample size: 
+  effectiveSize(a)
+  ESS(a)
+  # most of these are low (want ~1000) 
+  
