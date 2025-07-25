@@ -1,6 +1,6 @@
 ## =================================================
 ##
-## Title: multi-scale-occu-enes-interpret
+## Title: msc-occu-enes-marginal-plots
 ## Author: Jasmine Williamson 
 ## Date Created: 07/22/2025
 ##
@@ -223,39 +223,6 @@
   
   
   
-#### below plots made with help from chatgpt - need to inspect for any issues ---------
-  
-  # do these need to be back transformed first?
-  
-# occu across lat
-  lat_range <- seq(min(lat.2D), max(lat.2D), length.out = 100)
-  beta <- summary(a2)$statistics
-  psi_lat <- plogis(beta["beta0.psi", "Mean"] + beta["beta5.psi.lat", "Mean"] * lat_range)
-  
-  plot(lat_range, psi_lat, type='l', ylab="Pr(Site Occupancy)", xlab="Latitude")
-
-    
-# occu across elev
-  elev_range <- seq(min(elev.2D), max(elev.2D), length.out = 100)
-  beta <- summary(a2)$statistics
-  psi_elev <- plogis(beta["beta0.psi", "Mean"] + beta["beta8.psi.elev", "Mean"] * elev_range)
-  
-  plot(elev_range, psi_elev, type='l', ylab="Pr(Site Occupancy)", xlab="Elev")
-  
-  
-# dw on plot use  
-  dw_range <- seq(0, max(downedwood.3D, na.rm=TRUE), length.out=100)
-  theta_dw <- plogis(summary(a2)$statistics["beta0.theta", "Mean"] +
-                       summary(a2)$statistics["beta1.theta.DW", "Mean"] * dw_range)
-  
-  plot(dw_range, theta_dw, type='l', ylab="Pr(Plot Use)", xlab="Downed Wood Count")
-  
-  
-  
-
-  
-  
-  
 #### Coefficient Plot ----------------------------------------------------------
   
   summary_table <- summary(a2)
@@ -324,15 +291,15 @@
   
 #### Marginal parameter plots -------------------------------------------  
   
-  # Isolate the effect of a single covariate by varying it across a range,
-  # holding everything else constant
+# Isolate the effect of a single covariate by varying it across a range,
+# holding everything else constant
   
   # a=runjags::combine.mcmc(a2)
   # b <- a
   # n.samples = nrow(b) # number of posterior samples
   
   
-# Latitude
+# Latitude on psi
   
   # range of lat
   r<- range(lat.2D)
@@ -394,7 +361,7 @@
   
   
   
-# Longitude
+# Longitude on psi
   
   # range
   r<- range(lon.2D)
@@ -453,7 +420,7 @@
   
   
   
-# Elevation
+# Elevation on psi
   
   # range
   r<- range(elev.2D)
@@ -511,64 +478,102 @@
     theme_classic()
   
   
-# Downed Wood
+  
+# Downed Wood effect on Plot Use
   
   # range
   r<- range(downedwood.3D)
   # create sequence along range
   DW_data <- seq(r[1], r[2], length.out=50) 
   
-  # set all other covs at mean
-  HB = 0
-  HU = 0
-  BS = 0
-  BU = 0
-  lat = 0
-  long = 0
-  
   # create matrices to stick estimates in
-  logit_DW_psi = matrix(NA, n.samples, length(DW_data))
+  logit_DW_theta = matrix(NA, n.samples, length(DW_data))
   
-  # psi predictions for enes
+  # theta predictions for enes
   # Sample from posterior for the sequence of values for cov 
   for (i in 1:n.samples){
     for (j in 1:length(DW_data)){
-      logit_DW_psi[i,j] = 
-        b[,'beta0.psi'][[i]] + 
-        b[,'beta1.psi.BU'][[i]] * BU + 
-        b[,'beta2.psi.HB'][[i]] * HB + 
-        b[,'beta3.psi.HU'][[i]] * HU + 
-        b[,'beta4.psi.BS'][[i]] * BS + 
-        b[,'beta5.psi.lat'][[i]] * lat +  
-        b[,'beta6.psi.lon'][[i]] * long +  
-        b[,'beta8.psi.elev'][[i]] * elev_data[j] 
+      logit_DW_theta[i,j] = 
+        b[,'beta0.theta'][[i]] + 
+        b[,'beta1.theta.DW'][[i]] * DW_data[j] 
     }}
   
+
   # create array 
-  DW_psi = matrix(NA, n.samples, length(DW_data))
+  DW_theta = matrix(NA, n.samples, length(DW_data))
   
   # transform psi off logit-scale back to probability scale
-  DW_psi <- plogis(logit_DW_psi)
+  DW_theta <- plogis(logit_DW_theta)
   
   # calculate means and credible intervals
-  DW_psi_means = colMeans(DW_psi) 
-  DW_psi_CIs <- apply(DW_psi,2,quantile, c(0.025,0.975), na.rm=TRUE)
+  DW_means = colMeans(DW_theta) 
+  DW_CIs <- apply(DW_theta,2,quantile, c(0.025,0.975), na.rm=TRUE)
   
   # stuff into df
-  DW_psi_preds <- data.frame(predicted = DW_psi_means, 
+  DW_psi_preds <- data.frame(predicted = DW_means, 
                                DW_untransf = DW_data,
-                               LCI = DW_psi_CIs[1,],
-                               UCI = DW_psi_CIs[2,])
+                               LCI = DW_CIs[1,],
+                               UCI = DW_CIs[2,])
   
   ggplot(DW_psi_preds, aes(x = DW_untransf, y = predicted)) +
     geom_line() +
     geom_ribbon(aes(ymin = LCI, ymax = UCI), alpha = 0.2) +
-    ylab(bquote("Predicted "*psi~"")) +
+    ylab(bquote("Predicted "*theta~"")) +
     xlab("Downed Wood Count") +
-    labs(title = "Marginal Effect of Downed Wood on Occupancy") +
+    labs(title = "Marginal Effect of Downed Wood on Plot Use") +
     theme_classic()  
   
   
+  
+# Temp effect on Detection
+  
+  # do i need to include the yearly detection intercept?
+  # creating an average across years (they look almost identical)
+  alpha0_mean <- rowMeans(b[, grep("alpha0.year\\[", colnames(b))])
+  
+  # range
+  r<- range(temp.3D)
+  # create sequence along range
+  temp_data <- seq(r[1], r[2], length.out=50) 
+  
+  # create matrices to stick estimates in
+  logit_temp = matrix(NA, n.samples, length(temp_data))
+  
+  # theta predictions for enes
+  # Sample from posterior for the sequence of values for cov 
+  for (i in 1:n.samples){
+    for (j in 1:length(temp_data)){
+      logit_temp[i,j] = 
+        alpha0_mean[i] +
+        #b[,'alpha0'][[i]] + 
+        b[,'alpha1'][[i]] * temp_data[j] + 
+        b[,'alpha2'][[i]] * temp_data[j]^2 
+    }}
+  
+  
+  # create array 
+  temp_p = matrix(NA, n.samples, length(temp_data))
+  
+  # transform psi off logit-scale back to probability scale
+  temp_p <- plogis(logit_temp)
+  
+  # calculate means and credible intervals
+  temp_means = colMeans(temp_p ) 
+  temp_CIs <- apply(temp_p ,2,quantile, c(0.025,0.975), na.rm=TRUE)
+  
+  # stuff into df
+  temp_preds <- data.frame(predicted = temp_means, 
+                             temp_untransf = temp_data,
+                             LCI = temp_CIs[1,],
+                             UCI = temp_CIs[2,])
+  
+  ggplot(temp_preds, aes(x = temp_untransf, y = predicted)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = LCI, ymax = UCI), alpha = 0.2) +
+    ylab(bquote("Predicted p")) +
+    xlab("Temperature") +
+    labs(title = "Marginal Effect of Temp on Detection") +
+    theme_classic()  
   
   
 

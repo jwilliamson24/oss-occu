@@ -27,19 +27,21 @@
   enes <- read.csv("data/occupancy/enes.prepost.multiscale.occu.csv") 
   oss <- read.csv("data/occupancy/oss.prepost.multiscale.occu.csv")
 
+# choose enes or oss 
+  dat = oss
   
 # Data Formatting to 3D and 4D ------------------------------------------------------
 
   # formatting the data in script to see if it helps spot issue 
-  unique(enes$site_id)
-  unique(enes$year)
-  plotnames=sort(unique(enes$subplot))
-  sites=sort(unique(enes$site_id))
-  years=sort(unique(enes$year))
+  unique(dat$site_id)
+  unique(dat$year)
+  plotnames=sort(unique(dat$subplot))
+  sites=sort(unique(dat$site_id))
+  years=sort(unique(dat$year))
   n.sites=length(sites)
   n.years=length(years)
-  table(enes$year)
-  sum(table(enes$year))
+  table(dat$year)
+  sum(table(dat$year))
   # make year formatting in chronological order!!!
   ######## RERUN after check date order and site numbers (max of 82).   # has this been resolved?
 
@@ -48,16 +50,16 @@
   J=rep(NA, n.sites)
   site.plots=list(n.sites)
   for (i in 1:n.sites){
-    J[i]=length(enes$subplot[enes$site_id==sites[i]])
-    site.plots[[i]]=unique(enes$subplot[enes$site_id==sites[i]])
+    J[i]=length(dat$subplot[dat$site_id==sites[i]])
+    site.plots[[i]]=unique(dat$subplot[dat$site_id==sites[i]])
   }
   
   # how many sites in each year
   I=rep(NA, n.years)
   year.sites= list(9)
   for (t in 1:n.years){
-    I[t] = length(sort(unique(enes$site_id[enes$year==years[t]])))
-    year.sites[[t]]=unique(enes$site_id[enes$year==years[t]])
+    I[t] = length(sort(unique(dat$site_id[dat$year==years[t]])))
+    year.sites[[t]]=unique(dat$site_id[dat$year==years[t]])
   }
   
   # max number of sites in any year
@@ -92,24 +94,45 @@
   sum(y.4D, na.rm=TRUE)
   sum(y.4D == 0, na.rm=TRUE)
   
+
+# OSS detection data ------------------------------------------------------------
+  
+  # pull out the detection/non-detection data
+  y <- oss[,(6:8)]
+  sum(y, na.rm=TRUE)
+  
+  
+  # 4D matrix (plot, occ, site, year)
+  y.4D =array(NA,dim=c(maxJ,K,maxI, n.years)) #new data 
+  for(i in 1:nrow(oss)){ #loop through each row
+    this.year=which(years==oss$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==oss$site_id[i]) #get site for this row
+    this.plot=which(site.plots[[this.site]]==oss$subplot[i]) #get plot for this row
+    y.4D[this.plot,1:3,this.site,this.year]=as.numeric(oss[i,6:8]) #force numeric
+  }
+  
+  str(y.4D)
+  sum(y.4D, na.rm=TRUE)
+  sum(y.4D == 0, na.rm=TRUE)
+  
   
 # Covariates ------------------------------------------------------------
   
 # scale covariates
-  enes$DWscaled <- scale(enes$DW)
-  enes$tempscaled <- scale(enes$temp)
-  enes$elevscaled <- scale(enes$elev)
-  enes$latscaled <- scale(enes$lat)
-  enes$longscaled <- scale(enes$long)
+  dat$DWscaled <- scale(dat$DW)
+  dat$tempscaled <- scale(dat$temp)
+  dat$elevscaled <- scale(dat$elev)
+  dat$latscaled <- scale(dat$lat)
+  dat$longscaled <- scale(dat$long)
 
   
 # temperature - 4D matrix (plot, occ, site, year)
   temp.3D =array(0,dim=c(maxJ,maxI, n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-    temp.3D[this.plot,this.site,this.year]=as.numeric(enes$tempscaled[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    this.plot=which(site.plots[[this.site]]==dat$subplot[i]) #get plot for this row
+    temp.3D[this.plot,this.site,this.year]=as.numeric(dat$tempscaled[i]) #force numeric
   }
   
   str(temp.3D)
@@ -119,11 +142,11 @@
   
 # downed wood  
   downedwood.3D =array(0,dim=c(maxJ, maxI, n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    this.plot=which(site.plots[[this.site]]==enes$subplot[i]) #get plot for this row
-    downedwood.3D[this.plot,this.site,this.year]=as.numeric(enes$DWscaled[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    this.plot=which(site.plots[[this.site]]==dat$subplot[i]) #get plot for this row
+    downedwood.3D[this.plot,this.site,this.year]=as.numeric(dat$DWscaled[i]) #force numeric
   }
   
   str(downedwood.3D)
@@ -133,73 +156,73 @@
   
 # treatment
   # Make each treatment a dummy covariate
-  table(enes$trt)
+  table(dat$trt)
   
   #BU
-  enes$BU <- NA
-  enes$BU[enes$trt=="BU"]<- 1
-  enes$BU[enes$trt!="BU"]<- 0
+  dat$BU <- NA
+  dat$BU[dat$trt=="BU"]<- 1
+  dat$BU[dat$trt!="BU"]<- 0
   
   # format each treatment into sites and years
   BU.new =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    BU.new[this.site,this.year]=as.numeric(enes$BU[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    BU.new[this.site,this.year]=as.numeric(dat$BU[i]) #force numeric
   }
   
   str(BU.new)
   
   #BS
-  enes$BS <- NA
-  enes$BS[enes$trt=="BS"]<- 1
-  enes$BS[enes$trt!="BS"]<- 0
+  dat$BS <- NA
+  dat$BS[dat$trt=="BS"]<- 1
+  dat$BS[dat$trt!="BS"]<- 0
   
   # format each treatment into sites and years
   BS.new =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    BS.new[this.site,this.year]=as.numeric(enes$BS[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    BS.new[this.site,this.year]=as.numeric(dat$BS[i]) #force numeric
   }
   
   #HB
-  enes$HB <- NA
-  enes$HB[enes$trt=="HB"]<- 1
-  enes$HB[enes$trt!="HB"]<- 0
+  dat$HB <- NA
+  dat$HB[dat$trt=="HB"]<- 1
+  dat$HB[dat$trt!="HB"]<- 0
   
   # format each treatment into sites and years
   HB.new =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    HB.new[this.site,this.year]=as.numeric(enes$HB[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    HB.new[this.site,this.year]=as.numeric(dat$HB[i]) #force numeric
   }
   
   #HU
-  enes$HU <- NA
-  enes$HU[enes$trt=="HU"]<- 1
-  enes$HU[enes$trt!="HU"]<- 0
+  dat$HU <- NA
+  dat$HU[dat$trt=="HU"]<- 1
+  dat$HU[dat$trt!="HU"]<- 0
   
   # format each treatment into sites and years
   HU.new =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    HU.new[this.site,this.year]=as.numeric(enes$HU[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    HU.new[this.site,this.year]=as.numeric(dat$HU[i]) #force numeric
   }
   
   #UU
-  enes$UU <- NA
-  enes$UU[enes$trt=="UU"]<- 1
-  enes$UU[enes$trt!="UU"]<- 0
+  dat$UU <- NA
+  dat$UU[dat$trt=="UU"]<- 1
+  dat$UU[dat$trt!="UU"]<- 0
   
   # format each treatment into sites and years
   UU.new =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    UU.new[this.site,this.year]=as.numeric(enes$UU[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    UU.new[this.site,this.year]=as.numeric(dat$UU[i]) #force numeric
   }
 
     
@@ -218,34 +241,34 @@
   
 # management type
   mgmt.2D =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    mgmt.2D[this.site,this.year]=as.numeric(enes$mgmt[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    mgmt.2D[this.site,this.year]=as.numeric(dat$mgmt[i]) #force numeric
   }
   
 # lat
   lat.2D =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    lat.2D[this.site,this.year]=as.numeric(enes$latscaled[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    lat.2D[this.site,this.year]=as.numeric(dat$latscaled[i]) #force numeric
   }
   
 # long
   lon.2D =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    lon.2D[this.site,this.year]=as.numeric(enes$longscaled[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    lon.2D[this.site,this.year]=as.numeric(dat$longscaled[i]) #force numeric
   }
   
 # elev
   elev.2D =array(0,dim=c(maxI,n.years)) #new data 
-  for(i in 1:nrow(enes)){ #loop through each row
-    this.year=which(years==enes$year[i]) #get year for this row
-    this.site=which(year.sites[[this.year]]==enes$site_id[i]) #get site for this row
-    elev.2D[this.site,this.year]=as.numeric(enes$elevscaled[i]) #force numeric
+  for(i in 1:nrow(dat)){ #loop through each row
+    this.year=which(years==dat$year[i]) #get year for this row
+    this.site=which(year.sites[[this.year]]==dat$site_id[i]) #get site for this row
+    elev.2D[this.site,this.year]=as.numeric(dat$elevscaled[i]) #force numeric
   }
   
   
