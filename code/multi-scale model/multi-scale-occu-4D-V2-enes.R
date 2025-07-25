@@ -490,8 +490,8 @@ for(chain in 1:n.chains){
                mcmc(chains2[[3]][n.burn2:n.iter2,]))
 
 # save
-  save(a2, file = "multiscale_output_072125_small.RData")
-  save(a2, constants, Nimdata, NimModel, Niminits, file = "multiscale_output_and_data_072125_small.RData")
+  save(a, file = "multiscale_output_072525_oss_full.RData")
+  save(a, constants, Nimdata, NimModel, Niminits, file = "multiscale_output_and_data_072525_oss_full.RData")
 
   load("multiscale_output_and_data_072125_small.RData")
   

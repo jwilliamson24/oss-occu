@@ -1,6 +1,6 @@
 ## =================================================
 ##
-## Title: msc-occu-enes-marginal-plots
+## Title: msc-occu-marginal-plots
 ## Author: Jasmine Williamson 
 ## Date Created: 07/22/2025
 ##
