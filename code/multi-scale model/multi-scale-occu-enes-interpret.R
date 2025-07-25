@@ -15,20 +15,24 @@
   library(ggplot2)
   library(dplyr)
 
-  load("multiscale_output_and_data_072125_small.RData")
   load("data/occupancy/msc-enes-data-workspace.RData")
+  load("multiscale_output_and_data_072125_small.RData")
+  E = a2
+  load("multiscale_output_072525_oss_small.RData")
+  O = a2
   
 # Estimates
-  summary(a2)
+  summary(E)
+  summary(O)
 
   
 # Quick trt effect on occupancy barplot
   logit_psi <- c(
-    UU = summary(a2)$statistics["beta0.psi", "Mean"],
-    BU = summary(a2)$statistics["beta0.psi", "Mean"] + summary(a2)$statistics["beta1.psi.BU", "Mean"],
-    HB = summary(a2)$statistics["beta0.psi", "Mean"] + summary(a2)$statistics["beta2.psi.HB", "Mean"],
-    HU = summary(a2)$statistics["beta0.psi", "Mean"] + summary(a2)$statistics["beta3.psi.HU", "Mean"],
-    BS = summary(a2)$statistics["beta0.psi", "Mean"] + summary(a2)$statistics["beta4.psi.BS", "Mean"]
+    UU = summary(O)$statistics["beta0.psi", "Mean"],
+    BU = summary(O)$statistics["beta0.psi", "Mean"] + summary(O)$statistics["beta1.psi.BU", "Mean"],
+    HB = summary(O)$statistics["beta0.psi", "Mean"] + summary(O)$statistics["beta2.psi.HB", "Mean"],
+    HU = summary(O)$statistics["beta0.psi", "Mean"] + summary(O)$statistics["beta3.psi.HU", "Mean"],
+    BS = summary(O)$statistics["beta0.psi", "Mean"] + summary(O)$statistics["beta4.psi.BS", "Mean"]
   )
   psi_probs <- plogis(logit_psi) # back-transform
   
@@ -46,8 +50,10 @@
  
 # This example produces marginal estimates of occupancy for different treatment types
   
-  a=runjags::combine.mcmc(a2)
-  b <- a
+  E2 = runjags::combine.mcmc(E)
+  O2 = runjags::combine.mcmc(O) 
+  
+  b <- O2 ###################### choose species here
   
   # number of posterior samples
   n.samples = nrow(b) # why is this such a weird number?
@@ -217,7 +223,7 @@
   ggplot(alltreatment_preds, aes(x = treatment, y = predicted)) +
     geom_point(position = position_dodge(0.5), size = 1.5)+ geom_errorbar(aes(ymin = LCI, ymax = UCI), width = 0.1, position = position_dodge(0.5))+
     ylab(bquote("Predicted "*psi~""))+ xlab("Treatment Group")+
-    labs(title="Predicted Occupancy Estimates by Treatment - ENES") +
+    labs(title="Predicted Occupancy Estimates by Treatment - OSS") +
     theme_classic()
   #dev.off()  
   
@@ -225,7 +231,7 @@
   
 #### Coefficient Plot ----------------------------------------------------------
   
-  summary_table <- summary(a2)
+  summary_table <- summary(O)
   
   params_to_plot <- c("beta0.psi", "beta0.theta", "alpha0", 
                       "beta1.psi.BU", "beta2.psi.HB", "beta3.psi.HU", "beta4.psi.BS", 
@@ -263,20 +269,20 @@
   ))
   
   # rename - optional
-  # coef_df$Parameter <- recode(coef_df$Parameter,
-  #                             "beta1.psi.BU" = "Burned (BU)",
-  #                             "beta2.psi.HB" = "Harvest+Burn (HB)",
-  #                             "beta3.psi.HU" = "Harvested (HU)",
-  #                             "beta4.psi.BS" = "Burn+Salvage (BS)",
-  #                             "beta0.psi" = "Site Occu Intercept",
-  #                             "beta0.theta" = "Plot Use Intercept",
-  #                             "alpha0" = "Detection Intercept",
-  #                             "beta5.psi.lat" = "Latitude",
-  #                             "beta6.psi.lon" = "Longitude",
-  #                             "beta8.psi.elev" = "Elevation",
-  #                             "beta1.theta.DW" = "Downed Wood",
-  #                             "alpha1" = "Linear Temp",
-  #                             "alpha2" = "Quadratic Temp")
+  coef_df$Parameter <- recode(coef_df$Parameter,
+                              "beta1.psi.BU" = "Burned (BU)",
+                              "beta2.psi.HB" = "Harvest+Burn (HB)",
+                              "beta3.psi.HU" = "Harvested (HU)",
+                              "beta4.psi.BS" = "Burn+Salvage (BS)",
+                              "beta0.psi" = "Site Occu Intercept",
+                              "beta0.theta" = "Plot Use Intercept",
+                              "alpha0" = "Detection Intercept",
+                              "beta5.psi.lat" = "Latitude",
+                              "beta6.psi.lon" = "Longitude",
+                              "beta8.psi.elev" = "Elevation",
+                              "beta1.theta.DW" = "Downed Wood",
+                              "alpha1" = "Linear Temp",
+                              "alpha2" = "Quadratic Temp")
   
   
   ggplot(coef_df, aes(x = Mean, y = reorder(Parameter, Mean))) +
@@ -294,8 +300,8 @@
 # Isolate the effect of a single covariate by varying it across a range,
 # holding everything else constant
   
-  # a=runjags::combine.mcmc(a2)
-  # b <- a
+  # a=runjags::combine.mcmc(O2)
+  b <- O2 ###################### choose species here
   # n.samples = nrow(b) # number of posterior samples
   
   
