@@ -11,6 +11,8 @@
 ## =================================================
 # rm(list=ls())
 
+  load("data/plot lvl occu rdata/e-plot_level_output_and_data_071825.rdata")
+
 ## load packages
   library(nimble)
   library(coda)
@@ -100,7 +102,8 @@
   ## Define 
   I <- 889 # I = sites (subplots as sites)
   K <- 3 # K = occasions
-  y = occu.e[,c(6:8)]
+  y = occu.e[,c(6:8)]   ################# choose species here
+  y2 = occu.e       ################## and here
   covs = covs_scaled
   
 # run the chains
@@ -110,7 +113,7 @@
     
     #fit model
     constants <- list(I = I, K = K, 
-                      HU = occu.e$HU, HB = occu.e$HB, BU = occu.e$BU, BS = occu.e$BS,
+                      HU = y2$HU, HB = y2$HB, BU = y2$BU, BS = y2$BS,
                       canopy = covs$canopy_cov,
                       DW = covs$DW,
                       lat = covs$lat,
@@ -119,7 +122,7 @@
                       veg = covs$veg_cov,
                       soilmoist = covs$soil_moist_avg,
                       decay = covs$decay_cl,
-                      mgmt = occu.e$mgmt_type,
+                      #mgmt = y2$mgmt_type,
                       temp = covs$temp,
                       precip = covs$precip_mm,
                       raindays = covs$days_since_rain
@@ -129,7 +132,8 @@
     
     # set initial values
     Niminits <- list( beta0.psi=0, beta1.psi.BU=0, beta2.psi.HB=0, beta3.psi.HU=0, beta4.psi.BS=0,  
-                      beta5.psi.lat=0, beta6.psi.lon=0, beta7.psi.mgmt=0, beta8.psi.elev=0, beta9.psi.DW=0, 
+                      beta5.psi.lat=0, beta6.psi.lon=0, #beta7.psi.mgmt=0, 
+                      beta8.psi.elev=0, beta9.psi.DW=0, 
                       beta10.psi.cc=0, beta11.psi.veg=0, beta12.psi.soil=0, beta13.psi.dec=0, 
                       alpha0=0, alpha1.t=0, alpha2.t=0, alpha3.precip=0, alpha4.rdays=0)
     
@@ -144,7 +148,8 @@
     
     #set parameters to monitor
     parameters <- c("beta0.psi", "beta1.psi.BU", "beta2.psi.HB", "beta3.psi.HU", "beta4.psi.BS", 
-                    "beta5.psi.lat", "beta6.psi.lon", "beta7.psi.mgmt", "beta8.psi.elev", "beta9.psi.DW", 
+                    "beta5.psi.lat", "beta6.psi.lon", #"beta7.psi.mgmt", 
+                    "beta8.psi.elev", "beta9.psi.DW", 
                     "beta10.psi.cc", "beta11.psi.veg", "beta12.psi.soil", "beta13.psi.dec", 
                     "alpha0", "alpha1.t", "alpha2.t", "alpha3.precip", "alpha4.rdays", 'zsum')
   
@@ -160,7 +165,7 @@ NimModel <- nimbleCode({
       
       beta5.psi.lat ~ dnorm(0, sd = 5) # latitude
       beta6.psi.lon ~ dnorm(0, sd = 5) # longitude
-      beta7.psi.mgmt ~ dnorm(0, sd = 5) # management type
+      #beta7.psi.mgmt ~ dnorm(0, sd = 5) # management type
       beta8.psi.elev ~ dnorm(0, sd = 5) # elevation
       beta9.psi.DW ~ dnorm(0, sd = 5) # downed wood 
       beta10.psi.cc ~ dnorm(0, sd = 5) # canopy cover
@@ -180,7 +185,8 @@ NimModel <- nimbleCode({
         
           logit(psi[i]) <- beta0.psi + beta1.psi.BU * BU[i] + beta2.psi.HB * HB[i] + 
             beta3.psi.HU * HU[i] + beta4.psi.BS * BS[i] + beta5.psi.lat * lat[i] + 
-            beta6.psi.lon * lon[i] + beta7.psi.mgmt * mgmt[i] + beta8.psi.elev * elev[i] +
+            beta6.psi.lon * lon[i] + #beta7.psi.mgmt * mgmt[i] + 
+            beta8.psi.elev * elev[i] +
             beta9.psi.DW * DW[i] + beta10.psi.cc * canopy[i] + beta11.psi.veg * veg[i] +
             beta12.psi.soil * soilmoist[i] + beta13.psi.dec * DW[i] * decay[i] #when DW=0, decay term drops
             
@@ -205,7 +211,7 @@ NimModel <- nimbleCode({
     # Build the model, configure the mcmc, and compileConfigure
     start.time <- Sys.time()
     Rmodel <- nimbleModel(code=NimModel, constants=constants, data=Nimdata,check=FALSE,inits=Niminits)
-    conf <- configureMCMC(Rmodel,monitors=parameters, thin=5, useConjugacy=FALSE) # thinning interval
+    conf <- configureMCMC(Rmodel,monitors=parameters, thin=50, useConjugacy=FALSE) # thinning interval
     
     # Build and compile
     Rmcmc <- buildMCMC(conf)
@@ -214,12 +220,10 @@ NimModel <- nimbleCode({
     
     # Run the model
     start.time2 <- Sys.time()
-    Cmcmc$run(100000,reset=FALSE) # this sets n.iterations
+    Cmcmc$run(1000000,reset=FALSE) # this sets n.iterations
     end.time <- Sys.time()
     end.time - start.time  # total time for compilation, replacing samplers, and fitting
     end.time - start.time2 # post-compilation run time
-    
-    burnin <- 10000
     
     #get the chains
     mvSamples = as.matrix(Cmcmc$mvSamples)
@@ -228,15 +232,15 @@ NimModel <- nimbleCode({
   
   
   n.iter = 20000
-  n.burn = 15000
+  n.burn = 10000
   #combine the chains and burn
   a=mcmc.list(mcmc(chains[[1]][n.burn:n.iter,]),
               mcmc(chains[[2]][n.burn:n.iter,]),
               mcmc(chains[[3]][n.burn:n.iter,]))
   
   # save
-  save(a, file = "plot_level_output_071825.RData")
-  save(a, constants, Nimdata, NimModel, Niminits, file = "plot_level_output_and_data_071825.RData")
+  save(a, file = "e-plot_lvl_output_072525.RData")
+  save(a, constants, Nimdata, NimModel, Niminits, file = "e-plot_lvl_output_and_data_072525.RData")
   
   
   
