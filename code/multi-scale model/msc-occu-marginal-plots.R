@@ -15,10 +15,10 @@
   library(ggplot2)
   library(dplyr)
 
-  load("data/occupancy/msc-enes-data-workspace.RData")
-  load("multiscale_output_and_data_072125_small.RData")
+  load("data/msc model rdata/msc-enes-data-workspace.RData")
+  load("data/msc model rdata/multiscale_output_and_data_072125_enes_small.RData")
   E = a2
-  load("multiscale_output_072525_oss_small.RData")
+  load("data/msc model rdata/multiscale_output_072525_oss_small.RData")
   O = a2
   
 # Estimates
@@ -534,7 +534,7 @@
 # Temp effect on Detection
   
   # do i need to include the yearly detection intercept?
-  # creating an average across years (they look almost identical)
+  # created an average across years here (they look almost identical)
   alpha0_mean <- rowMeans(b[, grep("alpha0.year\\[", colnames(b))])
   
   # range
