@@ -11,7 +11,7 @@
 ## =================================================
 # rm(list=ls())
 
-  load("data/plot lvl occu rdata/e-plot_level_output_and_data_071825.rdata")
+  load("data/plot lvl occu rdata/e-plot_lvl_output_and_data_072525.rdata")
 
 ## load packages
   library(nimble)
@@ -244,31 +244,34 @@ NimModel <- nimbleCode({
   
   
   
-  ## Diagnostics ------------------------------------------------------------
+## Diagnostics ------------------------------------------------------------
   
-  # R-hat values 
+# R-hat values 
   gelman.diag(a)
-  # some upper CI above 1.1, not converged
+  # looks great
   
-  # Trace plots
+# Trace plots
   plot(a)
-  # some of them look good, some of them look real messy
+  # looks great
   
-  # Estimates
+# Estimates
   summary(a)
-  # zero boundary estimates seem to be gone!
+  # a few estimates close to zero, potentially concerning?
+  # DW is really small? cc is really high?
   
-  # Combine chains
+# Combine chains
   a=runjags::combine.mcmc(a)
   colnames(mvSamples)
   
-  # Correlation matrix
-  cor <- cor(a[, c("alpha0", "beta0.psi",
-                   "beta0.theta", "beta1.psi.BU", "beta2.psi.HB",  "beta3.psi.HU", "beta4.psi.BS", 
-                   "beta0.theta.year[1]" )])
   
-  # some high correlations above 0.6 here: 
-  # not sure what to do with that though. parameter redundancy?
+# Correlation matrix
+  cor <- cor(a[, c("alpha0", "alpha1.t", "alpha2.t", "alpha3.precip", "alpha4.rdays",   
+                   "beta0.psi", "beta1.psi.BU", "beta10.psi.cc", "beta11.psi.veg", "beta12.psi.soil",
+                   "beta13.psi.dec", "beta2.psi.HB", "beta3.psi.HU", "beta4.psi.BS", "beta5.psi.lat",  
+                   "beta6.psi.lon", "beta8.psi.elev", "beta9.psi.DW"
+                   )])
+  
+  # some really high correlations here -oopsies ######################
   
   threshold <- 0.6
   high_corr <- abs(cor) > threshold
@@ -280,8 +283,18 @@ NimModel <- nimbleCode({
     Correlation = cor[high_corr]
   )
   
-  # Effective sample size: 
+  # cc is moderately correlated to the harvest treatments - should i take it out?
+  
+  # harvest treatments are highly correlated to each other - should i combine them?
+  
+  # lat and long are highly correlated, chat gpt says i should remove them and 
+  # add a spatial random effect instead?
+  
+  
+# Effective sample size: 
   effectiveSize(a)
   ESS(a)
-  # most of these are low (want ~1000) 
+  # looks great 
+  
+  
   
